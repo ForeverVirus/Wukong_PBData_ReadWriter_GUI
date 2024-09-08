@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+	  <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Google.Protobuf">
+      <HintPath>ref\Google.Protobuf.dll</HintPath>
+    </Reference>
+    <Reference Include="GSE.ProtobufDB">
+      <HintPath>ref\GSE.ProtobufDB.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>ref\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Protobuf.RunTime">
+      <HintPath>ref\Protobuf.RunTime.dll</HintPath>
+    </Reference>
+    <Reference Include="UnrealEngine.Runtime">
+      <HintPath>ref\UnrealEngine.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

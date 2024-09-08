@@ -1,0 +1,54 @@
+﻿<Window x:Class="Wukong_PBData_ReadWriter_GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wukong_PBData_ReadWriter_GUI"
+        mc:Ignorable="d"
+        Title="黑猴配表编辑器" Height="720" Width="1280">
+    <DockPanel>
+        <!-- 顶部菜单栏 -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="文件">
+                <MenuItem Header="打开Data目录" Click="OpenDataFolder" />
+                <MenuItem Header="保存" />
+                <MenuItem Header="退出" />
+            </MenuItem>
+        </Menu>
+
+        <!-- 主体内容 -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="5*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 第一个区块 -->
+            <StackPanel Grid.Column="0" Margin="5">
+                <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Text="搜索配表文件" Foreground="Gray" GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus"/>
+                <ListBox Name="FileList" Width="Auto" Height="640" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+            </StackPanel>
+
+            <!-- 第二个区块 -->
+            <StackPanel Grid.Column="1" Margin="5">
+                <TextBox Width="Auto" Margin="0,0,0,10" Text="搜索ID或名称" Foreground="Gray"/>
+                <ListBox Name="DataItemList" Width="Auto" Height="640" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+            </StackPanel>
+
+            <!-- 第三个区块 -->
+            <StackPanel Grid.Column="2" Margin="5">
+                <TextBlock Text="配置数据" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="640">
+                    <Grid Name="DataGrid" Width="640">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="320"/>
+                            <ColumnDefinition Width="320"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ScrollViewer>
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>
