@@ -264,8 +264,11 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 string dir = dialog.SelectedPath;
 
+                var pakPath = _CurrentOpenFile._FilePath;
+
                 var b1Index = _CurrentOpenFile._FilePath.IndexOf("b1");
-                var pakPath = _CurrentOpenFile._FilePath.Substring(b1Index, _CurrentOpenFile._FilePath.Length - b1Index);
+                if(b1Index != -1)
+                    pakPath = _CurrentOpenFile._FilePath.Substring(b1Index, _CurrentOpenFile._FilePath.Length - b1Index);
 
                 var outPath = System.IO.Path.Combine(dir, pakPath);
 
@@ -295,7 +298,9 @@ namespace Wukong_PBData_ReadWriter_GUI
                 }
                 _CurrentOpenFile = file;
                 var b1Index = file._FilePath.IndexOf("b1");
-                var pakPath = file._FilePath.Substring(b1Index, file._FilePath.Length - b1Index);
+                var pakPath = file._FilePath;
+                if (b1Index != -1) 
+                    pakPath = file._FilePath.Substring(b1Index, file._FilePath.Length - b1Index);
                 DataFilePath.Text = $"配置数据({pakPath})";
                 CloseAllOtherWindow();
             }
