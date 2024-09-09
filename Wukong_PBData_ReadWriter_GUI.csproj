@@ -31,6 +31,9 @@
     <None Update="DefaultDescConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="README.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="ref\make_pak_compressed.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

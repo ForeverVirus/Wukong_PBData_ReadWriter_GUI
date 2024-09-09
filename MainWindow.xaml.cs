@@ -1045,5 +1045,33 @@ namespace Wukong_PBData_ReadWriter_GUI
                 //RefreshDataFile(_DataFiles);
             }
         }
+
+        private void AuthorMenuItem_Click_1(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo("https://space.bilibili.com/8729996") { UseShellExecute = true });
+        }
+
+        private void HelpMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            Window window = new Window();
+            window.Title = "帮助";
+            window.Width = 800;
+            window.Height = 800;
+            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            window.Show();
+
+            Grid grid = new Grid();
+            window.Content = grid;
+
+            if (File.Exists("README.md"))
+            {
+                TextBlock textBlock = new TextBlock();
+                textBlock.Text = System.IO.File.ReadAllText("README.md");
+                textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+                textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+                grid.Children.Add(textBlock);
+            }
+
+        }
     }
 }

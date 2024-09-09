@@ -17,6 +17,10 @@
                 <MenuItem Header="生成PAK" Click="CreatePak" />
                 <MenuItem Header="退出" />
             </MenuItem>
+            <MenuItem Header="帮助">
+                <MenuItem Header="查看帮助" Click="HelpMenuItem_Click"/>
+                <MenuItem Header="关于作者" Click="AuthorMenuItem_Click_1"/>
+            </MenuItem>
         </Menu>
 
         <!-- 主体内容 -->
