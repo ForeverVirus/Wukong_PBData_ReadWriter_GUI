@@ -221,7 +221,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                 {
                     var isValid = Exporter.GetIsValidFile(item, filePaths[index]);
                     if (!isValid)
+                    {
+                        index++;
                         continue;
+                    }
                     DataFile file = new DataFile();
                     file._FileName = item;
                     file._FilePath = filePaths[index];
