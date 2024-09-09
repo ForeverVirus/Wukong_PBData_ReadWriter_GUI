@@ -757,7 +757,14 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (data == null) return;
 
             var listType = data.Item1.GetType().GetGenericArguments()[0];
-            var newItem = Activator.CreateInstance(listType);
+            if(listType == null) return;
+            object newItem;
+            if(listType == typeof(string))
+            {
+                newItem = "";
+            }
+            else
+                newItem = Activator.CreateInstance(listType);
 
             data.Item1.Add(newItem);
 
