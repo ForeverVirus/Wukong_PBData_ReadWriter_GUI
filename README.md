@@ -39,3 +39,4 @@
 2. 支持Undo Redo
 3. dirty 的data文件标记
 4. data pak的解包及merge
+5. 新增数据（还有待测试是不是能新增道具进游戏）
