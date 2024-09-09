@@ -14,6 +14,7 @@
                 <MenuItem Header="另存为Data文件" Click="SaveAsNewDataFile" />
                 <MenuItem Header="导入备注配置" Click="ImportDescription" />
                 <MenuItem Header="导出备注配置" Click="ExportDescription" />
+                <MenuItem Header="生成PAK" Click="CreatePak" />
                 <MenuItem Header="退出" />
             </MenuItem>
         </Menu>
