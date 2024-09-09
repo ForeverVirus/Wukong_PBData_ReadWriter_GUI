@@ -41,7 +41,7 @@
 
             <!-- 第三个区块 -->
             <StackPanel Grid.Column="2" Margin="5">
-                <TextBlock Text="配置数据" FontWeight="Bold" Margin="0,0,0,10"/>
+                <TextBlock Name="DataFilePath" Text="配置数据" FontWeight="Bold" Margin="0,0,0,10"/>
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Height="640">
                     <Grid Name="DataGrid" Width="640">

@@ -90,6 +90,40 @@ namespace Wukong_PBData_ReadWriter_GUI
             grid.Children.Add( textBlock );
         }
 
+        //private void UncompressPak(object sender, RoutedEventArgs e)
+        //{
+        //    Window window = new Window();
+        //    window.Title = "解包PAK";
+        //    window.Width = 600;
+        //    window.Height = 400;
+        //    window.AllowDrop = true;
+        //    window.Drop += Window_Drop_Uncompress;
+        //    window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        //    window.Show();
+
+        //    Grid grid = new Grid();
+        //    window.Content = grid;
+
+        //    TextBlock textBlock = new TextBlock();
+        //    textBlock.Text = "拖拽要解包的Pak文件夹到此处";
+        //    textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+        //    textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+        //    grid.Children.Add(textBlock);
+        //}
+
+        //private void Window_Drop_Uncompress(object sender, System.Windows.DragEventArgs e)
+        //{
+        //    // 检查拖拽的数据是否是文件夹
+        //    if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
+        //    {
+        //        // 获取拖拽的文件路径
+        //        string[] draggedItems = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
+
+
+        //        RunBatFileWithFolder(@"ref\\make_pak_uncompressed.bat", draggedItems[0]);
+        //    }
+        //}
+
         private void Window_Drop(object sender, System.Windows.DragEventArgs e)
         {
             // 检查拖拽的数据是否是文件夹
@@ -102,7 +136,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 if (Directory.Exists(draggedItems[0]))
                 {
                     string folderPath = draggedItems[0];
-                    RunBatFileWithFolder(folderPath);
+                    RunBatFileWithFolder(@"ref\\make_pak_compressed.bat", folderPath);
                 }
                 else
                 {
@@ -111,15 +145,15 @@ namespace Wukong_PBData_ReadWriter_GUI
             }
         }
 
-        private void RunBatFileWithFolder(string folderPath)
+        private void RunBatFileWithFolder(string batPath, string folderPath)
         {
             // 设置 .bat 文件的路径
-            string batFilePath = @"ref\\make_pak_compressed.bat";
+            //string batFilePath = @"ref\\make_pak_compressed.bat";
 
             // 创建一个新的 ProcessStartInfo 对象
             ProcessStartInfo psi = new ProcessStartInfo
             {
-                FileName = batFilePath,
+                FileName = batPath,
                 Arguments = $"\"{folderPath}\"", // 将文件夹路径作为参数传递
                 UseShellExecute = false,  // 设置为 false 以便能够重定向输入/输出
                 CreateNoWindow = true,    // 如果你不想显示命令提示符窗口，设置为 true
@@ -239,8 +273,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                 {
                     RefreshFileDataItemList(file._FileDataItemList);
                 }
-
                 _CurrentOpenFile = file;
+                var b1Index = file._FilePath.IndexOf("b1");
+                var pakPath = file._FilePath.Substring(b1Index, file._FilePath.Length - b1Index);
+                DataFilePath.Text = $"配置数据({pakPath})";
                 CloseAllOtherWindow();
             }
         }
@@ -324,6 +360,11 @@ namespace Wukong_PBData_ReadWriter_GUI
             button.Content = "确定";
             button.Click += (sender, e) =>
             {
+                if(_DescriptionConfig.ContainsKey(data.Item1))
+                {
+                    _DescriptionConfig.Remove(data.Item1);
+                }
+
                 _DescriptionConfig.TryAdd(data.Item1, textBox.Text);
                 data.Item2?.Invoke();
                 window.Close();
