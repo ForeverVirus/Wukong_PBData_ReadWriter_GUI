@@ -314,16 +314,18 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             if (dataFile == null) return;
 
             string dir = Path.GetDirectoryName(path);
-            string fileName = Path.GetFileNameWithoutExtension(path);
 
-            string realPath = Path.Combine(dir, (fileName + "_" + dataFile._FileName));
-
-            if (File.Exists(realPath))
+            if(!Directory.Exists(dir))
             {
-                File.Delete(realPath);
+                Directory.CreateDirectory(dir);
             }
 
-            using (FileStream output = File.Create(realPath))
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
+            using (FileStream output = File.Create(path))
             {
                 dataFile._FileData.WriteTo(output);
             }

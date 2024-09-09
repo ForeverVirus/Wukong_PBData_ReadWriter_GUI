@@ -257,13 +257,19 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void SaveAsNewDataFile(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
-            dialog.AddExtension = true;
-            dialog.Filter = "Data|*.data";
-            dialog.Title = "保存当前Data";
+            System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+            dialog.Description = "请选择要保存Data数据的文件夹";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                Exporter.SaveDataFile(dialog.FileName, _CurrentOpenFile);
+
+                string dir = dialog.SelectedPath;
+
+                var b1Index = _CurrentOpenFile._FilePath.IndexOf("b1");
+                var pakPath = _CurrentOpenFile._FilePath.Substring(b1Index, _CurrentOpenFile._FilePath.Length - b1Index);
+
+                var outPath = System.IO.Path.Combine(dir, pakPath);
+
+                Exporter.SaveDataFile(outPath, _CurrentOpenFile);
             }
         }
 
