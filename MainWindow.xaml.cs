@@ -32,7 +32,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         public MainWindow()
         {
-            
+            _DescriptionConfig = Exporter.ImportDescriptionConfig("DefaultDescConfig.json");
         }
 
         private void CloseAllOtherWindow(bool isClearDataGrid = true)
@@ -65,7 +65,18 @@ namespace Wukong_PBData_ReadWriter_GUI
             dialog.Title = "导入备注配置";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                _DescriptionConfig = Exporter.ImportDescriptionConfig(dialog.FileName);
+                var newDict = Exporter.ImportDescriptionConfig(dialog.FileName);
+                foreach (var kvp in newDict)
+                {
+                    if(_DescriptionConfig.ContainsKey(kvp.Key))
+                    {
+                        _DescriptionConfig[kvp.Key] = kvp.Value;
+                    }
+                    else
+                    {
+                        _DescriptionConfig.Add(kvp.Key, kvp.Value);
+                    }
+                }
             }
         }
 
@@ -220,10 +231,13 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 //把_DataFiles绑定到FileList上并自动生成 ListBoxItem, 每个Item显示FileName 并且对应有一个打开按钮
                 RefreshDataFile(_DataFiles);
+
+                //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
                 CloseAllOtherWindow();
                 _CurrentOpenFile = null;
             }
         }
+
 
         private void RefreshDataFile(List<DataFile> files)
         {

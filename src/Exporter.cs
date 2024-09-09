@@ -8,8 +8,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace Wukong_PBData_ReadWriter_GUI.src
 {
@@ -324,6 +327,42 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             {
                 dataFile._FileData.WriteTo(output);
             }
+        }
+
+        public static Dictionary<string, string> GenerateFirstDescConfig(List<DataFile> fileList)
+        {
+            Dictionary<string, string> descConfig = new Dictionary<string, string>();
+
+            foreach (var file in fileList)
+            {
+                file.LoadData();
+                if (file._FileDataItemList != null && file._FileDataItemList.Count > 0)
+                {
+                    foreach (var data in file._FileDataItemList)
+                    {
+                        var properties = data._Data.GetType().GetProperties();
+                        foreach (var property in properties)
+                        {
+                            if (property.PropertyType == typeof(string))
+                            {
+                                var value = property.GetValue(data._Data, null) as string;
+                                if (ContainsChineseUsingRegex(value))
+                                {
+                                    descConfig.TryAdd(file._FileData.GetType().Name + "_" + data._ID, value);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return descConfig;
+        }
+
+        static bool ContainsChineseUsingRegex(string input)
+        {
+            // 使用正则表达式判断中文字符
+            return Regex.IsMatch(input, @"[\u4e00-\u9fff]");
         }
     }
 }
