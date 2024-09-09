@@ -4,14 +4,38 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Wukong_PBData_ReadWriter_GUI.src
 {
     public class DataItem
     {
         public int _ID;
-        public string _Desc;
+        public string _Desc
+        {
+            get
+            {
+                if(_File != null)
+                {
+                    var mainWindow = System.Windows.Application.Current.MainWindow as MainWindow;
+                    if(mainWindow._DescriptionConfig.TryGetValue(_File._FileData.GetType().Name + "_" + _ID, out var desc))
+                    {
+                        return desc;
+                    }
+                    //var windows = Application.Current.Windows;
+                }
+                return _desc;
+            }
+            set
+            {
+                _desc = value;
+            }
+        }
         public IMessage _Data;
+        public DataFile _File;
+        public bool _IsShow = true;
+
+        private string _desc;
 
         public List<DataPropertyItem> _DataPropertyItems;
 
@@ -29,6 +53,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                 dataPropertyItem._PropertyDesc = "";
                 dataPropertyItem._PropertyInfo = property;
                 dataPropertyItem._BelongData = _Data;
+                dataPropertyItem._DataItem = this;
                 _DataPropertyItems.Add(dataPropertyItem);
             }
         }

@@ -14,6 +14,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public string _FileName;
         public string _FilePath;
         public IMessage _FileData;
+        public bool _IsShow = true;
         public List<DataItem> _FileDataItemList;
 
         public void LoadData()
@@ -50,6 +51,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                                 DataItem dataItem = new DataItem();
                                 dataItem._ID = property.GetValue(item) as int? ?? 0;
                                 dataItem._Data = item as IMessage;
+                                dataItem._File = this;
                                 _FileDataItemList.Add(dataItem);
                             }
                         }

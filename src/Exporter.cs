@@ -273,13 +273,56 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                     var indexOf = f.FullName.LastIndexOf("\\");
                     filePathList.Add(f.FullName);
                 }
-                else
-                    File.Delete(f.FullName);
             }
             //获取子文件夹内的文件列表，递归遍历  
             foreach (DirectoryInfo dd in directs)
             {
                 Director(dd.FullName, list, filePathList);
+            }
+        }
+
+        public static void ExportDescriptionConfig(Dictionary<string, string> config, string path)
+        {
+            var json = JsonConvert.SerializeObject(config);
+
+            if(File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
+            File.WriteAllText(path, json);
+        }
+
+        public static Dictionary<string, string> ImportDescriptionConfig(string path)
+        {
+            var dict = new Dictionary<string, string>();
+            if (File.Exists(path))
+            {
+                var json = File.ReadAllText(path);
+
+                dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            }
+
+            return dict;
+        }
+
+        public static void SaveDataFile(string path, DataFile dataFile)
+        {
+            if (dataFile == null) return;
+
+            string dir = Path.GetDirectoryName(path);
+            string fileName = Path.GetFileNameWithoutExtension(path);
+
+            string realPath = Path.Combine(dir, (fileName + "_" + dataFile._FileName));
+
+            if (File.Exists(realPath))
+            {
+                File.Delete(realPath);
+            }
+
+            using (FileStream output = File.Create(realPath))
+            {
+                dataFile._FileData.WriteTo(output);
             }
         }
     }

@@ -11,7 +11,9 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="文件">
                 <MenuItem Header="打开Data目录" Click="OpenDataFolder" />
-                <MenuItem Header="保存" />
+                <MenuItem Header="另存为Data文件" Click="SaveAsNewDataFile" />
+                <MenuItem Header="导入备注配置" Click="ImportDescription" />
+                <MenuItem Header="导出备注配置" Click="ExportDescription" />
                 <MenuItem Header="退出" />
             </MenuItem>
         </Menu>
@@ -26,13 +28,13 @@
 
             <!-- 第一个区块 -->
             <StackPanel Grid.Column="0" Margin="5">
-                <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Text="搜索配表文件" Foreground="Gray" GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus"/>
+                <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Text="搜索配表文件" Foreground="Gray" GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus" TextChanged="FileSearch_TextChanged"/>
                 <ListBox Name="FileList" Width="Auto" Height="640" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
             </StackPanel>
 
             <!-- 第二个区块 -->
             <StackPanel Grid.Column="1" Margin="5">
-                <TextBox Width="Auto" Margin="0,0,0,10" Text="搜索ID或名称" Foreground="Gray"/>
+                <TextBox Name="ItemSearch" Width="Auto" Margin="0,0,0,10" Text="搜索ID或备注" Foreground="Gray" GotFocus="ItemSearch_GotFocus" LostFocus="ItemSearch_LostFocus" TextChanged="ItemSearch_TextChanged"/>
                 <ListBox Name="DataItemList" Width="Auto" Height="640" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
             </StackPanel>
 
