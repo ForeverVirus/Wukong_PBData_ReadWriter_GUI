@@ -10,6 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="vx.jpg" />
+    <None Remove="zfb.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Google.Protobuf">
       <HintPath>ref\Google.Protobuf.dll</HintPath>
     </Reference>
@@ -25,6 +30,15 @@
     <Reference Include="UnrealEngine.Runtime">
       <HintPath>ref\UnrealEngine.Runtime.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="vx.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="zfb.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

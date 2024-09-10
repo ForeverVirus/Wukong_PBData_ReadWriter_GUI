@@ -1,22 +1,17 @@
 ﻿using BtlShare;
 using Google.Protobuf;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Text;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Wukong_PBData_ReadWriter_GUI.src;
 
 namespace Wukong_PBData_ReadWriter_GUI
@@ -254,7 +249,113 @@ namespace Wukong_PBData_ReadWriter_GUI
                 listBoxItem.Content = item._FileName;
                 listBoxItem.MouseDoubleClick += new MouseButtonEventHandler(OpenDataFile);
                 listBoxItem.DataContext = item;
+
+                listBoxItem.ToolTip = item._Desc;
+                if(!string.IsNullOrEmpty(item._Desc))
+                {
+                    listBoxItem.Foreground = new SolidColorBrush(Colors.Blue);
+                }
+
+                listBoxItem.ContextMenu = new ContextMenu();
+                MenuItem menuItem = new MenuItem();
+                menuItem.Header = "备注";
+                string descKey = item._FileName;
+                Action descSuccessAction = () =>
+                {
+                    RefreshDataFile(files);
+                };
+                menuItem.DataContext = new Tuple<string, Action>(descKey, descSuccessAction);
+                menuItem.Click += OpenDescriptionWindow;
+                listBoxItem.ContextMenu.Items.Add(menuItem);
+
+                MenuItem topMenuItem = new MenuItem();
+                topMenuItem.Header = "置顶";
+                topMenuItem.DataContext = item;
+                topMenuItem.Click += SetTopFile;
+                listBoxItem.ContextMenu.Items.Add(topMenuItem);
+
                 FileList.Items.Add(listBoxItem);
+            }
+
+            RefreshTopFileList();
+        }
+
+        private void SetTopFile(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem == null) return;
+
+            var file = menuItem.DataContext as DataFile;
+
+            if (file == null) return;
+
+            file._IsTop = true;
+
+            RefreshTopFileList();
+        }
+        private void CancelTopFile(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem == null) return;
+
+            var file = menuItem.DataContext as DataFile;
+
+            if (file == null) return;
+
+            file._IsTop = false;
+
+            RefreshTopFileList();
+        }
+
+        private void RefreshTopFileList()
+        {
+            TopFileList.Items.Clear();
+            bool hasTop = false;
+            foreach(var file in _DataFiles)
+            {
+                if(file._IsTop)
+                {
+                    ListBoxItem listBoxItem = new ListBoxItem();
+                    listBoxItem.Content = file._FileName;
+                    listBoxItem.MouseDoubleClick += new MouseButtonEventHandler(OpenDataFile);
+                    listBoxItem.DataContext = file;
+
+                    listBoxItem.ToolTip = new System.Windows.Controls.ToolTip()
+                    {
+                        Content = new TextBlock
+                        {
+                            Text = file._Desc,
+                            TextWrapping = TextWrapping.Wrap
+                        }
+                    };
+
+                    if (!string.IsNullOrEmpty(file._Desc))
+                    {
+                        listBoxItem.Foreground = new SolidColorBrush(Colors.Blue);
+                    }
+
+                    listBoxItem.ContextMenu = new ContextMenu();
+                    MenuItem topMenuItem = new MenuItem();
+                    topMenuItem.Header = "取消置顶";
+                    topMenuItem.DataContext = file;
+                    topMenuItem.Click += CancelTopFile;
+                    listBoxItem.ContextMenu.Items.Add(topMenuItem);
+
+                    TopFileList.Items.Add(listBoxItem);
+                    hasTop = true;
+                }
+            }
+
+            if(!hasTop)
+            {
+                System.Windows.Controls.TextBlock topFileText = new System.Windows.Controls.TextBlock();
+                topFileText.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+                TopFileList.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+                topFileText.Text = "选中对应条目的右键置顶此区域";
+                TopFileList.Items.Add(topFileText);
+                //TopFileList.Visibility = Visibility.Hidden;
+                //Grid.SetRow(TopFileList, 2);
+                //Grid.SetRow(FileList, 1);
             }
         }
 
@@ -281,11 +382,27 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void OpenDataFile(object sender, MouseButtonEventArgs e)
         {
+
             ListBoxItem listBoxItem = sender as ListBoxItem;
             if(listBoxItem != null)
             {
-                DataFile file = listBoxItem.DataContext as DataFile;
-                OpenFile(file);
+                if (_CurrentOpenFile != null && _CurrentOpenFile._IsDirty)
+                {
+                    MessageBoxResult result = System.Windows.MessageBox.Show("切换data文件，当前修改将被还原", "确认", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                    // 根据用户的选择执行相应的逻辑
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        _CurrentOpenFile._IsDirty = false;
+                        DataFile file = listBoxItem.DataContext as DataFile;
+                        OpenFile(file);
+                    }
+                }
+                else
+                {
+                    DataFile file = listBoxItem.DataContext as DataFile;
+                    OpenFile(file);
+                }
             }
         }
 
@@ -298,6 +415,13 @@ namespace Wukong_PBData_ReadWriter_GUI
                 if (file._FileDataItemList != null && file._FileDataItemList.Count > 0)
                 {
                     RefreshFileDataItemList(file._FileDataItemList);
+                }
+                else
+                {
+                    if(DataItemList != null)
+                    {
+                        DataItemList.Items.Clear();
+                    }
                 }
                 _CurrentOpenFile = file;
                 var b1Index = file._FilePath.IndexOf("b1");
@@ -333,8 +457,112 @@ namespace Wukong_PBData_ReadWriter_GUI
                 menuItem.Click += OpenDescriptionWindow;
                 listItem.ContextMenu.Items.Add(menuItem);
 
+                MenuItem cloneMenuItem = new MenuItem();
+                cloneMenuItem.Header = "克隆";
+                cloneMenuItem.DataContext = item;
+                cloneMenuItem.Click += CloneMenuItem_Click;
+                listItem.ContextMenu.Items.Add(cloneMenuItem);
+
+                MenuItem delMenuItem = new MenuItem();
+                delMenuItem.Header = "删除";
+                delMenuItem.DataContext = item;
+                delMenuItem.Click += DelMenuItem_Click;
+                listItem.ContextMenu.Items.Add(delMenuItem);
+
                 DataItemList.Items.Add(listItem);
             }
+        }
+
+        private void CloneMenuItem_Click(object sender, EventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem == null) return;
+
+            var dataItem = menuItem.DataContext as DataItem;
+
+            if (dataItem == null) return;
+
+            if (_CurrentOpenFile == null)
+                return;
+
+            var bytes = dataItem._Data.ToByteArray();
+
+            var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile._FileData, null) as IList;
+
+            if (_CurrentOpenFile._FileDataItemList != null)
+            {
+                var newItemType = list.GetType().GetGenericArguments()[0];
+                if (newItemType != null)
+                {
+                    IMessage newItem = null;
+
+                    var parser = newItemType.GetProperty("Parser", BindingFlags.Static | BindingFlags.Public);
+                    if (parser != null)
+                    {
+                        try
+                        {
+                            MessageParser parserValue = parser.GetMethod.Invoke(null, null) as MessageParser;
+                            var message = parserValue.ParseFrom(bytes);
+                            if (message != null)
+                            {
+                                newItem = message;
+                            }
+                        }
+                        catch(Exception ex)
+                        {
+                            System.Windows.MessageBox.Show(ex.ToString());
+                        }
+                    }
+
+                    if (newItem == null)
+                        return;
+
+
+                    var property = newItemType.GetProperty("Id");
+                    if (property == null)
+                    {
+                        property = newItemType.GetProperty("ID");
+                    }
+
+                    if (property == null)
+                        return;
+
+                    DataItem newDataItem = new DataItem();
+                    newDataItem._ID = _CurrentOpenFile.GetNewID();
+                    property.SetValue(newItem, newDataItem._ID, null);
+                    _CurrentOpenFile._IDList.Add(newDataItem._ID);
+                    newDataItem._Data = newItem;
+                    newDataItem._File = _CurrentOpenFile;
+                    _CurrentOpenFile._FileDataItemList.Add(newDataItem);
+
+                    list.Add(newItem);
+
+                    _DescriptionConfig.Add(newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID, dataItem._Desc);
+
+                    RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
+                }
+            }
+        }
+
+        private void DelMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem == null) return;
+
+            var dataItem = menuItem.DataContext as DataItem;
+
+            if (dataItem == null) return;
+
+            var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile._FileData, null) as IList;
+
+            if (list == null || list.Count <= 0)
+                return;
+
+            list.Remove(dataItem._Data);
+
+            dataItem._File._FileDataItemList.Remove(dataItem);
+
+            RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
         }
 
         private void OpenDescriptionWindow(object sender, RoutedEventArgs e)
@@ -346,7 +574,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             Window window = new Window();
             window.Title = "备注";
-            window.Width = 300;
+            window.Width = 600;
             window.Height = 150;
             // 获取鼠标相对于主窗口的位置
             System.Windows.Point mousePosition = Mouse.GetPosition(this);
@@ -376,7 +604,11 @@ namespace Wukong_PBData_ReadWriter_GUI
             textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
             textBox.VerticalAlignment = VerticalAlignment.Top;
             textBox.Margin = new Thickness(100, 10, 0, 0);
-            textBox.Text = "这里写备注";
+            textBox.AcceptsReturn = true;
+            textBox.TextWrapping = TextWrapping.Wrap;
+            string desc = "这里写备注";
+            _DescriptionConfig.TryGetValue(data.Item1, out desc);
+            textBox.Text = desc;
             Grid.SetRow(textBox, 0);
             Grid.SetColumn(textBox, 1);
             grid.Children.Add(textBox);
@@ -398,7 +630,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 window.Close();
             };
             Grid.SetRow(button, 1);
-            Grid.SetColumn(button, 0);
+            Grid.SetColumn(button, 1);
             grid.Children.Add(button);
         }
 
@@ -434,19 +666,34 @@ namespace Wukong_PBData_ReadWriter_GUI
             foreach (var item in propertyItemList)
             {
                 System.Windows.Controls.Label label = new System.Windows.Controls.Label();
-                label.Content = $"{item._PropertyName}({item._PropertyDesc})";
-                label.ToolTip = item._PropertyDesc;
+                label.Content = $"{item._PropertyName}";
+
+                label.ToolTip = new System.Windows.Controls.ToolTip()
+                {
+                    Content = new TextBlock
+                    {
+                        Text = item._PropertyDesc,
+                        TextWrapping = TextWrapping.Wrap
+                    }
+                };
                 Grid.SetRow(label, rowIndex);
                 Grid.SetColumn(label, 0);
                 label.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 label.VerticalAlignment = VerticalAlignment.Top;
                 label.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                
 
                 label.ContextMenu = new ContextMenu();
                 MenuItem menuItem = new MenuItem();
                 menuItem.Header = "备注";
 
-                string descKey = item._DataItem._File._FileData.GetType().Name + "_" + item._DataItem._ID + "_" + item._PropertyName;
+                string descKey = item._DataItem._File._FileData.GetType().Name + "_" + item._PropertyName;
+
+                if (_DescriptionConfig.ContainsKey(descKey))
+                {
+                    label.Foreground = new SolidColorBrush(Colors.Blue);
+                }
+
                 Action descSuccessAction = () =>
                 {
                     RefreshDataItemList(propertyItemList);
@@ -517,7 +764,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                 button.VerticalAlignment = VerticalAlignment.Top;
                 button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
                 button.Click += new RoutedEventHandler(OpenNestedData);
-                button.DataContext = item._PropertyInfo.GetValue(item._BelongData);
+                var dataCtx = item._PropertyInfo.GetValue(item._BelongData);
+                if (dataCtx == null)
+                    dataCtx = Activator.CreateInstance(item._PropertyInfo.PropertyType);
+                button.DataContext = dataCtx;
                 Grid.SetRow(button, rowIndex);
                 Grid.SetColumn(button, 1);
                 curGrid.Children.Add(button);
@@ -544,21 +794,26 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 var item = textBox.DataContext as DataPropertyItem;
 
+
                 if(item._PropertyInfo.PropertyType == typeof(int))
-                {
-                    OnValueChanged(item, System.Convert.ToInt32(textBox.Text));
+                { 
+                    if(int.TryParse(textBox.Text, out var value))
+                        OnValueChanged(item, value);
                 }
                 else if(item._PropertyInfo.PropertyType == typeof(long))
                 {
-                    OnValueChanged(item, System.Convert.ToInt64(textBox.Text));
+                    if (long.TryParse(textBox.Text, out var value))
+                        OnValueChanged(item, value);
                 }
                 else if (item._PropertyInfo.PropertyType == typeof(float))
                 {
-                    OnValueChanged(item, System.Convert.ToSingle(textBox.Text));
+                    if (float.TryParse(textBox.Text, out var value))
+                        OnValueChanged(item, value);
                 }
                 else if (item._PropertyInfo.PropertyType == typeof(double))
                 {
-                    OnValueChanged(item, System.Convert.ToDouble(textBox.Text));
+                    if (double.TryParse(textBox.Text, out var value))
+                        OnValueChanged(item, value);
                 }
             }
         }
@@ -588,6 +843,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (item != null)
             {
                 item._PropertyInfo.SetValue(item._BelongData, value);
+                _CurrentOpenFile._IsDirty = true;
             }
         }
 
@@ -772,6 +1028,8 @@ namespace Wukong_PBData_ReadWriter_GUI
             data.Item1.Add(newItem);
 
             RefreshList(data.Item1, listType.Name, data.Item2);
+            _CurrentOpenFile._IsDirty = true;
+
             //data.Item2
 
 
@@ -804,6 +1062,8 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (list != null && index >= 0 && index < list.Count) 
             {
                 list[index] = value;
+
+                _CurrentOpenFile._IsDirty = true;
             }
         }
 
@@ -816,19 +1076,23 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 if (data.Item3 == typeof(int))
                 {
-                    OnListItemChanged(data.Item1, data.Item2, System.Convert.ToInt32(textBox.Text));
+                    if (int.TryParse(textBox.Text, out var value))
+                        OnListItemChanged(data.Item1, data.Item2, System.Convert.ToInt32(textBox.Text));
                 }
                 else if (data.Item3 == typeof(long))
                 {
-                    OnListItemChanged(data.Item1, data.Item2, System.Convert.ToInt64(textBox.Text));
+                    if (long.TryParse(textBox.Text, out var value))
+                        OnListItemChanged(data.Item1, data.Item2, System.Convert.ToInt64(textBox.Text));
                 }
                 else if (data.Item3 == typeof(float))
                 {
-                    OnListItemChanged(data.Item1, data.Item2, System.Convert.ToSingle(textBox.Text));
+                    if (float.TryParse(textBox.Text, out var value))
+                        OnListItemChanged(data.Item1, data.Item2, System.Convert.ToSingle(textBox.Text));
                 }
                 else if (data.Item3 == typeof(double))
                 {
-                    OnListItemChanged(data.Item1, data.Item2, System.Convert.ToDouble(textBox.Text));
+                    if (double.TryParse(textBox.Text, out var value))
+                        OnListItemChanged(data.Item1, data.Item2, System.Convert.ToDouble(textBox.Text));
                 }
             }
         }
@@ -839,6 +1103,11 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (button != null)
             {
                 var data = button.DataContext as IMessage;
+
+                if(data == null)
+                {
+                    data = Activator.CreateInstance(data.GetType()) as IMessage;
+                }
 
                 if (data != null)
                 {
@@ -973,7 +1242,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                 {
                     foreach (var file in _DataFiles)
                     {
-                        if(file._FileName.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase))
+                        if(file._FileName.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)
+                            || (!string.IsNullOrEmpty(file._Desc) && file._Desc.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)))
                         {
                             file._IsShow = true;
                         }
@@ -1066,15 +1336,135 @@ namespace Wukong_PBData_ReadWriter_GUI
             Grid grid = new Grid();
             window.Content = grid;
 
+            
+
+            // 创建Grid作为根布局容器
+            Grid rootGrid = new Grid();
+
+            // 创建ScrollViewer来支持上下滚动
+            ScrollViewer scrollViewer = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            };
+
+            // 创建StackPanel并设置其水平对齐方式为居中
+            StackPanel stackPanel = new StackPanel
+            {
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                Margin = new Thickness(10)
+            };
+
+            // 创建一个水平StackPanel来并排显示两个二维码图片
+            StackPanel qrCodePanel = new StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                Margin = new Thickness(0, 10, 0, 10)
+            };
+
+
+            // 创建二维码图片
+            System.Windows.Controls.Image qrCodeImage1 = new System.Windows.Controls.Image
+            {
+                Source = new BitmapImage(new Uri("pack://application:,,,/zfb.jpg")),
+                Width = 150,
+                Height = 150,
+                Margin = new Thickness(5)
+            };
+
+            System.Windows.Controls.Image qrCodeImage2 = new System.Windows.Controls.Image
+            {
+                Source = new BitmapImage(new Uri("pack://application:,,,/vx.jpg")),
+                Width = 150,
+                Height = 150,
+                Margin = new Thickness(5)
+            };
+
+            // 创建二维码文字
+            TextBlock qrCodeText = new TextBlock
+            {
+                Text = "这里是赛博乞讨\n如果你喜欢这个工具可以赞助一下，谢谢~",
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 20),
+                FontSize = 18
+            };
+
+
+            qrCodePanel.Children.Add(qrCodeImage1);
+            qrCodePanel.Children.Add(qrCodeImage2);
+
+            string helpText = "";
+
             if (File.Exists("README.md"))
             {
-                TextBlock textBlock = new TextBlock();
-                textBlock.Text = System.IO.File.ReadAllText("README.md");
-                textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-                textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-                grid.Children.Add(textBlock);
+                helpText = System.IO.File.ReadAllText("README.md");
             }
 
+            // 创建帮助文本内容
+            TextBlock helpTextBlock = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                Text = helpText
+            };
+
+            // 将控件添加到StackPanel
+            stackPanel.Children.Add(qrCodePanel);
+            stackPanel.Children.Add(qrCodeText);
+            stackPanel.Children.Add(helpTextBlock);
+
+            // 将StackPanel添加到ScrollViewer
+            scrollViewer.Content = stackPanel;
+
+            // 将ScrollViewer添加到Grid
+            rootGrid.Children.Add(scrollViewer);
+
+            // 将Grid设置为窗口的内容
+            window.Content = rootGrid;
+
+        }
+
+        private void AddNewDataItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (_CurrentOpenFile == null)
+                return;
+
+            var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile._FileData, null) as IList;
+
+            if(_CurrentOpenFile._FileDataItemList != null)
+            {
+                var newItemType = list.GetType().GetGenericArguments()[0];
+                if(newItemType != null)
+                {
+                    var newItem = Activator.CreateInstance(newItemType) as IMessage;
+
+                    if (newItem == null)
+                        return;
+
+                    var property = newItemType.GetProperty("Id");
+                    if (property == null)
+                    {
+                        property = newItemType.GetProperty("ID");
+                    }
+
+                    if (property == null)
+                        return;
+
+                    DataItem dataItem = new DataItem();
+                    dataItem._ID = _CurrentOpenFile.GetNewID();
+                    property.SetValue(newItem, dataItem._ID, null);
+                    _CurrentOpenFile._IDList.Add(dataItem._ID);
+                    dataItem._Data = newItem;
+                    dataItem._File = _CurrentOpenFile;
+                    _CurrentOpenFile._FileDataItemList.Add(dataItem);
+
+                    list.Add(newItem);
+
+                    //_CurrentOpenFile._ListPropertyInfo.SetValue(_CurrentOpenFile._FileData, list, null);
+
+                    RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
+                }
+            }
+            
         }
     }
 }

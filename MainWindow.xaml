@@ -32,22 +32,30 @@
             </Grid.ColumnDefinitions>
 
             <!-- 第一个区块 -->
-            <StackPanel Grid.Column="0" Margin="5">
-                <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Text="搜索配表文件" Foreground="Gray" GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus" TextChanged="FileSearch_TextChanged"/>
-                <ListBox Name="FileList" Width="Auto" Height="640" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-            </StackPanel>
+            <Grid Grid.Column="0" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Grid.Row="0" Text="搜索配表文件" Foreground="Gray" GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus" TextChanged="FileSearch_TextChanged"/>
+                <ListBox Name="TopFileList" Width="Auto" Height="120" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                </ListBox>
+                <ListBox Name="FileList" Width="Auto" Height="500" Grid.Row="2" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+            </Grid>
 
             <!-- 第二个区块 -->
             <StackPanel Grid.Column="1" Margin="5">
                 <TextBox Name="ItemSearch" Width="Auto" Margin="0,0,0,10" Text="搜索ID或备注" Foreground="Gray" GotFocus="ItemSearch_GotFocus" LostFocus="ItemSearch_LostFocus" TextChanged="ItemSearch_TextChanged"/>
-                <ListBox Name="DataItemList" Width="Auto" Height="640" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <ListBox Name="DataItemList" Width="Auto" Height="600" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <Button x:Name="AddNewDataItem" Content="新增一项" Width="Auto" Height="20" Click="AddNewDataItem_Click"/>
             </StackPanel>
 
             <!-- 第三个区块 -->
             <StackPanel Grid.Column="2" Margin="5">
                 <TextBlock Name="DataFilePath" Text="配置数据" FontWeight="Bold" Margin="0,0,0,10"/>
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="640">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="620">
                     <Grid Name="DataGrid" Width="640">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="320"/>

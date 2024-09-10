@@ -353,6 +353,10 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                                     descConfig.TryAdd(file._FileData.GetType().Name + "_" + data._ID, value);
                                     break;
                                 }
+                                if (IsPathFormat(value))
+                                {
+                                    descConfig.TryAdd(file._FileData.GetType().Name + "_" + data._ID, GetFileName(value));
+                                }
                             }
                         }
                     }
@@ -365,6 +369,19 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         {
             // 使用正则表达式判断中文字符
             return Regex.IsMatch(input, @"[\u4e00-\u9fff]");
+        }
+
+        static bool IsPathFormat(string path)
+        {
+            // 正则表达式匹配路径格式
+            string pattern = @"^[^/]*(/[^/ ]+)+/?$";
+            return Regex.IsMatch(path, pattern);
+        }
+
+        static string GetFileName(string path)
+        {
+            // 提取最后一个斜杠后的部分作为文件名
+            return path.Substring(path.LastIndexOf('.') + 1);
         }
     }
 }

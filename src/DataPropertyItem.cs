@@ -17,7 +17,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                 if(_DataItem != null && _DataItem._File != null)
                 {
                     var mainWindow = System.Windows.Application.Current.MainWindow as MainWindow;
-                    if(mainWindow._DescriptionConfig.TryGetValue(_DataItem._File._FileData.GetType().Name + "_" + _DataItem._ID + "_" + _PropertyName, out var desc))
+                    if(mainWindow._DescriptionConfig.TryGetValue(_DataItem._File._FileData.GetType().Name + "_" + _PropertyName, out var desc))
                     {
                         return desc;
                     }
