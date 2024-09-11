@@ -423,6 +423,9 @@ namespace Wukong_PBData_ReadWriter_GUI
                 var extension = Path.GetExtension(pakPath);
 
                 var newPath = dir + "\\" + fileName + ".bak" + extension;
+                if (File.Exists(newPath))
+                    File.Delete(newPath);
+
                 File.Move(pakPath, newPath);
             }
 
