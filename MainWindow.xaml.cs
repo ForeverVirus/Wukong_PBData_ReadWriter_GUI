@@ -1659,14 +1659,14 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                             if (data.Item2 != null)
                             {
-                                data.Item2.LoadData();
-                                RefreshDataItemList(data.Item2._DataPropertyItems);
+                                
 
                                 foreach (var item2 in data.Item1._FileDataItemList)
                                 {
                                     if (item2._ID == data.Item2._ID)
                                     {
-
+                                        item2.LoadData();
+                                        RefreshDataItemList(item2._DataPropertyItems);
                                         DataItemList.ScrollIntoView(item2._ListBoxItem);
                                         DataItemList.SelectedItem = item2._ListBoxItem;
                                         break;
