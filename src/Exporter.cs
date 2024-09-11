@@ -331,6 +331,44 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             }
         }
 
+        public static List<(string, DataFile, DataItem)> GlobalSearchCache(List<DataFile> fileList)
+        {
+            List<(string, DataFile, DataItem)> cache = new List<(string, DataFile, DataItem)>();
+
+            foreach (DataFile file in fileList)
+            {
+                file.LoadData();
+                if (file._FileDataItemList != null && file._FileDataItemList.Count > 0)
+                {
+                    foreach (var data in file._FileDataItemList)
+                    {
+                        string cacheKey = $"{file._FileName}({file._Desc})-{data._ID}({data._Desc})";
+                        cache.Add((cacheKey, file, data));
+
+                        //var properties = data._Data.GetType().GetProperties();
+                        //foreach (var property in properties)
+                        //{
+                        //    if (property.PropertyType == typeof(string))
+                        //    {
+                        //        var value = property.GetValue(data._Data, null) as string;
+                        //        if (ContainsChineseUsingRegex(value))
+                        //        {
+                        //            cache.Add(file._FileData.GetType().Name + "_" + data._ID);
+                        //            break;
+                        //        }
+                        //        if (IsPathFormat(value))
+                        //        {
+                        //            cache.Add(file._FileData.GetType().Name + "_" + data._ID);
+                        //        }
+                        //    }
+                        //}
+                    }
+                }
+            }
+
+            return cache;
+        }
+
         public static Dictionary<string, string> GenerateFirstDescConfig(List<DataFile> fileList)
         {
             Dictionary<string, string> descConfig = new Dictionary<string, string>();

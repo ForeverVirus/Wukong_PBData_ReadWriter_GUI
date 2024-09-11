@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace Wukong_PBData_ReadWriter_GUI.src
 {
@@ -39,6 +40,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public List<DataItem> _FileDataItemList;
         public PropertyInfo _ListPropertyInfo;
         public List<int> _IDList;
+        public ListBoxItem _ListBoxItem;
 
         public void LoadData()
         {

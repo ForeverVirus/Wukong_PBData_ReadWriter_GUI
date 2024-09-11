@@ -1,6 +1,8 @@
-﻿using BtlShare;
+﻿using ArchiveB1;
+using BtlShare;
 using Google.Protobuf;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -12,7 +14,10 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using System.Xml.Serialization;
 using Wukong_PBData_ReadWriter_GUI.src;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Wukong_PBData_ReadWriter_GUI
 {
@@ -24,10 +29,16 @@ namespace Wukong_PBData_ReadWriter_GUI
         public List<DataFile> _DataFiles = new List<DataFile>();
         public Dictionary<string, string> _DescriptionConfig = new Dictionary<string, string>();
         public DataFile _CurrentOpenFile = null;
+        public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
+        public DispatcherTimer _SearchTimer;
+        public string _CurrentOpenFolder = "";
 
         public MainWindow()
         {
             _DescriptionConfig = Exporter.ImportDescriptionConfig("DefaultDescConfig.json");
+            _SearchTimer = new DispatcherTimer();
+            _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
+            _SearchTimer.Tick += SearchTimer_Tick;
         }
 
         private void CloseAllOtherWindow(bool isClearDataGrid = true)
@@ -204,36 +215,42 @@ namespace Wukong_PBData_ReadWriter_GUI
             dialog.Description = "请选择Data数据文件夹";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                //将选择的文件夹路径显示在文本框中
-                string dir = dialog.SelectedPath;
-                List<string> fileNames = new List<string>();
-                List<string> filePaths = new List<string>();
-                Exporter.Director(dir + "\\", fileNames, filePaths);
+                RefreshFolderFile(dialog.SelectedPath);
 
-                _DataFiles.Clear();
-                int index = 0;
-                foreach(var item in fileNames)
-                {
-                    var isValid = Exporter.GetIsValidFile(item, filePaths[index]);
-                    if (!isValid)
-                    {
-                        index++;
-                        continue;
-                    }
-                    DataFile file = new DataFile();
-                    file._FileName = item;
-                    file._FilePath = filePaths[index];
-                    _DataFiles.Add(file);
-                    index++;
-                }
-
-                //把_DataFiles绑定到FileList上并自动生成 ListBoxItem, 每个Item显示FileName 并且对应有一个打开按钮
-                RefreshDataFile(_DataFiles);
-
+                _GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
                 //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
                 CloseAllOtherWindow();
                 _CurrentOpenFile = null;
             }
+        }
+
+        private void RefreshFolderFile(string dir)
+        {
+            //将选择的文件夹路径显示在文本框中
+            _CurrentOpenFolder = dir;
+            List<string> fileNames = new List<string>();
+            List<string> filePaths = new List<string>();
+            Exporter.Director(dir + "\\", fileNames, filePaths);
+
+            _DataFiles.Clear();
+            int index = 0;
+            foreach (var item in fileNames)
+            {
+                var isValid = Exporter.GetIsValidFile(item, filePaths[index]);
+                if (!isValid)
+                {
+                    index++;
+                    continue;
+                }
+                DataFile file = new DataFile();
+                file._FileName = item;
+                file._FilePath = filePaths[index];
+                _DataFiles.Add(file);
+                index++;
+            }
+
+            //把_DataFiles绑定到FileList上并自动生成 ListBoxItem, 每个Item显示FileName 并且对应有一个打开按钮
+            RefreshDataFile(_DataFiles);
         }
 
 
@@ -249,6 +266,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 listBoxItem.Content = item._FileName;
                 listBoxItem.MouseDoubleClick += new MouseButtonEventHandler(OpenDataFile);
                 listBoxItem.DataContext = item;
+                item._ListBoxItem = listBoxItem;
 
                 listBoxItem.ToolTip = item._Desc;
                 if(!string.IsNullOrEmpty(item._Desc))
@@ -273,6 +291,12 @@ namespace Wukong_PBData_ReadWriter_GUI
                 topMenuItem.DataContext = item;
                 topMenuItem.Click += SetTopFile;
                 listBoxItem.ContextMenu.Items.Add(topMenuItem);
+
+                MenuItem openFolderMenuItem = new MenuItem();
+                openFolderMenuItem.Header = "打开所在文件夹";
+                openFolderMenuItem.DataContext = item._FilePath;
+                openFolderMenuItem.Click += OpenContainingFolder_Click;
+                listBoxItem.ContextMenu.Items.Add(openFolderMenuItem);
 
                 FileList.Items.Add(listBoxItem);
             }
@@ -341,6 +365,12 @@ namespace Wukong_PBData_ReadWriter_GUI
                     topMenuItem.Click += CancelTopFile;
                     listBoxItem.ContextMenu.Items.Add(topMenuItem);
 
+                    MenuItem openFolderMenuItem = new MenuItem();
+                    openFolderMenuItem.Header = "打开所在文件夹";
+                    openFolderMenuItem.DataContext = file._FilePath;
+                    openFolderMenuItem.Click += OpenContainingFolder_Click;
+                    listBoxItem.ContextMenu.Items.Add(openFolderMenuItem);
+
                     TopFileList.Items.Add(listBoxItem);
                     hasTop = true;
                 }
@@ -357,6 +387,55 @@ namespace Wukong_PBData_ReadWriter_GUI
                 //Grid.SetRow(TopFileList, 2);
                 //Grid.SetRow(FileList, 1);
             }
+        }
+
+        private void OpenContainingFolder_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem && menuItem.DataContext is string filePath)
+            {
+                string folderPath = Path.GetDirectoryName(filePath);
+                if (Directory.Exists(folderPath))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "explorer.exe",
+                        Arguments = $"/select,\"{filePath}\"",
+                        UseShellExecute = true
+                    });
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("文件夹不存在", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void SaveDataFile(object sender, RoutedEventArgs e)
+        {
+
+            var pakPath = _CurrentOpenFile._FilePath;
+
+            //rename pakPath file if exist
+            if (File.Exists(pakPath))
+            {
+                var dir = Path.GetDirectoryName(pakPath);
+                var fileName = Path.GetFileNameWithoutExtension(pakPath);
+                var extension = Path.GetExtension(pakPath);
+
+                var newPath = dir + "\\" + fileName + ".bak" + extension;
+                File.Move(pakPath, newPath);
+            }
+
+            Exporter.SaveDataFile(pakPath, _CurrentOpenFile);
+
+            RefreshFolderFile(_CurrentOpenFolder);
+
+            //_GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
+            DataItemList.Items.Clear();
+            DataGrid.Children.Clear();
+            CloseAllOtherWindow();
+            _CurrentOpenFile = null;
+
         }
 
         private void SaveAsNewDataFile(object sender, RoutedEventArgs e)
@@ -444,6 +523,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 ListBoxItem listItem = new ListBoxItem();
                 listItem.Content = item._ID + "  " + item._Desc;
                 listItem.DataContext = item;
+                item._ListBoxItem = listItem;
                 listItem.MouseDoubleClick += new MouseButtonEventHandler(OpenDataItem);
                 listItem.ContextMenu = new ContextMenu();
                 MenuItem menuItem = new MenuItem();
@@ -1465,6 +1545,138 @@ namespace Wukong_PBData_ReadWriter_GUI
                 }
             }
             
+        }
+
+        private void GlobalSearchBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (GlobalSearchBox.Text == "全局搜索")
+            {
+                GlobalSearchBox.Text = "";
+                GlobalSearchBox.Foreground = System.Windows.Media.Brushes.Black;
+            }
+        }
+
+        private void GlobalSearchBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(GlobalSearchBox.Text))
+            {
+                GlobalSearchBox.Text = "全局搜索";
+                GlobalSearchBox.Foreground = System.Windows.Media.Brushes.Gray;
+            }
+        }
+
+        private void GlobalSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _SearchTimer.Stop();
+            _SearchTimer.Start();
+
+            
+        }
+        private void SearchTimer_Tick(object sender, EventArgs e)
+        {
+            _SearchTimer.Stop();
+
+            string searchText = GlobalSearchBox.Text;
+
+            if (SearchResultsList == null) return;
+
+            // 清空之前的搜索结果
+            SearchResultsList.Items.Clear();
+
+            if (!string.IsNullOrWhiteSpace(searchText) && searchText != "全局搜索")
+            {
+
+                foreach (var item in _GlobalSearchCache)
+                {
+                    if (item.Item1.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ListBoxItem listItem = new ListBoxItem();
+                        listItem.Content = item.Item1;
+                        listItem.DataContext = new Tuple<DataFile, DataItem>(item.Item2, item.Item3);
+                        listItem.MouseDoubleClick += OpenGlobalSearchItem;
+                        SearchResultsList.Items.Add(listItem);
+                    }
+                }
+
+                // 展开搜索结果
+                SearchResultsExpander.Visibility = Visibility.Visible;
+                SearchResultsExpander.IsExpanded = true;
+                this.Height = 920;
+            }
+            else
+            {
+                // 折叠搜索结果
+                SearchResultsExpander.Visibility = Visibility.Collapsed;
+                this.Height = 720;
+            }
+        }
+
+        private void OpenGlobalSearchItem(object sender, MouseButtonEventArgs e)
+        {
+            var listBoxItem = sender as ListBoxItem;
+            if (listBoxItem != null)
+            {
+                var data = listBoxItem.DataContext as Tuple<DataFile, DataItem>;
+                if (data != null)
+                {
+                    if (data.Item1 != null)
+                    {
+                        if (_CurrentOpenFile != null && _CurrentOpenFile._IsDirty)
+                        {
+                            MessageBoxResult result = System.Windows.MessageBox.Show("切换data文件，当前修改将被还原", "确认", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                            // 根据用户的选择执行相应的逻辑
+                            if (result == MessageBoxResult.Yes)
+                            {
+                                _CurrentOpenFile._IsDirty = false;
+                                OpenFile(data.Item1);
+
+                                if (data.Item2 != null)
+                                {
+                                    data.Item2.LoadData();
+                                    RefreshDataItemList(data.Item2._DataPropertyItems);
+
+                                    foreach (var item2 in data.Item1._FileDataItemList)
+                                    {
+                                        if (item2._ID == data.Item2._ID)
+                                        {
+
+                                            DataItemList.ScrollIntoView(item2._ListBoxItem);
+                                            DataItemList.SelectedItem = item2._ListBoxItem;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            DataFile file = listBoxItem.DataContext as DataFile;
+                            OpenFile(data.Item1);
+
+                            if (data.Item2 != null)
+                            {
+                                data.Item2.LoadData();
+                                RefreshDataItemList(data.Item2._DataPropertyItems);
+
+                                foreach (var item2 in data.Item1._FileDataItemList)
+                                {
+                                    if (item2._ID == data.Item2._ID)
+                                    {
+
+                                        DataItemList.ScrollIntoView(item2._ListBoxItem);
+                                        DataItemList.SelectedItem = item2._ListBoxItem;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        FileList.ScrollIntoView(data.Item1._ListBoxItem);
+                        FileList.SelectedItem = data.Item1._ListBoxItem;
+                    }
+                }
+            }
         }
     }
 }

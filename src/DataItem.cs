@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Wukong_PBData_ReadWriter_GUI.src
 {
@@ -34,6 +35,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public IMessage _Data;
         public DataFile _File;
         public bool _IsShow = true;
+        public ListBoxItem _ListBoxItem;
 
         private string _desc;
 

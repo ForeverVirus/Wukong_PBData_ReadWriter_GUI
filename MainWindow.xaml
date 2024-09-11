@@ -6,11 +6,34 @@
         xmlns:local="clr-namespace:Wukong_PBData_ReadWriter_GUI"
         mc:Ignorable="d"
         Title="黑猴配表编辑器" Height="720" Width="1280">
+    <Window.Resources>
+        <!-- 自定义ListBoxItem的选中样式 -->
+        <Style x:Key="CustomListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border Name="Border" Padding="2" SnapsToDevicePixels="true">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="true">
+                                <Setter TargetName="Border" Property="Background" Value="LightBlue" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="Border" Property="Background" Value="LightGray" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <DockPanel>
         <!-- 顶部菜单栏 -->
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="文件">
                 <MenuItem Header="打开Data目录" Click="OpenDataFolder" />
+                <MenuItem Header="保存Data文件" Click="SaveDataFile" />
                 <MenuItem Header="另存为Data文件" Click="SaveAsNewDataFile" />
                 <MenuItem Header="导入备注配置" Click="ImportDescription" />
                 <MenuItem Header="导出备注配置" Click="ExportDescription" />
@@ -23,6 +46,13 @@
             </MenuItem>
         </Menu>
 
+        <StackPanel DockPanel.Dock="Top" Margin="5">
+            <TextBox Name="GlobalSearchBox" Width="Auto" Margin="0,0,0,10" Text="全局搜索" Foreground="Gray" GotFocus="GlobalSearchBox_GotFocus" LostFocus="GlobalSearchBox_LostFocus" TextChanged="GlobalSearchBox_TextChanged"/>
+            <Expander Name="SearchResultsExpander" Header="搜索结果" IsExpanded="False" Visibility="Collapsed">
+                <ListBox Name="SearchResultsList" Width="Auto" Height="200" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+            </Expander>
+        </StackPanel>
+
         <!-- 主体内容 -->
         <Grid>
             <Grid.ColumnDefinitions>
@@ -30,24 +60,23 @@
                 <ColumnDefinition Width="3*"/>
                 <ColumnDefinition Width="5*"/>
             </Grid.ColumnDefinitions>
-
             <!-- 第一个区块 -->
-            <Grid Grid.Column="0" Margin="5">
-                <Grid.RowDefinitions>
+            <StackPanel Grid.Column="0" Margin="5">
+                <!--<Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+                </Grid.RowDefinitions>-->
                 <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Grid.Row="0" Text="搜索配表文件" Foreground="Gray" GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus" TextChanged="FileSearch_TextChanged"/>
                 <ListBox Name="TopFileList" Width="Auto" Height="120" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto">
                 </ListBox>
-                <ListBox Name="FileList" Width="Auto" Height="500" Grid.Row="2" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-            </Grid>
+                <ListBox Name="FileList" Width="Auto" Height="440" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.RowSpan="2" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}"/>
+            </StackPanel>
 
             <!-- 第二个区块 -->
             <StackPanel Grid.Column="1" Margin="5">
                 <TextBox Name="ItemSearch" Width="Auto" Margin="0,0,0,10" Text="搜索ID或备注" Foreground="Gray" GotFocus="ItemSearch_GotFocus" LostFocus="ItemSearch_LostFocus" TextChanged="ItemSearch_TextChanged"/>
-                <ListBox Name="DataItemList" Width="Auto" Height="600" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <ListBox Name="DataItemList" Width="Auto" Height="540" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}"/>
                 <Button x:Name="AddNewDataItem" Content="新增一项" Width="Auto" Height="20" Click="AddNewDataItem_Click"/>
             </StackPanel>
 
@@ -55,7 +84,7 @@
             <StackPanel Grid.Column="2" Margin="5">
                 <TextBlock Name="DataFilePath" Text="配置数据" FontWeight="Bold" Margin="0,0,0,10"/>
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="620">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="600">
                     <Grid Name="DataGrid" Width="640">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="320"/>
