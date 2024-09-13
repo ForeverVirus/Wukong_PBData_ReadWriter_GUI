@@ -2,6 +2,7 @@
 using BtlShare;
 using Google.Protobuf;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ResB1;
 using System;
 using System.Collections.Generic;
@@ -22,15 +23,15 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public static Assembly s_runtime = Assembly.Load("Protobuf.Runtime");
 
         public static Dictionary<string, (Type, Assembly)> s_speFileTypeMapping = new Dictionary<string, (Type, Assembly)>()
-    {
-        {"FUStBeAttackedInfoOldDesc.data", (typeof(FUStBeAttackedInfoDesc), s_protobufDB)},
-        {"FUStBeAttackedInfoOldDesc1.data", (typeof(FUStBeAttackedInfoDesc), s_protobufDB)},
-        {"EndingCredits_EndA.data", (typeof(EndingCreditsData), s_runtime) },
-        {"EndingCredits_EndA_Other.data", (typeof(EndingCreditsData), s_runtime) },
-        {"EndingCredits_EndB.data", (typeof(EndingCreditsData), s_runtime) },
-        {"EndingCredits_EndB_Other.data", (typeof(EndingCreditsData), s_runtime) },
-        {"FUStUnitCommOverrideDesc.data", (typeof(FUStUnitCommDesc), s_protobufDB) },
-    };
+        {
+            {"FUStBeAttackedInfoOldDesc.data", (typeof(FUStBeAttackedInfoDesc), s_protobufDB)},
+            {"FUStBeAttackedInfoOldDesc1.data", (typeof(FUStBeAttackedInfoDesc), s_protobufDB)},
+            {"EndingCredits_EndA.data", (typeof(EndingCreditsData), s_runtime) },
+            {"EndingCredits_EndA_Other.data", (typeof(EndingCreditsData), s_runtime) },
+            {"EndingCredits_EndB.data", (typeof(EndingCreditsData), s_runtime) },
+            {"EndingCredits_EndB_Other.data", (typeof(EndingCreditsData), s_runtime) },
+            {"FUStUnitCommOverrideDesc.data", (typeof(FUStUnitCommDesc), s_protobufDB) },
+        };
 
         public static bool InputJson2Data(string filePath, string outputPath)
         {
@@ -394,6 +395,14 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                                 if (IsPathFormat(value))
                                 {
                                     descConfig.TryAdd(file._FileData.GetType().Name + "_" + data._ID, GetFileName(value));
+                                }
+                            }
+                            if (property.PropertyType == typeof(int))
+                            {
+                                var value = (int)property.GetValue(data._Data, null);
+                                if (property.Name.Contains("ID", StringComparison.OrdinalIgnoreCase) && !property.Name.Equals("ID", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    descConfig.TryAdd(file._FileData.GetType().Name + "_" + data._ID, value.ToString());
                                 }
                             }
                         }

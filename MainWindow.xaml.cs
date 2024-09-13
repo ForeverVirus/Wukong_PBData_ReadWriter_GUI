@@ -32,6 +32,8 @@ namespace Wukong_PBData_ReadWriter_GUI
         public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
         public DispatcherTimer _SearchTimer;
         public string _CurrentOpenFolder = "";
+        public string version = "V1.3.0";
+        public MergeWindow _MergeWindow;
 
         public MainWindow()
         {
@@ -39,6 +41,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             _SearchTimer = new DispatcherTimer();
             _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
             _SearchTimer.Tick += SearchTimer_Tick;
+            this.Title = "黑猴配表编辑器" + version;
         }
 
         private void CloseAllOtherWindow(bool isClearDataGrid = true)
@@ -107,39 +110,39 @@ namespace Wukong_PBData_ReadWriter_GUI
             grid.Children.Add( textBlock );
         }
 
-        //private void UncompressPak(object sender, RoutedEventArgs e)
-        //{
-        //    Window window = new Window();
-        //    window.Title = "解包PAK";
-        //    window.Width = 600;
-        //    window.Height = 400;
-        //    window.AllowDrop = true;
-        //    window.Drop += Window_Drop_Uncompress;
-        //    window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        //    window.Show();
+        private void UncompressPak(object sender, RoutedEventArgs e)
+        {
+            Window window = new Window();
+            window.Title = "解包PAK";
+            window.Width = 600;
+            window.Height = 400;
+            window.AllowDrop = true;
+            window.Drop += Window_Drop_Uncompress;
+            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            window.Show();
 
-        //    Grid grid = new Grid();
-        //    window.Content = grid;
+            Grid grid = new Grid();
+            window.Content = grid;
 
-        //    TextBlock textBlock = new TextBlock();
-        //    textBlock.Text = "拖拽要解包的Pak文件夹到此处";
-        //    textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-        //    textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-        //    grid.Children.Add(textBlock);
-        //}
+            TextBlock textBlock = new TextBlock();
+            textBlock.Text = "拖拽要解包的Pak文件夹到此处";
+            textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+            textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+            grid.Children.Add(textBlock);
+        }
 
-        //private void Window_Drop_Uncompress(object sender, System.Windows.DragEventArgs e)
-        //{
-        //    // 检查拖拽的数据是否是文件夹
-        //    if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
-        //    {
-        //        // 获取拖拽的文件路径
-        //        string[] draggedItems = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
+        private void Window_Drop_Uncompress(object sender, System.Windows.DragEventArgs e)
+        {
+            // 检查拖拽的数据是否是文件夹
+            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
+            {
+                // 获取拖拽的文件路径
+                string[] draggedItems = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
 
 
-        //        RunBatFileWithFolder(@"ref\\make_pak_uncompressed.bat", draggedItems[0]);
-        //    }
-        //}
+                RunBatFileWithFolder(@"ref\\make_pak_uncompressed.bat", draggedItems[0]);
+            }
+        }
 
         private void Window_Drop(object sender, System.Windows.DragEventArgs e)
         {
@@ -193,6 +196,19 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 // 显示输出或错误信息
                 System.Windows.MessageBox.Show($"Output: {output}\nError: {error}");
+            }
+        }
+
+        private void CreateUnpackWindow(object sender, RoutedEventArgs e)
+        {
+            if (_MergeWindow == null || !_MergeWindow.IsVisible)
+            {
+                _MergeWindow = new MergeWindow();
+                _MergeWindow.Show();
+            }
+            else
+            {
+                _MergeWindow.Activate();
             }
         }
 
@@ -1680,6 +1696,12 @@ namespace Wukong_PBData_ReadWriter_GUI
                     }
                 }
             }
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            CloseAllOtherWindow();
+            this.Close();
         }
     }
 }

@@ -62,4 +62,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Page Update="MainWindow - 复制.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
 </Project>

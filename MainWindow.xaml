@@ -35,10 +35,15 @@
                 <MenuItem Header="打开Data目录" Click="OpenDataFolder" />
                 <MenuItem Header="保存Data文件" Click="SaveDataFile" />
                 <MenuItem Header="另存为Data文件" Click="SaveAsNewDataFile" />
+                <Separator />
                 <MenuItem Header="导入备注配置" Click="ImportDescription" />
                 <MenuItem Header="导出备注配置" Click="ExportDescription" />
+                <Separator />
                 <MenuItem Header="生成PAK" Click="CreatePak" />
-                <MenuItem Header="退出" />
+                <MenuItem Header="解包PAK" Click="UncompressPak" />
+                <MenuItem Header="合并PAK" Click="CreateUnpackWindow" />
+                <Separator />
+                <MenuItem Header="退出" Click="Close_Click" />
             </MenuItem>
             <MenuItem Header="帮助">
                 <MenuItem Header="查看帮助" Click="HelpMenuItem_Click"/>
