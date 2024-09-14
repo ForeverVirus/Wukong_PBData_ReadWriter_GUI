@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace Wukong_PBData_ReadWriter_GUI
+namespace Wukong_PBData_ReadWriter_GUI.Views
 {
     /// <summary>
     /// ConflictWindow.xaml 的交互逻辑
