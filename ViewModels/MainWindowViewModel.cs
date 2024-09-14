@@ -20,24 +20,7 @@ public partial class MainWindowViewModel : ObservableObject
     public void ChangeOpenFolder(string dir)
     {
         CurrentOpenFolder = dir;
-        _dataFiles = GetAllDataFiles(new DirectoryInfo(dir));
+        _dataFiles = DataFileHelper.GetAllDataFiles(new DirectoryInfo(dir));
         OnPropertyChanged(nameof(FilteredDataFiles));
     }
-
-    private List<DataFile> GetAllDataFiles(DirectoryInfo dirInfo)
-    {
-        var res = dirInfo.GetFiles().Where(file => file.Extension == ".data")
-            .Select(fi => new DataFile(fi)).ToList();
-
-        foreach (var subDirInfo in dirInfo.GetDirectories())
-        {
-            res.AddRange(GetAllDataFiles(subDirInfo));
-        }
-
-        return res;
-    }
-
-    [ObservableProperty] private DataFile? _selectedFile;
-
-    [ObservableProperty] private DataItem? _selectedItem;
 }

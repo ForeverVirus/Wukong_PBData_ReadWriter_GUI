@@ -9,7 +9,7 @@ using ResB1;
 
 namespace Wukong_PBData_ReadWriter_GUI.Models
 {
-    public class DataFileHelper
+    public static class DataFileHelper
     {
         public static Dictionary<string, string> DescriptionConfig { get; set; } = new();
         private static Assembly s_protobufDB = Assembly.Load("GSE.ProtobufDB");
@@ -27,6 +27,19 @@ namespace Wukong_PBData_ReadWriter_GUI.Models
                 { "FUStUnitCommOverrideDesc.data", (typeof(FUStUnitCommDesc), s_protobufDB) },
             };
 
+        public static List<DataFile> GetAllDataFiles(DirectoryInfo dirInfo)
+        {
+            var res = dirInfo.GetFiles().Where(file => file.Extension == ".data")
+                .Select(fi => new DataFile(fi)).ToList();
+
+            foreach (var subDirInfo in dirInfo.GetDirectories())
+            {
+                res.AddRange(GetAllDataFiles(subDirInfo));
+            }
+
+            return res;
+        }
+        
         public static bool InputJson2Data(string filePath, string outputPath)
         {
             var json = File.ReadAllText(filePath);
@@ -306,22 +319,22 @@ namespace Wukong_PBData_ReadWriter_GUI.Models
 
         public static void SaveDataFile(string path, DataFile dataFile)
         {
-            if (dataFile == null) return;
-
-            string dir = Path.GetDirectoryName(path);
-
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-
-            using var output = File.Create(path);
-            dataFile.FileData.WriteTo(output);
+            // if (dataFile == null) return;
+            //
+            // string dir = Path.GetDirectoryName(path);
+            //
+            // if (!Directory.Exists(dir))
+            // {
+            //     Directory.CreateDirectory(dir);
+            // }
+            //
+            // if (File.Exists(path))
+            // {
+            //     File.Delete(path);
+            // }
+            //
+            // using var output = File.Create(path);
+            // dataFile.FileData.WriteTo(output);
         }
 
         // public static List<(string, DataFile, DataItem)> GlobalSearchCache(List<DataFile> fileList)

@@ -23,6 +23,7 @@ using Image = System.Windows.Controls.Image;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using KeyEventHandler = System.Windows.Input.KeyEventHandler;
 using Label = System.Windows.Controls.Label;
+using ListBox = System.Windows.Controls.ListBox;
 using MessageBox = System.Windows.MessageBox;
 using Orientation = System.Windows.Controls.Orientation;
 using Point = System.Windows.Point;
@@ -529,40 +530,40 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
 
         private void RefreshFileDataItemList(List<DataItem> list)
         {
-            if (DataItemList == null) return;
-            DataItemList.Items.Clear();
-            foreach (var item in list)
-            {
-                if (!item._IsShow) continue;
-
-                ListBoxItem listItem = new ListBoxItem();
-                listItem.Content = item.Id + "  " + item.Desc;
-                listItem.DataContext = item;
-                item._ListBoxItem = listItem;
-                listItem.MouseDoubleClick += new MouseButtonEventHandler(OpenDataItem);
-                listItem.ContextMenu = new ContextMenu();
-                MenuItem menuItem = new MenuItem();
-                menuItem.Header = "备注";
-                string descKey = item._File.FileData.GetType().Name + "_" + item.Id;
-                Action descSuccessAction = () => { RefreshFileDataItemList(list); };
-                menuItem.DataContext = new Tuple<string, Action>(descKey, descSuccessAction);
-                menuItem.Click += OpenDescriptionWindow;
-                listItem.ContextMenu.Items.Add(menuItem);
-
-                MenuItem cloneMenuItem = new MenuItem();
-                cloneMenuItem.Header = "克隆";
-                cloneMenuItem.DataContext = item;
-                cloneMenuItem.Click += CloneMenuItem_Click;
-                listItem.ContextMenu.Items.Add(cloneMenuItem);
-
-                MenuItem delMenuItem = new MenuItem();
-                delMenuItem.Header = "删除";
-                delMenuItem.DataContext = item;
-                delMenuItem.Click += DelMenuItem_Click;
-                listItem.ContextMenu.Items.Add(delMenuItem);
-
-                DataItemList.Items.Add(listItem);
-            }
+            // if (DataItemList == null) return;
+            // DataItemList.Items.Clear();
+            // foreach (var item in list)
+            // {
+            //     if (!item._IsShow) continue;
+            //
+            //     ListBoxItem listItem = new ListBoxItem();
+            //     listItem.Content = item.Id + "  " + item.Desc;
+            //     listItem.DataContext = item;
+            //     item._ListBoxItem = listItem;
+            //     listItem.MouseDoubleClick += new MouseButtonEventHandler(OpenDataItem);
+            //     listItem.ContextMenu = new ContextMenu();
+            //     MenuItem menuItem = new MenuItem();
+            //     menuItem.Header = "备注";
+            //     string descKey = item._File.FileData.GetType().Name + "_" + item.Id;
+            //     Action descSuccessAction = () => { RefreshFileDataItemList(list); };
+            //     menuItem.DataContext = new Tuple<string, Action>(descKey, descSuccessAction);
+            //     menuItem.Click += OpenDescriptionWindow;
+            //     listItem.ContextMenu.Items.Add(menuItem);
+            //
+            //     MenuItem cloneMenuItem = new MenuItem();
+            //     cloneMenuItem.Header = "克隆";
+            //     cloneMenuItem.DataContext = item;
+            //     cloneMenuItem.Click += CloneMenuItem_Click;
+            //     listItem.ContextMenu.Items.Add(cloneMenuItem);
+            //
+            //     MenuItem delMenuItem = new MenuItem();
+            //     delMenuItem.Header = "删除";
+            //     delMenuItem.DataContext = item;
+            //     delMenuItem.Click += DelMenuItem_Click;
+            //     listItem.ContextMenu.Items.Add(delMenuItem);
+            //
+            //     DataItemList.Items.Add(listItem);
+            // }
         }
 
         private void CloneMenuItem_Click(object sender, EventArgs e)
@@ -619,22 +620,22 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
             //         if (property == null)
             //             return;
 
-                    // DataItem newDataItem = new DataItem();
-                    // newDataItem.Id = _CurrentOpenFile.GetNewID();
-                    // property.SetValue(newItem, newDataItem.Id, null);
-                    // _CurrentOpenFile._IDList.Add(newDataItem.Id);
-                    // newDataItem._Data = newItem;
-                    // newDataItem._File = _CurrentOpenFile;
-                    // _CurrentOpenFile.DataItemList.Add(newDataItem);
-                    //
-                    // list.Add(newItem);
+            // DataItem newDataItem = new DataItem();
+            // newDataItem.Id = _CurrentOpenFile.GetNewID();
+            // property.SetValue(newItem, newDataItem.Id, null);
+            // _CurrentOpenFile._IDList.Add(newDataItem.Id);
+            // newDataItem._Data = newItem;
+            // newDataItem._File = _CurrentOpenFile;
+            // _CurrentOpenFile.DataItemList.Add(newDataItem);
+            //
+            // list.Add(newItem);
 
-                    // DataFileHelper.DescriptionConfig.Add(
-                    //     newDataItem._File.FileData.GetType().Name + "_" + newDataItem.Id,
-                    //     dataItem.Desc);
+            // DataFileHelper.DescriptionConfig.Add(
+            //     newDataItem._File.FileData.GetType().Name + "_" + newDataItem.Id,
+            //     dataItem.Desc);
 
-                    // RefreshFileDataItemList(_CurrentOpenFile.DataItemList);
-                // }
+            // RefreshFileDataItemList(_CurrentOpenFile.DataItemList);
+            // }
             // }
         }
 
@@ -807,7 +808,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
                 numberTextBox.PreviewTextInput += new TextCompositionEventHandler(NumericTextBox_PreviewTextInput);
                 numberTextBox.PreviewKeyDown += new KeyEventHandler(NumericTextBox_PreviewKeyDown);
                 numberTextBox.LostFocus += new RoutedEventHandler(NumericTextBox_LostFocus);
-                numberTextBox.Text = item._PropertyInfo.GetValue(item._BelongData).ToString();
+                numberTextBox.Text = item.PropertyInfo.GetValue(item.BelongData).ToString();
                 numberTextBox.HorizontalAlignment = HorizontalAlignment.Left;
                 numberTextBox.VerticalAlignment = VerticalAlignment.Top;
                 numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
@@ -820,7 +821,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
             else if (valueType == typeof(string))
             {
                 TextBox stringTextBox = new TextBox();
-                stringTextBox.Text = item._PropertyInfo.GetValue(item._BelongData).ToString();
+                stringTextBox.Text = item.PropertyInfo.GetValue(item.BelongData).ToString();
                 stringTextBox.HorizontalAlignment = HorizontalAlignment.Left;
                 stringTextBox.VerticalAlignment = VerticalAlignment.Top;
                 stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
@@ -838,7 +839,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
                 comboBox.VerticalAlignment = VerticalAlignment.Top;
                 comboBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
                 comboBox.ItemsSource = Enum.GetValues(valueType);
-                comboBox.SelectedItem = item._PropertyInfo.GetValue(item._BelongData);
+                comboBox.SelectedItem = item.PropertyInfo.GetValue(item.BelongData);
                 comboBox.DataContext = item;
                 comboBox.SelectionChanged += ComboBox_SelectionChanged;
                 Grid.SetRow(comboBox, rowIndex);
@@ -853,9 +854,9 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
                 button.VerticalAlignment = VerticalAlignment.Top;
                 button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
                 button.Click += new RoutedEventHandler(OpenNestedData);
-                var dataCtx = item._PropertyInfo.GetValue(item._BelongData);
+                var dataCtx = item.PropertyInfo.GetValue(item.BelongData);
                 if (dataCtx == null)
-                    dataCtx = Activator.CreateInstance(item._PropertyInfo.PropertyType);
+                    dataCtx = Activator.CreateInstance(item.PropertyInfo.PropertyType);
                 button.DataContext = dataCtx;
                 Grid.SetRow(button, rowIndex);
                 Grid.SetColumn(button, 1);
@@ -869,7 +870,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
                 button.VerticalAlignment = VerticalAlignment.Top;
                 button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
                 button.Click += new RoutedEventHandler(OpenListData);
-                button.DataContext = item._PropertyInfo.GetValue(item._BelongData);
+                button.DataContext = item.PropertyInfo.GetValue(item.BelongData);
                 Grid.SetRow(button, rowIndex);
                 Grid.SetColumn(button, 1);
                 curGrid.Children.Add(button);
@@ -884,22 +885,22 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
                 var item = textBox.DataContext as DataPropertyItem;
 
 
-                if (item._PropertyInfo.PropertyType == typeof(int))
+                if (item.PropertyInfo.PropertyType == typeof(int))
                 {
                     if (int.TryParse(textBox.Text, out var value))
                         OnValueChanged(item, value);
                 }
-                else if (item._PropertyInfo.PropertyType == typeof(long))
+                else if (item.PropertyInfo.PropertyType == typeof(long))
                 {
                     if (long.TryParse(textBox.Text, out var value))
                         OnValueChanged(item, value);
                 }
-                else if (item._PropertyInfo.PropertyType == typeof(float))
+                else if (item.PropertyInfo.PropertyType == typeof(float))
                 {
                     if (float.TryParse(textBox.Text, out var value))
                         OnValueChanged(item, value);
                 }
-                else if (item._PropertyInfo.PropertyType == typeof(double))
+                else if (item.PropertyInfo.PropertyType == typeof(double))
                 {
                     if (double.TryParse(textBox.Text, out var value))
                         OnValueChanged(item, value);
@@ -931,7 +932,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
         {
             if (item != null)
             {
-                item._PropertyInfo.SetValue(item._BelongData, value);
+                item.PropertyInfo.SetValue(item.BelongData, value);
                 _CurrentOpenFile._IsDirty = true;
             }
         }
@@ -1446,30 +1447,6 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
             //         RefreshFileDataItemList(_CurrentOpenFile.DataItemList);
             //     }
             // }
-        }
-
-        private void GlobalSearchBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (GlobalSearchBox.Text == "全局搜索")
-            {
-                GlobalSearchBox.Text = "";
-                GlobalSearchBox.Foreground = Brushes.Black;
-            }
-        }
-
-        private void GlobalSearchBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(GlobalSearchBox.Text))
-            {
-                GlobalSearchBox.Text = "全局搜索";
-                GlobalSearchBox.Foreground = Brushes.Gray;
-            }
-        }
-
-        private void GlobalSearchBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            _SearchTimer.Stop();
-            _SearchTimer.Start();
         }
 
         private void SearchTimer_Tick(object sender, EventArgs e)
