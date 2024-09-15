@@ -1,57 +1,46 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using Google.Protobuf;
 using Wukong_PBData_ReadWriter_GUI.Models;
 using Wukong_PBData_ReadWriter_GUI.ViewModels;
-using Application = System.Windows.Application;
-using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
 using ComboBox = System.Windows.Controls.ComboBox;
 using DataFormats = System.Windows.DataFormats;
 using DragEventArgs = System.Windows.DragEventArgs;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using Image = System.Windows.Controls.Image;
-using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using KeyEventHandler = System.Windows.Input.KeyEventHandler;
 using Label = System.Windows.Controls.Label;
-using ListBox = System.Windows.Controls.ListBox;
 using MessageBox = System.Windows.MessageBox;
 using Orientation = System.Windows.Controls.Orientation;
 using Point = System.Windows.Point;
 using TextBox = System.Windows.Controls.TextBox;
-using ToolTip = System.Windows.Controls.ToolTip;
 
 namespace Wukong_PBData_ReadWriter_GUI.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
-        public List<DataFile> _DataFiles = new List<DataFile>();
         public DataFile _CurrentOpenFile = null;
-        public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
+        public List<(string, DataFile, DataItem)> _GlobalSearchCache = new();
         public DispatcherTimer _SearchTimer;
-        public string _CurrentOpenFolder = "";
         public string version = "V1.3.0";
         public MergeWindow _MergeWindow;
 
         public MainWindow()
         {
+            InitializeComponent();
             DataFileHelper.DescriptionConfig = DataFileHelper.ImportDescriptionConfig("DefaultDescConfig.json");
             _SearchTimer = new DispatcherTimer();
             _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
             _SearchTimer.Tick += SearchTimer_Tick;
-            this.Title = "黑猴配表编辑器" + version;
+            Title = "黑猴配表编辑器" + version;
         }
 
         private void CloseAllOtherWindow(bool isClearDataGrid = true)
@@ -801,132 +790,82 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
 
         private void ProcessPropertyType(Type valueType, DataPropertyItem item, int rowIndex, Grid curGrid, int left)
         {
-            if (valueType == typeof(int) || valueType == typeof(float) || valueType == typeof(long) ||
-                valueType == typeof(double))
-            {
-                TextBox numberTextBox = new TextBox();
-                numberTextBox.PreviewTextInput += new TextCompositionEventHandler(NumericTextBox_PreviewTextInput);
-                numberTextBox.PreviewKeyDown += new KeyEventHandler(NumericTextBox_PreviewKeyDown);
-                numberTextBox.LostFocus += new RoutedEventHandler(NumericTextBox_LostFocus);
-                numberTextBox.Text = item.PropertyInfo.GetValue(item.BelongData).ToString();
-                numberTextBox.HorizontalAlignment = HorizontalAlignment.Left;
-                numberTextBox.VerticalAlignment = VerticalAlignment.Top;
-                numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                numberTextBox.DataContext = item;
-                numberTextBox.TextChanged += NumberTextBox_TextChanged;
-                Grid.SetRow(numberTextBox, rowIndex);
-                Grid.SetColumn(numberTextBox, 1);
-                curGrid.Children.Add(numberTextBox);
-            }
-            else if (valueType == typeof(string))
-            {
-                TextBox stringTextBox = new TextBox();
-                stringTextBox.Text = item.PropertyInfo.GetValue(item.BelongData).ToString();
-                stringTextBox.HorizontalAlignment = HorizontalAlignment.Left;
-                stringTextBox.VerticalAlignment = VerticalAlignment.Top;
-                stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                stringTextBox.DataContext = item;
-                stringTextBox.TextChanged += StringTextBox_TextChanged;
-                Grid.SetRow(stringTextBox, rowIndex);
-                Grid.SetColumn(stringTextBox, 1);
-
-                curGrid.Children.Add(stringTextBox);
-            }
-            else if (valueType.IsEnum)
-            {
-                ComboBox comboBox = new ComboBox();
-                comboBox.HorizontalAlignment = HorizontalAlignment.Left;
-                comboBox.VerticalAlignment = VerticalAlignment.Top;
-                comboBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                comboBox.ItemsSource = Enum.GetValues(valueType);
-                comboBox.SelectedItem = item.PropertyInfo.GetValue(item.BelongData);
-                comboBox.DataContext = item;
-                comboBox.SelectionChanged += ComboBox_SelectionChanged;
-                Grid.SetRow(comboBox, rowIndex);
-                Grid.SetColumn(comboBox, 1);
-                curGrid.Children.Add(comboBox);
-            }
-            else if (typeof(IMessage).IsAssignableFrom(valueType))
-            {
-                var button = new Button();
-                button.Content = "打开";
-                button.HorizontalAlignment = HorizontalAlignment.Left;
-                button.VerticalAlignment = VerticalAlignment.Top;
-                button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                button.Click += new RoutedEventHandler(OpenNestedData);
-                var dataCtx = item.PropertyInfo.GetValue(item.BelongData);
-                if (dataCtx == null)
-                    dataCtx = Activator.CreateInstance(item.PropertyInfo.PropertyType);
-                button.DataContext = dataCtx;
-                Grid.SetRow(button, rowIndex);
-                Grid.SetColumn(button, 1);
-                curGrid.Children.Add(button);
-            }
-            else if (typeof(IList).IsAssignableFrom(valueType))
-            {
-                var button = new Button();
-                button.Content = "打开";
-                button.HorizontalAlignment = HorizontalAlignment.Left;
-                button.VerticalAlignment = VerticalAlignment.Top;
-                button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                button.Click += new RoutedEventHandler(OpenListData);
-                button.DataContext = item.PropertyInfo.GetValue(item.BelongData);
-                Grid.SetRow(button, rowIndex);
-                Grid.SetColumn(button, 1);
-                curGrid.Children.Add(button);
-            }
+            // if (valueType == typeof(int) || valueType == typeof(float) || valueType == typeof(long) ||
+            //     valueType == typeof(double))
+            // {
+            //     TextBox numberTextBox = new TextBox();
+            //     numberTextBox.PreviewTextInput += new TextCompositionEventHandler(NumericTextBox_PreviewTextInput);
+            //     numberTextBox.PreviewKeyDown += new KeyEventHandler(NumericTextBox_PreviewKeyDown);
+            //     numberTextBox.LostFocus += new RoutedEventHandler(NumericTextBox_LostFocus);
+            //     numberTextBox.Text = item.PropertyInfo.GetValue(item.BelongData).ToString();
+            //     numberTextBox.HorizontalAlignment = HorizontalAlignment.Left;
+            //     numberTextBox.VerticalAlignment = VerticalAlignment.Top;
+            //     numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //     numberTextBox.DataContext = item;
+            //     numberTextBox.TextChanged += NumberTextBox_TextChanged;
+            //     Grid.SetRow(numberTextBox, rowIndex);
+            //     Grid.SetColumn(numberTextBox, 1);
+            //     curGrid.Children.Add(numberTextBox);
+            // }
+            // else if (valueType == typeof(string))
+            // {
+            //     TextBox stringTextBox = new TextBox();
+            //     stringTextBox.Text = item.PropertyInfo.GetValue(item.BelongData).ToString();
+            //     stringTextBox.HorizontalAlignment = HorizontalAlignment.Left;
+            //     stringTextBox.VerticalAlignment = VerticalAlignment.Top;
+            //     stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //     stringTextBox.DataContext = item;
+            //     stringTextBox.TextChanged += StringTextBox_TextChanged;
+            //     Grid.SetRow(stringTextBox, rowIndex);
+            //     Grid.SetColumn(stringTextBox, 1);
+            //
+            //     curGrid.Children.Add(stringTextBox);
+            // }
+            // else if (valueType.IsEnum)
+            // {
+            //     ComboBox comboBox = new ComboBox();
+            //     comboBox.HorizontalAlignment = HorizontalAlignment.Left;
+            //     comboBox.VerticalAlignment = VerticalAlignment.Top;
+            //     comboBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //     comboBox.ItemsSource = Enum.GetValues(valueType);
+            //     comboBox.SelectedItem = item.PropertyInfo.GetValue(item.BelongData);
+            //     comboBox.DataContext = item;
+            //     comboBox.SelectionChanged += ComboBox_SelectionChanged;
+            //     Grid.SetRow(comboBox, rowIndex);
+            //     Grid.SetColumn(comboBox, 1);
+            //     curGrid.Children.Add(comboBox);
+            // }
+            // else if (typeof(IMessage).IsAssignableFrom(valueType))
+            // {
+            //     var button = new Button();
+            //     button.Content = "打开";
+            //     button.HorizontalAlignment = HorizontalAlignment.Left;
+            //     button.VerticalAlignment = VerticalAlignment.Top;
+            //     button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //     button.Click += new RoutedEventHandler(OpenNestedData);
+            //     var dataCtx = item.PropertyInfo.GetValue(item.BelongData);
+            //     if (dataCtx == null)
+            //         dataCtx = Activator.CreateInstance(item.PropertyInfo.PropertyType);
+            //     button.DataContext = dataCtx;
+            //     Grid.SetRow(button, rowIndex);
+            //     Grid.SetColumn(button, 1);
+            //     curGrid.Children.Add(button);
+            // }
+            // else if (typeof(IList).IsAssignableFrom(valueType))
+            // {
+            //     var button = new Button();
+            //     button.Content = "打开";
+            //     button.HorizontalAlignment = HorizontalAlignment.Left;
+            //     button.VerticalAlignment = VerticalAlignment.Top;
+            //     button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //     button.Click += new RoutedEventHandler(OpenListData);
+            //     button.DataContext = item.PropertyInfo.GetValue(item.BelongData);
+            //     Grid.SetRow(button, rowIndex);
+            //     Grid.SetColumn(button, 1);
+            //     curGrid.Children.Add(button);
+            // }
         }
 
-        private void NumberTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var textBox = sender as TextBox;
-            if (textBox != null)
-            {
-                var item = textBox.DataContext as DataPropertyItem;
-
-
-                if (item.PropertyInfo.PropertyType == typeof(int))
-                {
-                    if (int.TryParse(textBox.Text, out var value))
-                        OnValueChanged(item, value);
-                }
-                else if (item.PropertyInfo.PropertyType == typeof(long))
-                {
-                    if (long.TryParse(textBox.Text, out var value))
-                        OnValueChanged(item, value);
-                }
-                else if (item.PropertyInfo.PropertyType == typeof(float))
-                {
-                    if (float.TryParse(textBox.Text, out var value))
-                        OnValueChanged(item, value);
-                }
-                else if (item.PropertyInfo.PropertyType == typeof(double))
-                {
-                    if (double.TryParse(textBox.Text, out var value))
-                        OnValueChanged(item, value);
-                }
-            }
-        }
-
-        private void StringTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var textBox = sender as TextBox;
-            if (textBox != null)
-            {
-                var item = textBox.DataContext as DataPropertyItem;
-                OnValueChanged(item, textBox.Text);
-            }
-        }
-
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var comboBox = sender as ComboBox;
-            if (comboBox != null)
-            {
-                var item = comboBox.DataContext as DataPropertyItem;
-                OnValueChanged(item, comboBox.SelectedValue);
-            }
-        }
 
         private void OnValueChanged(DataPropertyItem item, object value)
         {
@@ -970,117 +909,117 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
 
         private void RefreshList(IList data, string ListType, Grid grid)
         {
-            grid.Children.Clear();
-            int rowIndex = 0;
-            foreach (var item in data)
-            {
-                Label groupLabel = new Label();
-                groupLabel.Content = ListType + "-" + rowIndex;
-                groupLabel.HorizontalAlignment = HorizontalAlignment.Left;
-                groupLabel.VerticalAlignment = VerticalAlignment.Top;
-                groupLabel.Margin = new Thickness(10, 10 + rowIndex * 30, 0, 0);
-                groupLabel.ContextMenu = new ContextMenu();
-                //MenuItem descItem = new MenuItem();
-                //descItem.Header = "备注";
-                //descItem.Click += (sender, e) =>
-                //{
-
-                //};
-                MenuItem delMenu = new MenuItem();
-                delMenu.Header = "删除";
-                delMenu.DataContext = new Tuple<int, IList, Grid>(rowIndex, data, grid);
-                delMenu.Click += DelMenu_Click;
-                groupLabel.ContextMenu.Items.Add(delMenu);
-
-                grid.Children.Add(groupLabel);
-
-                var valueType = item.GetType();
-                if (valueType == typeof(int) || valueType == typeof(float) || valueType == typeof(long) ||
-                    valueType == typeof(double))
-                {
-                    TextBox numberTextBox = new TextBox();
-                    numberTextBox.PreviewTextInput += new TextCompositionEventHandler(NumericTextBox_PreviewTextInput);
-                    numberTextBox.PreviewKeyDown +=
-                        new KeyEventHandler(NumericTextBox_PreviewKeyDown);
-                    numberTextBox.LostFocus += new RoutedEventHandler(NumericTextBox_LostFocus);
-                    numberTextBox.Text = item.ToString();
-                    numberTextBox.HorizontalAlignment = HorizontalAlignment.Left;
-                    numberTextBox.VerticalAlignment = VerticalAlignment.Top;
-                    numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                    numberTextBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
-                    numberTextBox.TextChanged += NumberTextBox_TextChanged1;
-
-                    Grid.SetRow(numberTextBox, rowIndex);
-                    Grid.SetColumn(numberTextBox, 1);
-                    grid.Children.Add(numberTextBox);
-                }
-                else if (valueType == typeof(string))
-                {
-                    TextBox stringTextBox = new TextBox();
-                    stringTextBox.Text = item.ToString();
-                    stringTextBox.HorizontalAlignment = HorizontalAlignment.Left;
-                    stringTextBox.VerticalAlignment = VerticalAlignment.Top;
-                    stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                    stringTextBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
-                    stringTextBox.TextChanged += StringTextBox_TextChanged1;
-                    Grid.SetRow(stringTextBox, rowIndex);
-                    Grid.SetColumn(stringTextBox, 1);
-
-                    grid.Children.Add(stringTextBox);
-                }
-                else if (valueType.IsEnum)
-                {
-                    ComboBox comboBox = new ComboBox();
-                    comboBox.HorizontalAlignment = HorizontalAlignment.Left;
-                    comboBox.VerticalAlignment = VerticalAlignment.Top;
-                    comboBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                    comboBox.ItemsSource = Enum.GetValues(valueType);
-                    comboBox.SelectedItem = item;
-                    comboBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
-                    comboBox.SelectionChanged += ComboBox_SelectionChanged1;
-                    Grid.SetRow(comboBox, rowIndex);
-                    Grid.SetColumn(comboBox, 1);
-                    grid.Children.Add(comboBox);
-                }
-                else if (typeof(IMessage).IsAssignableFrom(valueType))
-                {
-                    var newButton = new Button();
-                    newButton.Content = "打开";
-                    newButton.HorizontalAlignment = HorizontalAlignment.Left;
-                    newButton.VerticalAlignment = VerticalAlignment.Top;
-                    newButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                    newButton.Click += new RoutedEventHandler(OpenNestedData);
-
-                    newButton.DataContext = item;
-                    Grid.SetRow(newButton, rowIndex);
-                    Grid.SetColumn(newButton, 1);
-                    grid.Children.Add(newButton);
-                }
-                else if (typeof(IList).IsAssignableFrom(valueType))
-                {
-                    var newButton = new Button();
-                    newButton.Content = "打开";
-                    newButton.HorizontalAlignment = HorizontalAlignment.Left;
-                    newButton.VerticalAlignment = VerticalAlignment.Top;
-                    newButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-                    newButton.Click += new RoutedEventHandler(OpenListData);
-                    newButton.DataContext = item;
-                    Grid.SetRow(newButton, rowIndex);
-                    Grid.SetColumn(newButton, 1);
-                    grid.Children.Add(newButton);
-                }
-
-                rowIndex++;
-            }
-
-            var addItemButton = new Button();
-            addItemButton.Content = "新增";
-            addItemButton.HorizontalAlignment = HorizontalAlignment.Left;
-            addItemButton.VerticalAlignment = VerticalAlignment.Top;
-            addItemButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
-            addItemButton.DataContext = new Tuple<IList, Grid>(data, grid);
-            addItemButton.Click += AddItemButton_Click;
-            grid.Children.Add(addItemButton);
+            // grid.Children.Clear();
+            // int rowIndex = 0;
+            // foreach (var item in data)
+            // {
+            //     Label groupLabel = new Label();
+            //     groupLabel.Content = ListType + "-" + rowIndex;
+            //     groupLabel.HorizontalAlignment = HorizontalAlignment.Left;
+            //     groupLabel.VerticalAlignment = VerticalAlignment.Top;
+            //     groupLabel.Margin = new Thickness(10, 10 + rowIndex * 30, 0, 0);
+            //     groupLabel.ContextMenu = new ContextMenu();
+            //     //MenuItem descItem = new MenuItem();
+            //     //descItem.Header = "备注";
+            //     //descItem.Click += (sender, e) =>
+            //     //{
+            //
+            //     //};
+            //     MenuItem delMenu = new MenuItem();
+            //     delMenu.Header = "删除";
+            //     delMenu.DataContext = new Tuple<int, IList, Grid>(rowIndex, data, grid);
+            //     delMenu.Click += DelMenu_Click;
+            //     groupLabel.ContextMenu.Items.Add(delMenu);
+            //
+            //     grid.Children.Add(groupLabel);
+            //
+            //     var valueType = item.GetType();
+            //     if (valueType == typeof(int) || valueType == typeof(float) || valueType == typeof(long) ||
+            //         valueType == typeof(double))
+            //     {
+            //         TextBox numberTextBox = new TextBox();
+            //         numberTextBox.PreviewTextInput += new TextCompositionEventHandler(NumericTextBox_PreviewTextInput);
+            //         numberTextBox.PreviewKeyDown +=
+            //             new KeyEventHandler(NumericTextBox_PreviewKeyDown);
+            //         numberTextBox.LostFocus += new RoutedEventHandler(NumericTextBox_LostFocus);
+            //         numberTextBox.Text = item.ToString();
+            //         numberTextBox.HorizontalAlignment = HorizontalAlignment.Left;
+            //         numberTextBox.VerticalAlignment = VerticalAlignment.Top;
+            //         numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //         numberTextBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
+            //         numberTextBox.TextChanged += NumberTextBox_TextChanged1;
+            //
+            //         Grid.SetRow(numberTextBox, rowIndex);
+            //         Grid.SetColumn(numberTextBox, 1);
+            //         grid.Children.Add(numberTextBox);
+            //     }
+            //     else if (valueType == typeof(string))
+            //     {
+            //         TextBox stringTextBox = new TextBox();
+            //         stringTextBox.Text = item.ToString();
+            //         stringTextBox.HorizontalAlignment = HorizontalAlignment.Left;
+            //         stringTextBox.VerticalAlignment = VerticalAlignment.Top;
+            //         stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //         stringTextBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
+            //         stringTextBox.TextChanged += StringTextBox_TextChanged1;
+            //         Grid.SetRow(stringTextBox, rowIndex);
+            //         Grid.SetColumn(stringTextBox, 1);
+            //
+            //         grid.Children.Add(stringTextBox);
+            //     }
+            //     else if (valueType.IsEnum)
+            //     {
+            //         ComboBox comboBox = new ComboBox();
+            //         comboBox.HorizontalAlignment = HorizontalAlignment.Left;
+            //         comboBox.VerticalAlignment = VerticalAlignment.Top;
+            //         comboBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //         comboBox.ItemsSource = Enum.GetValues(valueType);
+            //         comboBox.SelectedItem = item;
+            //         comboBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
+            //         comboBox.SelectionChanged += ComboBox_SelectionChanged1;
+            //         Grid.SetRow(comboBox, rowIndex);
+            //         Grid.SetColumn(comboBox, 1);
+            //         grid.Children.Add(comboBox);
+            //     }
+            //     else if (typeof(IMessage).IsAssignableFrom(valueType))
+            //     {
+            //         var newButton = new Button();
+            //         newButton.Content = "打开";
+            //         newButton.HorizontalAlignment = HorizontalAlignment.Left;
+            //         newButton.VerticalAlignment = VerticalAlignment.Top;
+            //         newButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //         newButton.Click += new RoutedEventHandler(OpenNestedData);
+            //
+            //         newButton.DataContext = item;
+            //         Grid.SetRow(newButton, rowIndex);
+            //         Grid.SetColumn(newButton, 1);
+            //         grid.Children.Add(newButton);
+            //     }
+            //     else if (typeof(IList).IsAssignableFrom(valueType))
+            //     {
+            //         var newButton = new Button();
+            //         newButton.Content = "打开";
+            //         newButton.HorizontalAlignment = HorizontalAlignment.Left;
+            //         newButton.VerticalAlignment = VerticalAlignment.Top;
+            //         newButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            //         newButton.Click += new RoutedEventHandler(OpenListData);
+            //         newButton.DataContext = item;
+            //         Grid.SetRow(newButton, rowIndex);
+            //         Grid.SetColumn(newButton, 1);
+            //         grid.Children.Add(newButton);
+            //     }
+            //
+            //     rowIndex++;
+            // }
+            //
+            // var addItemButton = new Button();
+            // addItemButton.Content = "新增";
+            // addItemButton.HorizontalAlignment = HorizontalAlignment.Left;
+            // addItemButton.VerticalAlignment = VerticalAlignment.Top;
+            // addItemButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            // addItemButton.DataContext = new Tuple<IList, Grid>(data, grid);
+            // addItemButton.Click += AddItemButton_Click;
+            // grid.Children.Add(addItemButton);
         }
 
         private void DelMenu_Click(object sender, RoutedEventArgs e)
@@ -1238,71 +1177,6 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
             // }
         }
 
-        private void NumericTextBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            var textBox = sender as TextBox;
-            if (textBox != null)
-            {
-                var value = textBox.Text;
-                if (string.IsNullOrEmpty(value))
-                {
-                    textBox.Text = "0";
-                    return;
-                }
-
-                if (int.TryParse(value, out int intValue))
-                {
-                    textBox.Text = intValue.ToString();
-                }
-                else if (float.TryParse(value, out float floatValue))
-                {
-                    textBox.Text = floatValue.ToString();
-                }
-                else if (long.TryParse(value, out long longValue))
-                {
-                    textBox.Text = longValue.ToString();
-                }
-                else if (double.TryParse(value, out double doubleValue))
-                {
-                    textBox.Text = doubleValue.ToString();
-                }
-                else
-                    textBox.Text = "0";
-            }
-        }
-
-        private void NumericTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            // 使用正则表达式检查输入是否为有效的浮点数字符
-            Regex regex = new Regex(@"^[0-9.\-+eE]$");
-            e.Handled = !regex.IsMatch(e.Text);
-        }
-
-        private void NumericTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            // 允许使用退格键、删除键、Tab键、箭头键等
-            if (e.Key == Key.Back || e.Key == Key.Delete || e.Key == Key.Tab ||
-                e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
-            {
-                e.Handled = false;
-            }
-            else
-            {
-                // 其他键处理
-                e.Handled = !IsNumericKey(e.Key);
-            }
-        }
-
-        private bool IsNumericKey(Key key)
-        {
-            // 检查按键是否为数字键或小数点、正负号、指数符号
-            return (key >= Key.D0 && key <= Key.D9) ||
-                   (key >= Key.NumPad0 && key <= Key.NumPad9) ||
-                   key == Key.OemPeriod || key == Key.Decimal ||
-                   key == Key.OemMinus || key == Key.Subtract ||
-                   key == Key.OemPlus || key == Key.Add ||
-                   key == Key.E || key == Key.Oem5; // Oem5 is for 'e' in some keyboards
-        }
 
         private void AuthorMenuItem_Click_1(object sender, RoutedEventArgs e)
         {

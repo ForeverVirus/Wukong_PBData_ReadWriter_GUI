@@ -4,8 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:m="clr-namespace:Wukong_PBData_ReadWriter_GUI.Models"
+        xmlns:v="clr-namespace:Wukong_PBData_ReadWriter_GUI.Views"
         xmlns:vm="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
         xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="黑猴配表编辑器" Height="720" Width="1280">
     <Window.DataContext>
@@ -14,7 +16,7 @@
     <DockPanel>
         <!-- 顶部菜单栏 -->
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="文件">
+            <MenuItem Header="文件" Width="60">
                 <MenuItem Header="打开Data目录" Click="OpenDataFolder" />
                 <MenuItem Header="保存Data文件" Click="SaveDataFile" />
                 <MenuItem Header="另存为Data文件" Click="SaveAsNewDataFile" />
@@ -28,7 +30,7 @@
                 <Separator />
                 <MenuItem Header="退出" Click="Close_Click" />
             </MenuItem>
-            <MenuItem Header="帮助">
+            <MenuItem Header="帮助" Width="60">
                 <MenuItem Header="查看帮助" Click="HelpMenuItem_Click" />
                 <MenuItem Header="关于作者" Click="AuthorMenuItem_Click_1" />
             </MenuItem>
@@ -56,13 +58,12 @@
                             Text="{Binding FileSearchText,UpdateSourceTrigger=PropertyChanged}" />
                 <ListBox Width="Auto" Height="120">
                 </ListBox>
-                <ListBox x:Name="DataFileListBox"
-                         Width="Auto" Height="440"
+                <ListBox x:Name="DataFileListBox" Width="Auto" Height="440"
                          SelectedValuePath="DataItemList"
                          ItemsSource="{Binding FilteredDataFiles}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding FileInfo.Name}"
+                            <TextBlock Text="{Binding DisplayName}"
                                        ToolTip="{Binding Desc}">
                             </TextBlock>
                         </DataTemplate>
@@ -74,25 +75,15 @@
             <StackPanel Grid.Column="1" Margin="5">
                 <hc:TextBox Width="Auto" Margin="0,0,0,10"
                             hc:InfoElement.Placeholder="搜索ID或备注" />
-                <ListBox x:Name="DataItemListBox"
-                         Width="Auto" Height="520"
-                         SelectedValuePath="DataPropertyItems"
-                         ItemsSource="{Binding SelectedValue,ElementName=DataFileListBox}">
+                <ListBox x:Name="DataItemListBox" Width="Auto" Height="520"
+                         ItemsSource="{Binding SelectedValue, ElementName=DataFileListBox}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock d:DataContext="{d:DesignInstance m:DataItem}"
-                                       Text="{Binding Desc}" />
+                                       Text="{Binding Desc}"
+                                       Foreground="{Binding Foreground}" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
-                    <!-- <ListBox.Resources> -->
-                    <!--     <Style TargetType="ListBoxItem"> -->
-                    <!--         <Style.Triggers> -->
-                    <!--             <DataTrigger Binding="{Binding IsDirty}" Value="True"> -->
-                    <!--                 <Setter Property="Background" Value="LightYellow" /> -->
-                    <!--             </DataTrigger> -->
-                    <!--         </Style.Triggers> -->
-                    <!--     </Style> -->
-                    <!-- </ListBox.Resources> -->
                 </ListBox>
                 <Button Content="新增一项" Width="Auto" Height="40" Click="AddNewDataItem_Click" />
             </StackPanel>
@@ -100,54 +91,12 @@
             <!-- 第三个区块 -->
             <StackPanel Grid.Column="2" Margin="5">
                 <TextBlock Text="配置数据" FontWeight="Bold" Margin="0,0,0,10" />
-
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="600">
-                    <ItemsControl ItemsSource="{Binding SelectedValue ,ElementName=DataItemListBox}">
-                        <ItemsControl.ItemTemplateSelector>
-                            <m:PropertyItemTemplateSelector>
-                                <m:PropertyItemTemplateSelector.NumberTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal"
-                                                    d:DataContext="{d:DesignInstance m:DataPropertyItem}">
-                                            <Label Content="{Binding PropertyName}"
-                                                   ToolTip="{Binding PropertyDesc}"
-                                                   Width="300" Margin="5" />
-                                            <hc:NumericUpDown Value="{Binding AsDouble}"
-                                                              Width="300" Margin="5" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </m:PropertyItemTemplateSelector.NumberTemplate>
-                                <m:PropertyItemTemplateSelector.StringTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal"
-                                                    d:DataContext="{d:DesignInstance m:DataPropertyItem}">
-                                            <Label Content="{Binding PropertyName}"
-                                                   ToolTip="{Binding PropertyDesc}"
-                                                   Width="300" Margin="5" />
-                                            <TextBox Text="{Binding AsString}"
-                                                     VerticalAlignment="Center"
-                                                     TextWrapping="NoWrap"
-                                                     Width="300" Margin="5" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </m:PropertyItemTemplateSelector.StringTemplate>
-                                <m:PropertyItemTemplateSelector.EnumTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal"
-                                                    d:DataContext="{d:DesignInstance m:DataPropertyItem}">
-                                            <Label Content="{Binding PropertyName}"
-                                                   ToolTip="{Binding PropertyDesc}"
-                                                   Width="300" Margin="5" />
-                                            <ComboBox ItemsSource="{Binding Enums}"
-                                                      SelectedItem="{Binding EnumValue}"
-                                                      Width="300" Margin="5" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </m:PropertyItemTemplateSelector.EnumTemplate>
-                            </m:PropertyItemTemplateSelector>
-                        </ItemsControl.ItemTemplateSelector>
-                    </ItemsControl>
-                </ScrollViewer>
+                <!-- <hc:PropertyGrid ShowSortButton="False" -->
+                <!--                  Description="123" -->
+                <!--                  SelectedObject="{Binding SelectedValue, ElementName=DataItemListBox}"> -->
+                <!-- </hc:PropertyGrid> -->
+                <v:DataItemView Height="580" Item="{Binding SelectedValue, ElementName=DataItemListBox}" />
+                <!-- <v:DataItemView Data="{Binding SelectedValue, ElementName=DataItemListBox}" /> -->
             </StackPanel>
         </Grid>
     </DockPanel>

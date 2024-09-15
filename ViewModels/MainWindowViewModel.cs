@@ -14,7 +14,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     public List<DataFile> FilteredDataFiles => _dataFiles
         .Where(f =>
-            f.FileInfo.Name.Contains(FileSearchText, StringComparison.OrdinalIgnoreCase)
+            f.DisplayName.Contains(FileSearchText, StringComparison.OrdinalIgnoreCase)
         ).ToList();
 
     public void ChangeOpenFolder(string dir)

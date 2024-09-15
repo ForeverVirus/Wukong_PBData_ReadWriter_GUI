@@ -1,6 +1,12 @@
-﻿using System.Windows.Controls;
+﻿using System.ComponentModel;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Media;
+using BtlShare;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Google.Protobuf;
+using HandyControl.Controls;
+using Color = System.Windows.Media.Color;
 
 namespace Wukong_PBData_ReadWriter_GUI.Models;
 
@@ -19,8 +25,11 @@ public partial class DataItem : ObservableObject
         ? $"{Id,-10}{desc}"
         : Id.ToString();
 
-    [ObservableProperty]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(Foreground))]
     private bool _isDirty;
+
+    public SolidColorBrush Foreground =>
+        IsDirty ? new SolidColorBrush(Colors.Green) : new SolidColorBrush(Colors.Black);
 
     public List<DataPropertyItem> DataPropertyItems => _dataPropertyItems.Value;
 
@@ -29,6 +38,22 @@ public partial class DataItem : ObservableObject
         Id = id;
         Data = data;
         File = file;
+        // var properties = Data.GetType().GetProperties();
+        // foreach (var propertyInfo in properties)
+        // {
+        //     if (typeof(IMessage).IsAssignableFrom(propertyInfo.PropertyType))
+        //     {
+        //         var s = typeof(MemberDescriptor).GetFields();
+        //         typeof(MemberDescriptor).GetField("displayName").SetValue(
+        //             TypeDescriptor.GetProperties(Data)[propertyInfo.Name],""
+        //             );
+        //         TypeDescriptor.AddAttributes(propertyInfo, new EditorAttribute(
+        //             typeof(MessageEditor), typeof(MessageEditor)
+        //         ));
+        //         NumberPropertyEditor
+        //     }
+        // }
+
         _dataPropertyItems = new Lazy<List<DataPropertyItem>>(
             () =>
             {
@@ -45,5 +70,19 @@ public partial class DataItem : ObservableObject
                 ).ToList();
             }
         );
+    }
+}
+
+public class MessageEditor : PropertyEditorBase
+{
+    public override FrameworkElement CreateElement(PropertyItem propertyItem)
+    {
+        return new HandyControl.Controls.PropertyGrid();
+    }
+
+    // 设置对应实体属性与控件关联的依赖属性
+    public override DependencyProperty GetDependencyProperty()
+    {
+        return HandyControl.Controls.PropertyGrid.SelectedObjectProperty;
     }
 }
