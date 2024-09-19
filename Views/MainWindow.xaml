@@ -7,32 +7,32 @@
         xmlns:v="clr-namespace:Wukong_PBData_ReadWriter_GUI.Views"
         xmlns:vm="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
         xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
-        Title="黑猴配表编辑器" Height="720" Width="1280">
+        Title="黑猴配表编辑器" Height="720" Width="1280"
+        Closed="MainWindowClosed">
     <Window.DataContext>
         <vm:MainWindowViewModel />
     </Window.DataContext>
     <DockPanel>
         <!-- 顶部菜单栏 -->
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="文件" Width="60">
-                <MenuItem Header="打开Data目录" Click="OpenDataFolder" />
-                <MenuItem Header="保存Data文件" Click="SaveDataFile" />
-                <MenuItem Header="另存为Data文件" Click="SaveAsNewDataFile" />
+            <MenuItem Header="文件">
+                <MenuItem Header="打开Data目录" Command="{Binding OpenFolderCommand}" />
+                <MenuItem Header="保存Data文件" Command="{Binding SaveCommand}" />
+                <MenuItem Header="另存Data文件" Command="{Binding SaveAsCommand}" />
                 <Separator />
-                <MenuItem Header="导入备注配置" Click="ImportDescription" />
-                <MenuItem Header="导出备注配置" Click="ExportDescription" />
+                <MenuItem Header="导入备注配置" Command="{Binding ImportDescriptionCommand}" />
+                <MenuItem Header="导出备注配置" Command="{Binding ExportDescriptionCommand}" />
                 <Separator />
                 <MenuItem Header="生成PAK" Click="CreatePak" />
                 <MenuItem Header="解包PAK" Click="UncompressPak" />
                 <MenuItem Header="合并PAK" Click="CreateUnpackWindow" />
                 <Separator />
-                <MenuItem Header="退出" Click="Close_Click" />
+                <MenuItem Header="退出" Click="CloseButtonClick" />
             </MenuItem>
-            <MenuItem Header="帮助" Width="60">
+            <MenuItem Header="帮助">
                 <MenuItem Header="查看帮助" Click="HelpMenuItem_Click" />
-                <MenuItem Header="关于作者" Click="AuthorMenuItem_Click_1" />
+                <MenuItem Header="关于作者🔗" Click="AuthorMenuItem_Click" />
             </MenuItem>
         </Menu>
 
@@ -53,9 +53,10 @@
             </Grid.ColumnDefinitions>
             <!-- 第一个区块 -->
             <StackPanel Grid.Column="0" Margin="5">
+                <hc:SearchBar hc:InfoElement.Placeholder="{Binding CurrentOpenFolder}" hc:InfoElement.Necessary="True" />
                 <hc:TextBox Width="Auto" Margin="0,0,0,10"
                             hc:InfoElement.Placeholder="搜索配表文件"
-                            Text="{Binding FileSearchText,UpdateSourceTrigger=PropertyChanged}" />
+                            Text="{Binding FileSearchText}" />
                 <ListBox Width="Auto" Height="120">
                 </ListBox>
                 <ListBox x:Name="DataFileListBox" Width="Auto" Height="440"

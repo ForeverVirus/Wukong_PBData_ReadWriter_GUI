@@ -36,7 +36,7 @@ public partial class DataItemView
         viewer.Content = GetControl(
             item.Data.GetType().GetProperties(),
             item.Data,
-            () => item.IsDirty = true
+            () => item.Changed()
         );
     }
 

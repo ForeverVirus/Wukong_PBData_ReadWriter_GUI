@@ -1,24 +1,15 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Wukong_PBData_ReadWriter_GUI.Models;
 using Wukong_PBData_ReadWriter_GUI.ViewModels;
-using Button = System.Windows.Controls.Button;
-using ComboBox = System.Windows.Controls.ComboBox;
-using DataFormats = System.Windows.DataFormats;
-using DragEventArgs = System.Windows.DragEventArgs;
-using HorizontalAlignment = System.Windows.HorizontalAlignment;
-using Image = System.Windows.Controls.Image;
-using Label = System.Windows.Controls.Label;
-using MessageBox = System.Windows.MessageBox;
-using Orientation = System.Windows.Controls.Orientation;
-using Point = System.Windows.Point;
-using TextBox = System.Windows.Controls.TextBox;
 
 namespace Wukong_PBData_ReadWriter_GUI.Views
 {
@@ -27,7 +18,6 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
     /// </summary>
     public partial class MainWindow
     {
-        public DataFile _CurrentOpenFile = null;
         public List<(string, DataFile, DataItem)> _GlobalSearchCache = new();
         public DispatcherTimer _SearchTimer;
         public string version = "V1.3.0";
@@ -36,46 +26,10 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
         public MainWindow()
         {
             InitializeComponent();
-            DataFileHelper.DescriptionConfig = DataFileHelper.ImportDescriptionConfig("DefaultDescConfig.json");
             _SearchTimer = new DispatcherTimer();
             _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
             _SearchTimer.Tick += SearchTimer_Tick;
             Title = "黑猴配表编辑器" + version;
-        }
-
-        private void CloseAllOtherWindow(bool isClearDataGrid = true)
-        {
-            // WindowCollection windows = Application.Current.Windows;
-            // foreach (var win in windows)
-            // {
-            //     if (win == null)
-            //         continue;
-            //
-            //     if (win.GetType() != typeof(MainWindow))
-            //     {
-            //         (win as Window).Close();
-            //     }
-            // }
-            //
-            // if (isClearDataGrid)
-            // {
-            //     DataGrid.RowDefinitions.Clear();
-            //     DataGrid.Children.Clear();
-            // }
-        }
-
-        private void ImportDescription(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFileDialog();
-            dialog.AddExtension = true;
-            dialog.Filter = "Json|*.json";
-            dialog.Title = "导入备注配置";
-            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-            var newDict = DataFileHelper.ImportDescriptionConfig(dialog.FileName);
-            foreach (var kvp in newDict)
-            {
-                DataFileHelper.DescriptionConfig[kvp.Key] = kvp.Value;
-            }
         }
 
         private void CreatePak(object sender, RoutedEventArgs e)
@@ -199,33 +153,6 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
             {
                 _MergeWindow.Activate();
             }
-        }
-
-        private void ExportDescription(object sender, RoutedEventArgs e)
-        {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.AddExtension = true;
-            dialog.Filter = "Json|*.json";
-            dialog.Title = "导出备注配置";
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                DataFileHelper.ExportDescriptionConfig(DataFileHelper.DescriptionConfig, dialog.FileName);
-            }
-        }
-
-        private void OpenDataFolder(object sender, RoutedEventArgs e)
-        {
-            //选择文件夹,并返回选择的文件夹路径，FolderBrowserDialog是一个选择文件夹的对话框
-            var dialog = new FolderBrowserDialog();
-            dialog.Description = "请选择Data数据文件夹";
-            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-            ((MainWindowViewModel)DataContext).ChangeOpenFolder(dialog.SelectedPath);
-            // RefreshFolderFile(dialog.SelectedPath);
-
-            // _GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
-            //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
-            // CloseAllOtherWindow();
-            // _CurrentOpenFile = null;
         }
 
         // private void RefreshFolderFile(string dir)
@@ -412,57 +339,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
                 }
             }
         }
-
-        private void SaveDataFile(object sender, RoutedEventArgs e)
-        {
-            // var pakPath = _CurrentOpenFile._FilePath;
-            //
-            // //rename pakPath file if exist
-            // if (File.Exists(pakPath))
-            // {
-            //     var dir = Path.GetDirectoryName(pakPath);
-            //     var fileName = Path.GetFileNameWithoutExtension(pakPath);
-            //     var extension = Path.GetExtension(pakPath);
-            //
-            //     var newPath = dir + "\\" + fileName + ".bak" + extension;
-            //     if (File.Exists(newPath))
-            //         File.Delete(newPath);
-            //
-            //     File.Move(pakPath, newPath);
-            // }
-            //
-            // Exporter.SaveDataFile(pakPath, _CurrentOpenFile);
-            //
-            // RefreshFolderFile(_CurrentOpenFolder);
-            //
-            // //_GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
-            // DataItemList.Items.Clear();
-            // DataGrid.Children.Clear();
-            // CloseAllOtherWindow();
-            // _CurrentOpenFile = null;
-        }
-
-        private void SaveAsNewDataFile(object sender, RoutedEventArgs e)
-        {
-            // FolderBrowserDialog dialog = new FolderBrowserDialog();
-            // dialog.Description = "请选择要保存Data数据的文件夹";
-            // if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            // {
-            //     string dir = dialog.SelectedPath;
-            //
-            //     var pakPath = _CurrentOpenFile._FilePath;
-            //
-            //     var b1Index = _CurrentOpenFile._FilePath.IndexOf("b1");
-            //     if (b1Index != -1)
-            //         pakPath = _CurrentOpenFile._FilePath.Substring(b1Index,
-            //             _CurrentOpenFile._FilePath.Length - b1Index);
-            //
-            //     var outPath = Path.Combine(dir, pakPath);
-            //
-            //     DataFileHelper.SaveDataFile(outPath, _CurrentOpenFile);
-            // }
-        }
-
+        
         private void OpenDataFile(object sender, MouseButtonEventArgs e)
         {
             // ListBoxItem listBoxItem = sender as ListBoxItem;
@@ -866,16 +743,6 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
             // }
         }
 
-
-        private void OnValueChanged(DataPropertyItem item, object value)
-        {
-            if (item != null)
-            {
-                item.PropertyInfo.SetValue(item.BelongData, value);
-                _CurrentOpenFile._IsDirty = true;
-            }
-        }
-
         private void OpenListData(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
@@ -1038,27 +905,27 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
 
         private void AddItemButton_Click(object sender, RoutedEventArgs e)
         {
-            var item = (Button)sender;
-            if (item == null) return;
-
-            var data = item.DataContext as Tuple<IList, Grid>;
-
-            if (data == null) return;
-
-            var listType = data.Item1.GetType().GetGenericArguments()[0];
-            if (listType == null) return;
-            object newItem;
-            if (listType == typeof(string))
-            {
-                newItem = "";
-            }
-            else
-                newItem = Activator.CreateInstance(listType);
-
-            data.Item1.Add(newItem);
-
-            RefreshList(data.Item1, listType.Name, data.Item2);
-            _CurrentOpenFile._IsDirty = true;
+            // var item = (Button)sender;
+            // if (item == null) return;
+            //
+            // var data = item.DataContext as Tuple<IList, Grid>;
+            //
+            // if (data == null) return;
+            //
+            // var listType = data.Item1.GetType().GetGenericArguments()[0];
+            // if (listType == null) return;
+            // object newItem;
+            // if (listType == typeof(string))
+            // {
+            //     newItem = "";
+            // }
+            // else
+            //     newItem = Activator.CreateInstance(listType);
+            //
+            // data.Item1.Add(newItem);
+            //
+            // RefreshList(data.Item1, listType.Name, data.Item2);
+            // _CurrentOpenFile._IsDirty = true;
 
             //data.Item2
         }
@@ -1087,12 +954,12 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
 
         private void OnListItemChanged(int index, IList list, object value)
         {
-            if (list != null && index >= 0 && index < list.Count)
-            {
-                list[index] = value;
-
-                _CurrentOpenFile._IsDirty = true;
-            }
+            // if (list != null && index >= 0 && index < list.Count)
+            // {
+            //     list[index] = value;
+            //
+            //     _CurrentOpenFile._IsDirty = true;
+            // }
         }
 
         private void NumberTextBox_TextChanged1(object sender, TextChangedEventArgs e)
@@ -1178,106 +1045,15 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
         }
 
 
-        private void AuthorMenuItem_Click_1(object sender, RoutedEventArgs e)
+        private void AuthorMenuItem_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(new ProcessStartInfo("https://space.bilibili.com/8729996") { UseShellExecute = true });
         }
 
         private void HelpMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            Window window = new Window();
-            window.Title = "帮助";
-            window.Width = 800;
-            window.Height = 800;
-            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            window.Show();
-
-            Grid grid = new Grid();
-            window.Content = grid;
-
-
-            // 创建Grid作为根布局容器
-            Grid rootGrid = new Grid();
-
-            // 创建ScrollViewer来支持上下滚动
-            ScrollViewer scrollViewer = new ScrollViewer
-            {
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
-            };
-
-            // 创建StackPanel并设置其水平对齐方式为居中
-            StackPanel stackPanel = new StackPanel
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(10)
-            };
-
-            // 创建一个水平StackPanel来并排显示两个二维码图片
-            StackPanel qrCodePanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 10, 0, 10)
-            };
-
-
-            // 创建二维码图片
-            Image qrCodeImage1 = new Image
-            {
-                Source = new BitmapImage(new Uri("pack://application:,,,/zfb.jpg")),
-                Width = 150,
-                Height = 150,
-                Margin = new Thickness(5)
-            };
-
-            Image qrCodeImage2 = new Image
-            {
-                Source = new BitmapImage(new Uri("pack://application:,,,/vx.jpg")),
-                Width = 150,
-                Height = 150,
-                Margin = new Thickness(5)
-            };
-
-            // 创建二维码文字
-            TextBlock qrCodeText = new TextBlock
-            {
-                Text = "这里是赛博乞讨\n如果你喜欢这个工具可以赞助一下，谢谢~",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 20),
-                FontSize = 18
-            };
-
-
-            qrCodePanel.Children.Add(qrCodeImage1);
-            qrCodePanel.Children.Add(qrCodeImage2);
-
-            string helpText = "";
-
-            if (File.Exists("README.md"))
-            {
-                helpText = File.ReadAllText("README.md");
-            }
-
-            // 创建帮助文本内容
-            TextBlock helpTextBlock = new TextBlock
-            {
-                TextWrapping = TextWrapping.Wrap,
-                Text = helpText
-            };
-
-            // 将控件添加到StackPanel
-            stackPanel.Children.Add(qrCodePanel);
-            stackPanel.Children.Add(qrCodeText);
-            stackPanel.Children.Add(helpTextBlock);
-
-            // 将StackPanel添加到ScrollViewer
-            scrollViewer.Content = stackPanel;
-
-            // 将ScrollViewer添加到Grid
-            rootGrid.Children.Add(scrollViewer);
-
-            // 将Grid设置为窗口的内容
-            window.Content = rootGrid;
+            var helpWindow = new HelpWindowView();
+            helpWindow.Show();
         }
 
         private void AddNewDataItem_Click(object sender, RoutedEventArgs e)
@@ -1427,10 +1203,22 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
             // }
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e)
+        private void CloseButtonClick(object sender, RoutedEventArgs e)
         {
-            CloseAllOtherWindow();
-            this.Close();
+            Close();
+        }
+
+
+        private void MainWindowClosed(object? sender, EventArgs e)
+        {
+            // 关闭子窗口
+            foreach (var window in Application.Current.Windows)
+            {
+                if (window is Window childWindow)
+                {
+                    childWindow.Close();
+                }
+            }
         }
     }
 }
