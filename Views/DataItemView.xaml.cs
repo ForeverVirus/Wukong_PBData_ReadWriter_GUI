@@ -32,18 +32,14 @@ public partial class DataItemView
     private static void ShowProperties(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not DataItemView { Item: { } item } dataItemView) return;
-        var viewer = dataItemView.PropertyViewer;
-        viewer.Content = GetControl(
-            item.Data.GetType().GetProperties(),
-            item.Data,
-            () => item.Changed()
-        );
+        dataItemView.PropertyViewer.Content = GetControl(item.Data, () => item.Changed());
     }
 
-    private static SimpleStackPanel GetControl(PropertyInfo[] propertyInfos, IMessage? data, Action changeCallBack)
+    private static SimpleStackPanel GetControl(object obj, Action changeCallBack)
     {
         var stackPanel = new SimpleStackPanel { HorizontalAlignment = HorizontalAlignment.Left };
-        foreach (var propertyInfo in propertyInfos)
+
+        foreach (var propertyInfo in obj.GetType().GetProperties())
         {
             if (propertyInfo.PropertyType == typeof(int))
             {
@@ -58,17 +54,17 @@ public partial class DataItemView
                 {
                     Minimum = int.MinValue,
                     Maximum = int.MaxValue,
-                    Value = Convert.ToDouble(propertyInfo.GetValue(data))
+                    Value = Convert.ToDouble(propertyInfo.GetValue(obj)),
+                    IsEnabled = propertyInfo.CanWrite
                 };
                 control.ValueChanged += (_, _) =>
                 {
-                    propertyInfo.SetValue(data, Convert.ToInt32(control.Value));
+                    propertyInfo.SetValue(obj, Convert.ToInt32(control.Value));
                     changeCallBack();
                 };
                 line.Children.Add(control);
                 stackPanel.Children.Add(line);
             }
-
             else if (propertyInfo.PropertyType == typeof(float))
             {
                 var line = new SimpleStackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(5) };
@@ -82,17 +78,17 @@ public partial class DataItemView
                 {
                     Minimum = float.MinValue,
                     Maximum = float.MaxValue,
-                    Value = Convert.ToDouble(propertyInfo.GetValue(data))
+                    Value = Convert.ToDouble(propertyInfo.GetValue(obj)),
+                    IsEnabled = propertyInfo.CanWrite
                 };
                 control.ValueChanged += (_, _) =>
                 {
-                    propertyInfo.SetValue(data, Convert.ToSingle(control.Value));
+                    propertyInfo.SetValue(obj, Convert.ToSingle(control.Value));
                     changeCallBack();
                 };
                 line.Children.Add(control);
                 stackPanel.Children.Add(line);
             }
-
             else if (propertyInfo.PropertyType == typeof(string))
             {
                 var line = new SimpleStackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(5) };
@@ -102,16 +98,19 @@ public partial class DataItemView
                     Width = 200,
                     VerticalAlignment = VerticalAlignment.Center
                 });
-                var control = new TextBox { Text = Convert.ToString(propertyInfo.GetValue(data)) ?? "" };
+                var control = new TextBox
+                {
+                    Text = Convert.ToString(propertyInfo.GetValue(obj)) ?? "",
+                    IsEnabled = propertyInfo.CanWrite
+                };
                 control.TextChanged += (_, _) =>
                 {
-                    propertyInfo.SetValue(data, control.Text);
+                    propertyInfo.SetValue(obj, control.Text);
                     changeCallBack();
                 };
                 line.Children.Add(control);
                 stackPanel.Children.Add(line);
             }
-
             else if (propertyInfo.PropertyType.IsEnum)
             {
                 var line = new SimpleStackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(5) };
@@ -126,22 +125,22 @@ public partial class DataItemView
                     HorizontalAlignment = HorizontalAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Top,
                     ItemsSource = Enum.GetValues(propertyInfo.PropertyType),
-                    SelectedItem = propertyInfo.GetValue(data)
+                    SelectedItem = propertyInfo.GetValue(obj),
+                    IsEnabled = propertyInfo.CanWrite
                 };
                 control.SelectionChanged += (_, _) =>
                 {
-                    propertyInfo.SetValue(data, control.SelectedValue);
+                    propertyInfo.SetValue(obj, control.SelectedValue);
                     changeCallBack();
                 };
                 line.Children.Add(control);
                 stackPanel.Children.Add(line);
             }
-
             else if (typeof(IMessage).IsAssignableFrom(propertyInfo.PropertyType))
             {
                 var line = new Expander { Header = propertyInfo.Name };
-                if (propertyInfo.GetValue(data) is not IMessage subObject) break;
-                var sub = GetControl(subObject.GetType().GetProperties(), subObject, changeCallBack);
+                if (propertyInfo.GetValue(obj) is not IMessage subObject) break;
+                var sub = GetControl(subObject, changeCallBack);
                 sub.Margin = new Thickness(20, 0, 0, 0);
                 line.Content = sub;
                 stackPanel.Children.Add(line);

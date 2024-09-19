@@ -6,23 +6,25 @@ namespace Wukong_PBData_ReadWriter_GUI.Models;
 
 public class DataFile : ObservableObject
 {
-    private readonly Lazy<IMessage?> _fileData;
-    private readonly Lazy<List<DataItem>> _dataItemList;
+    // private readonly Lazy<IMessage?> _fileData;
     private readonly string _filePath;
+    private readonly Lazy<List<DataItem>> _dataItemList;
 
     public string DisplayName => Path.GetFileNameWithoutExtension(_filePath);
-    public dynamic? FileData => _fileData.Value;
-    public string Desc => DataFileHelper.DescriptionConfig.GetValueOrDefault(DisplayName, "");
+    // public dynamic? FileData => _fileData.Value;
+    public dynamic FileData { get; }
     public List<DataItem> DataItemList => _dataItemList.Value;
     public bool IsDirty => _dataItemList.IsValueCreated && DataItemList.Any(item => item.IsDirty);
 
-    public DataFile(string filePath)
+    public DataFile(string filePath, IMessage fileData)
     {
         _filePath = filePath;
-        _fileData = new Lazy<IMessage?>(() => DataFileHelper.GetDataByFile(_filePath));
+        FileData = fileData;
+        // _fileData = new Lazy<IMessage?>(() => DataFileHelper.GetDataByFile(_filePath));
+        // _ = _fileData.Value;
         _dataItemList = new Lazy<List<DataItem>>(() =>
         {
-            if (FileData == null) return [];
+            // if (FileData == null) return [];
             // // if (!type.Name.StartsWith("TB")) return res;
             // //获取名为List的public 属性，并且判定类型是否为 RepeatedField<T>
             // var listPropertyInfo = FileData.GetType().GetProperty("List");

@@ -9,8 +9,6 @@ using ResB1;
 
 namespace Wukong_PBData_ReadWriter_GUI.Models;
 
-public record TypeInfo(Type Type, Type[] AllTypes);
-
 public static class DataFileHelper
 {
     public static Dictionary<string, string> DescriptionConfig { get; } =
@@ -94,7 +92,7 @@ public static class DataFileHelper
         foreach (var type in ProtobufDbTypes)
         {
             // var typeName = type.Name.StartsWith("TB") ? type.Name[2..] : type.Name;
-            if (type.Name.StartsWith("TB")&& fileName.Contains(type.Name[2..]) && type.IsClass)
+            if (type.Name.StartsWith("TB") && fileName.Contains(type.Name[2..]))
             {
                 return type;
             }
@@ -102,7 +100,7 @@ public static class DataFileHelper
 
         foreach (var type in RuntimeTypes)
         {
-            if (fileName.Contains(type.Name))
+            if (type.Name.StartsWith("TB") && fileName.Contains(type.Name[2..]))
             {
                 return type;
             }
@@ -262,7 +260,7 @@ public static class DataFileHelper
 
     public static void SaveDataFile(string path, DataFile dataFile)
     {
-        // if (dataFile == null) return;
+        if (dataFile.FileData == null) return;
         //
         // string dir = Path.GetDirectoryName(path);
         //
@@ -276,8 +274,8 @@ public static class DataFileHelper
         //     File.Delete(path);
         // }
         //
-        // using var output = File.Create(path);
-        // dataFile.FileData.WriteTo(output);
+        using var output = File.Create(path);
+        ((IMessage)dataFile.FileData).WriteTo(output);
     }
 
     // public static List<(string, DataFile, DataItem)> GlobalSearchCache(List<DataFile> fileList)

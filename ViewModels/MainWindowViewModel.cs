@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using Wukong_PBData_ReadWriter_GUI.Models;
 
 namespace Wukong_PBData_ReadWriter_GUI.ViewModels;
@@ -10,13 +11,25 @@ public partial class MainWindowViewModel : ObservableObject
     private List<DataFile> _dataFiles = [];
     public string CurrentOpenFolder { get; set; } = string.Empty;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(FilteredDataFiles))]
-    private string _fileSearchText = string.Empty;
+    // [ObservableProperty] [NotifyPropertyChangedFor(nameof(FilteredDataFiles))]
+    // private string _fileSearchText = string.Empty;
+    [ObservableProperty] private DataFile[] _filteredDataFiles = [];
 
-    public List<DataFile> FilteredDataFiles => _dataFiles
-        .Where(f =>
-            f.DisplayName.Contains(FileSearchText, StringComparison.OrdinalIgnoreCase)
-        ).ToList();
+    public string FileSearchText
+    {
+        set
+        {
+            FilteredDataFiles = _dataFiles
+                .Where(f =>
+                    f.DisplayName.Contains(value, StringComparison.OrdinalIgnoreCase)
+                ).ToArray();
+        }
+    }
+
+    // public List<DataFile> FilteredDataFiles => _dataFiles
+    //     .Where(f =>
+    //         f.DisplayName.Contains(FileSearchText, StringComparison.OrdinalIgnoreCase)
+    //     ).ToList();
 
     [RelayCommand]
     private void OpenFolder()
@@ -29,13 +42,15 @@ public partial class MainWindowViewModel : ObservableObject
         CurrentOpenFolder = dialog.FolderName;
         _dataFiles = Directory
             .GetFiles(dialog.FolderName, "*.data", SearchOption.AllDirectories)
-            .Select(file => new DataFile(file))
+            .Select(file => (data: DataFileHelper.GetDataByFile(file), file))
+            .Where(tuple => tuple.data != null)
+            .Select(tuple => new DataFile(tuple.file, tuple.data!))
             .ToList();
-        OnPropertyChanged(nameof(FilteredDataFiles));
+        FileSearchText = "";
     }
 
     [RelayCommand]
-    private void Save()
+    private void SaveAll()
     {
         // var pakPath = _CurrentOpenFile._FilePath;
         //
@@ -82,25 +97,27 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SaveAs()
+    private void SaveAllAs()
     {
-        // FolderBrowserDialog dialog = new FolderBrowserDialog();
-        // dialog.Description = "请选择要保存Data数据的文件夹";
-        // if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-        // {
-        //     string dir = dialog.SelectedPath;
-        //
-        //     var pakPath = _CurrentOpenFile._FilePath;
-        //
-        //     var b1Index = _CurrentOpenFile._FilePath.IndexOf("b1");
-        //     if (b1Index != -1)
-        //         pakPath = _CurrentOpenFile._FilePath.Substring(b1Index,
-        //             _CurrentOpenFile._FilePath.Length - b1Index);
-        //
-        //     var outPath = Path.Combine(dir, pakPath);
-        //
-        //     DataFileHelper.SaveDataFile(outPath, _CurrentOpenFile);
-        // }
+        var dialog = new OpenFolderDialog
+        {
+            Title = "请选择要保存Data数据的文件夹"
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            var dir = dialog.FolderName;
+            //
+            //     var pakPath = _CurrentOpenFile._FilePath;
+            //
+            //     var b1Index = _CurrentOpenFile._FilePath.IndexOf("b1");
+            //     if (b1Index != -1)
+            //         pakPath = _CurrentOpenFile._FilePath.Substring(b1Index,
+            //             _CurrentOpenFile._FilePath.Length - b1Index);
+            //
+            // var outPath = Path.Combine(dir, pakPath);
+
+            // DataFileHelper.SaveDataFile(outPath, );
+        }
     }
 
     [RelayCommand]

@@ -8,13 +8,13 @@ public class DataItem(int id, dynamic data, DataFile file) : ObservableObject
     public IMessage Data { get; } = data.Clone();
 
     public string Desc => DataFileHelper.DescriptionConfig.TryGetValue(
-        (string)file.FileData!.GetType().Name + "_" + id,
+        ((IMessage)file.FileData).GetType().Name + "_" + id,
         out var desc
     )
         ? $"{id,-10}{desc}"
         : id.ToString();
 
-    public bool IsDirty => data.Equals(Data);
+    public bool IsDirty => !data.Equals(Data);
 
     public void Changed()
     {

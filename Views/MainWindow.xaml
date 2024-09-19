@@ -6,6 +6,7 @@
         xmlns:m="clr-namespace:Wukong_PBData_ReadWriter_GUI.Models"
         xmlns:v="clr-namespace:Wukong_PBData_ReadWriter_GUI.Views"
         xmlns:vm="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
+        xmlns:conv="clr-namespace:Wukong_PBData_ReadWriter_GUI.Converters"
         xmlns:hc="https://handyorg.github.io/handycontrol"
         mc:Ignorable="d"
         Title="黑猴配表编辑器" Height="720" Width="1280"
@@ -13,13 +14,16 @@
     <Window.DataContext>
         <vm:MainWindowViewModel />
     </Window.DataContext>
+    <Window.Resources>
+        <conv:DirtyToForeground x:Key="DirtyToForeground" />
+    </Window.Resources>
     <DockPanel>
         <!-- 顶部菜单栏 -->
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="文件">
                 <MenuItem Header="打开Data目录" Command="{Binding OpenFolderCommand}" />
-                <MenuItem Header="保存Data文件" Command="{Binding SaveCommand}" />
-                <MenuItem Header="另存Data文件" Command="{Binding SaveAsCommand}" />
+                <MenuItem Header="保存Data文件" Command="{Binding SaveAllCommand}" />
+                <MenuItem Header="另存Data文件" Command="{Binding SaveAllAsCommand}" />
                 <Separator />
                 <MenuItem Header="导入备注配置" Command="{Binding ImportDescriptionCommand}" />
                 <MenuItem Header="导出备注配置" Command="{Binding ExportDescriptionCommand}" />
@@ -39,8 +43,7 @@
         <StackPanel DockPanel.Dock="Top" Margin="5">
             <TextBox Name="GlobalSearchBox" Width="Auto" Margin="0,0,0,10" Text="全局搜索" Foreground="Gray" />
             <Expander Name="SearchResultsExpander" Header="搜索结果" IsExpanded="False" Visibility="Collapsed">
-                <ListBox Name="SearchResultsList" Width="Auto" Height="200"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                <ListBox Name="SearchResultsList" Width="Auto" Height="200" />
             </Expander>
         </StackPanel>
 
@@ -53,7 +56,7 @@
             </Grid.ColumnDefinitions>
             <!-- 第一个区块 -->
             <StackPanel Grid.Column="0" Margin="5">
-                <hc:SearchBar hc:InfoElement.Placeholder="{Binding CurrentOpenFolder}" hc:InfoElement.Necessary="True" />
+                <!-- <hc:SearchBar hc:InfoElement.Placeholder="？？？？？？？？" hc:InfoElement.Necessary="True" /> -->
                 <hc:TextBox Width="Auto" Margin="0,0,0,10"
                             hc:InfoElement.Placeholder="搜索配表文件"
                             Text="{Binding FileSearchText}" />
@@ -65,7 +68,7 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding DisplayName}"
-                                       ToolTip="{Binding Desc}">
+                                       Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}">
                             </TextBlock>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -82,7 +85,7 @@
                         <DataTemplate>
                             <TextBlock d:DataContext="{d:DesignInstance m:DataItem}"
                                        Text="{Binding Desc}"
-                                       Foreground="{Binding Foreground}" />
+                                       Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
