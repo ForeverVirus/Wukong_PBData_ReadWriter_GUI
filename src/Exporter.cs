@@ -430,5 +430,47 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             // 提取最后一个斜杠后的部分作为文件名
             return path.Substring(path.LastIndexOf('.') + 1);
         }
+
+        public static Dictionary<string, string> CollectItemMD5(List<DataFile> fileList)
+        {
+            Dictionary<string, string> md5Config = new Dictionary<string, string>();
+
+            foreach (var file in fileList)
+            {
+                file.LoadData();
+                if (file._FileDataItemList != null && file._FileDataItemList.Count > 0)
+                {
+                    foreach (var data in file._FileDataItemList)
+                    {
+                        var key = file._FileData.GetType().Name + "_" + data._ID;
+                        var bytes = data._Data.ToByteArray();
+                        var md5 = MD5.Create().ComputeHash(bytes);
+                        var md5Str = BitConverter.ToString(md5).Replace("-", "").ToLower();
+                        md5Config.TryAdd(key, md5Str);
+                    }
+                }
+            }
+
+            return md5Config;
+        }
+
+        public static bool IsSameAsMd5(DataItem item, Dictionary<string, string> md5Config)
+        {
+            if (item == null || item._Data == null)
+                return false;
+
+            string key = item._File._FileData.GetType().Name + "_" + item._ID;
+
+            if (md5Config.TryGetValue(key, out var md5))
+            {
+                var bytes = item._Data.ToByteArray();
+                var itemMd5 = MD5.Create().ComputeHash(bytes);
+                var md5Str = BitConverter.ToString(itemMd5).Replace("-", "").ToLower();
+                return md5Str.Equals(md5);
+            }
+
+            return false;
+
+        }
     }
 }

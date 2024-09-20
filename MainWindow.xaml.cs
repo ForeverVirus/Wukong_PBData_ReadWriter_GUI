@@ -28,6 +28,7 @@ namespace Wukong_PBData_ReadWriter_GUI
     {
         public List<DataFile> _DataFiles = new List<DataFile>();
         public Dictionary<string, string> _DescriptionConfig = new Dictionary<string, string>();
+        public Dictionary<string, string> _MD5Config = new Dictionary<string, string>();
         public DataFile _CurrentOpenFile = null;
         public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
         public DispatcherTimer _SearchTimer;
@@ -38,6 +39,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         public MainWindow()
         {
             _DescriptionConfig = Exporter.ImportDescriptionConfig("DefaultDescConfig.json");
+            _MD5Config = Exporter.ImportDescriptionConfig("DefaultMD5Config.json");
             _SearchTimer = new DispatcherTimer();
             _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
             _SearchTimer.Tick += SearchTimer_Tick;
@@ -235,6 +237,8 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 _GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
                 //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
+                // _MD5Config = Exporter.CollectItemMD5(_DataFiles);
+                
                 CloseAllOtherWindow();
                 _CurrentOpenFile = null;
             }
@@ -541,6 +545,10 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 ListBoxItem listItem = new ListBoxItem();
                 listItem.Content = item._ID + "  " + item._Desc;
+                
+                if(!Exporter.IsSameAsMd5(item, _MD5Config))
+                    listItem.Foreground = new SolidColorBrush(Colors.Red);
+                
                 listItem.DataContext = item;
                 item._ListBoxItem = listItem;
                 listItem.MouseDoubleClick += new MouseButtonEventHandler(OpenDataItem);
@@ -963,9 +971,13 @@ namespace Wukong_PBData_ReadWriter_GUI
                     window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
                     window.Show();
+                    
+                    ScrollViewer scrollViewer = new ScrollViewer();
+                    scrollViewer.Height = 550;
+                    window.Content = scrollViewer;
                     //window 增加一个Grid,与parent Grid一样
                     Grid grid = new Grid();
-                    window.Content = grid;
+                    scrollViewer.Content = grid;
                     grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
                     grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
                     grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
@@ -1217,9 +1229,13 @@ namespace Wukong_PBData_ReadWriter_GUI
                     window.Height = 600;
                     window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                     window.Show();
+                    
+                    ScrollViewer scrollViewer = new ScrollViewer();
+                    scrollViewer.Height = 550;
+                    window.Content = scrollViewer;
                     //window 增加一个Grid,与parent Grid一样
                     Grid grid = new Grid();
-                    window.Content = grid;
+                    scrollViewer.Content = grid;
                     grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
                     grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
                     grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
