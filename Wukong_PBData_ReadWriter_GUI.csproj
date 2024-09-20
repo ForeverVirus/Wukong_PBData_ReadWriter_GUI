@@ -4,9 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-	  <UseWindowsForms>true</UseWindowsForms>
+	  <UseWindowsForms>False</UseWindowsForms>
+	  <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,19 +16,19 @@
 
   <ItemGroup>
     <Reference Include="Google.Protobuf">
-      <HintPath>ref\Google.Protobuf.dll</HintPath>
+      <HintPath>Libs\Google.Protobuf.dll</HintPath>
     </Reference>
     <Reference Include="GSE.ProtobufDB">
-      <HintPath>ref\GSE.ProtobufDB.dll</HintPath>
+      <HintPath>Libs\GSE.ProtobufDB.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>ref\Newtonsoft.Json.dll</HintPath>
+      <HintPath>Libs\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Protobuf.RunTime">
-      <HintPath>ref\Protobuf.RunTime.dll</HintPath>
+      <HintPath>Libs\Protobuf.RunTime.dll</HintPath>
     </Reference>
     <Reference Include="UnrealEngine.Runtime">
-      <HintPath>ref\UnrealEngine.Runtime.dll</HintPath>
+      <HintPath>Libs\UnrealEngine.Runtime.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -63,9 +63,27 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Page Update="MainWindow - 复制.xaml">
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.1" />
+    <PackageReference Include="HandyControl" Version="3.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <XamlRuntime>Wpf</XamlRuntime>
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Views\ConflictWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <XamlRuntime>Wpf</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\ConflictWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
 </Project>

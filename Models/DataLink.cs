@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Wukong_PBData_ReadWriter_GUI.src
+namespace Wukong_PBData_ReadWriter_GUI.Models
 {
     public class DataLink
     {

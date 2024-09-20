@@ -1,0 +1,140 @@
+﻿<Window x:Class="Wukong_PBData_ReadWriter_GUI.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:m="clr-namespace:Wukong_PBData_ReadWriter_GUI.Models"
+        xmlns:v="clr-namespace:Wukong_PBData_ReadWriter_GUI.Views"
+        xmlns:vm="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
+        xmlns:conv="clr-namespace:Wukong_PBData_ReadWriter_GUI.Converters"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        mc:Ignorable="d"
+        Title="黑猴配表编辑器" Height="720" Width="1280"
+        ResizeMode="CanMinimize"
+        Closed="MainWindowClosed">
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
+    <Window.Resources>
+        <conv:DirtyToForeground x:Key="DirtyToForeground" />
+        <Style x:Key="ListBoxItemFullWidth" 
+            BasedOn="{StaticResource ListBoxBaseStyle}" TargetType="ListBox">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+    </Window.Resources>
+    <DockPanel>
+        <!-- 顶部菜单栏 -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="文件">
+                <MenuItem Header="打开Data目录" Command="{Binding OpenFolderCommand}" />
+                <MenuItem Header="保存Data文件" Command="{Binding SaveAllCommand}" />
+                <MenuItem Header="另存Data文件" Command="{Binding SaveAllAsCommand}" />
+                <Separator />
+                <MenuItem Header="导入备注配置" Command="{Binding ImportDescriptionCommand}" />
+                <MenuItem Header="导出备注配置" Command="{Binding ExportDescriptionCommand}" />
+                <Separator />
+                <MenuItem Header="PAK工具" Click="ShowPakWindow" />
+                <!-- <MenuItem Header="生成PAK" Click="CreatePak" /> -->
+                <!-- <MenuItem Header="解包PAK" Click="UncompressPak" /> -->
+                <!-- <MenuItem Header="合并PAK" Click="CreateUnpackWindow" /> -->
+                <Separator />
+                <MenuItem Header="退出" Click="CloseButtonClick" />
+            </MenuItem>
+            <MenuItem Header="帮助">
+                <MenuItem Header="查看帮助" Click="ShowHelpWindow" />
+                <MenuItem Header="关于作者🔗" Click="OpenAuthorHomeLink" />
+            </MenuItem>
+        </Menu>
+
+        <StackPanel DockPanel.Dock="Top" Margin="5">
+            <TextBox Name="GlobalSearchBox" Width="Auto" Margin="0,0,0,10" Text="全局搜索" Foreground="Gray" />
+            <Expander Name="SearchResultsExpander" Header="搜索结果" IsExpanded="False" Visibility="Collapsed">
+                <ListBox Name="SearchResultsList" Width="Auto" Height="200" />
+            </Expander>
+        </StackPanel>
+
+        <!-- 主体内容 -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="5*" />
+            </Grid.ColumnDefinitions>
+            <!-- 第一个区块 -->
+            <Grid Grid.Column="0" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="120"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <!-- <hc:SearchBar hc:InfoElement.Placeholder="？？？？？？？？" hc:InfoElement.Necessary="True" /> -->
+                <hc:TextBox Grid.Row="0" Margin="0,0,0,10"
+                            hc:InfoElement.Placeholder="搜索配表文件"
+                            Text="{Binding FileSearchText, UpdateSourceTrigger=PropertyChanged}" />
+
+                <ListBox Grid.Row="1" Margin="0,0,0,10" Height="110" VerticalAlignment="Bottom">
+                </ListBox>
+
+                <ListBox x:Name="DataFileListBox" Grid.Row="2"
+                         SelectedValue="{Binding SelectedFile}"
+                         Style="{StaticResource ListBoxItemFullWidth}"
+                         ItemsSource="{Binding FilteredDataFiles}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}"
+                                       Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}">
+                                <TextBlock.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="保存文件" IsEnabled="{Binding IsDirty}"/>
+                                        <MenuItem Header="另存文件"/>
+                                    </ContextMenu>
+                                </TextBlock.ContextMenu>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+            <!-- 第二个区块 -->
+            <Grid Grid.Column="1" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+                <hc:TextBox Grid.Row="0" Margin="0,0,0,10" 
+                            hc:InfoElement.Placeholder="搜索ID或备注"
+                            Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                <ListBox x:Name="DataItemListBox" Grid.Row="1"
+                         Style="{StaticResource ListBoxItemFullWidth}"
+                         ItemsSource="{Binding FilteredDataItems}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock d:DataContext="{d:DesignInstance m:DataItem}"
+                                       Text="{Binding Desc}"
+                                       Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}">
+                                <TextBlock.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="备注"/>
+                                        <MenuItem Header="克隆"/>
+                                        <MenuItem Header="删除"/>
+                                    </ContextMenu>
+                                </TextBlock.ContextMenu>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Button Content="新增一项" Grid.Row="2" Click="AddNewDataItem_Click" />
+            </Grid>
+
+            <!-- 第三个区块 -->
+            <Grid Grid.Column="2" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Stretch">配置数据</Label>
+                <v:DataItemView Grid.Row="1" DataContext="{Binding SelectedValue, ElementName=DataItemListBox}" />
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>

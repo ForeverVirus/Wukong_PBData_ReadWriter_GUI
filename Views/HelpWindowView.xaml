@@ -1,0 +1,27 @@
+﻿<Window x:Class="Wukong_PBData_ReadWriter_GUI.Views.HelpWindowView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        mc:Ignorable="d"
+        Title="帮助" Height="800" Width="800"
+        WindowStartupLocation="CenterScreen"
+        Loaded="WindowLoaded">
+    <hc:SimplePanel>
+        <hc:ScrollViewer VerticalScrollBarVisibility="Auto">
+            <hc:SimpleStackPanel HorizontalAlignment="Center" Margin="10">
+                <hc:SimpleStackPanel Orientation="Horizontal"
+                                     HorizontalAlignment="Center"
+                                     Margin="0,10,0,10">
+                    <Image Source="../zfb.jpg" Width="150" Height="150" Margin="5" />
+                    <Image Source="../vx.jpg" Width="150" Height="150" Margin="5" />
+                </hc:SimpleStackPanel>
+                <TextBlock FontSize="18" HorizontalAlignment="Center" Margin="0,0,0,18">
+                    这里是赛博乞讨<LineBreak />如果你喜欢这个工具可以赞助一下，谢谢~
+                </TextBlock>
+                <TextBlock x:Name="HelpText" />
+            </hc:SimpleStackPanel>
+        </hc:ScrollViewer>
+    </hc:SimplePanel>
+</Window>

@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace Wukong_PBData_ReadWriter_GUI
+namespace Wukong_PBData_ReadWriter_GUI.Views
 {
     /// <summary>
     /// Interaction logic for App.xaml
