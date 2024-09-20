@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ResB1;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -297,6 +298,46 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             File.WriteAllText(path, json);
         }
 
+        public static void ExportItemDataBytes(Dictionary<string, byte[]> itemData, string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
+            //write itemData to file with BinaryWriter
+            using(BinaryWriter bw = new BinaryWriter(new FileStream(path, FileMode.CreateNew)))
+            {
+                bw.Write(itemData.Count);
+                foreach (var item in itemData)
+                {
+                    bw.Write(item.Key);
+                    bw.Write(item.Value.Length);
+                    bw.Write(item.Value);
+                }
+            }
+        }
+
+        public static Dictionary<string, byte[]> ImportItemDataBytes(string path)
+        {
+            Dictionary<string, byte[]> itemData = new Dictionary<string, byte[]>();
+
+            //read itemData from file
+            using (BinaryReader br = new BinaryReader(new FileStream(path, FileMode.Open)))
+            {
+                var count = br.ReadInt32();
+                for(int i = 0; i < count; i++)
+                {
+                    var key = br.ReadString();
+                    var byteLength = br.ReadInt32();
+                    var bytes = br.ReadBytes(byteLength);
+
+                    itemData.Add(key, bytes);
+                }
+            }
+            return itemData;
+        }
+
         public static Dictionary<string, string> ImportDescriptionConfig(string path)
         {
             var dict = new Dictionary<string, string>();
@@ -332,42 +373,89 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             }
         }
 
-        public static List<(string, DataFile, DataItem)> GlobalSearchCache(List<DataFile> fileList)
+        public static async Task<List<(string, DataFile, DataItem)>> GlobalSearchCacheAsync(List<DataFile> fileList)
         {
-            List<(string, DataFile, DataItem)> cache = new List<(string, DataFile, DataItem)>();
-
-            foreach (DataFile file in fileList)
+            return await Task.Run(() =>
             {
-                file.LoadData();
-                if (file._FileDataItemList != null && file._FileDataItemList.Count > 0)
-                {
-                    foreach (var data in file._FileDataItemList)
-                    {
-                        string cacheKey = $"{file._FileName}({file._Desc})-{data._ID}({data._Desc})";
-                        cache.Add((cacheKey, file, data));
+                List<(string, DataFile, DataItem)> cache = new List<(string, DataFile, DataItem)>();
 
-                        //var properties = data._Data.GetType().GetProperties();
-                        //foreach (var property in properties)
-                        //{
-                        //    if (property.PropertyType == typeof(string))
-                        //    {
-                        //        var value = property.GetValue(data._Data, null) as string;
-                        //        if (ContainsChineseUsingRegex(value))
-                        //        {
-                        //            cache.Add(file._FileData.GetType().Name + "_" + data._ID);
-                        //            break;
-                        //        }
-                        //        if (IsPathFormat(value))
-                        //        {
-                        //            cache.Add(file._FileData.GetType().Name + "_" + data._ID);
-                        //        }
-                        //    }
-                        //}
+                foreach (DataFile file in fileList)
+                {
+                    file.LoadData();
+                    if (file._FileDataItemList != null && file._FileDataItemList.Count > 0)
+                    {
+                        foreach (var data in file._FileDataItemList)
+                        {
+                            string cacheKey = $"{file._FileName}({file._Desc})-{data._ID}({data._Desc})";
+                            cache.Add((cacheKey, file, data));
+
+                            data.LoadData();
+
+                            var propertyItems = data._DataPropertyItems;
+                            foreach (var property in propertyItems)
+                            {
+                                if (property != null)
+                                {
+                                    var value = property._PropertyInfo.GetValue(property._BelongData, null);
+
+                                    ProcessGlobalSearch(value, file, data, cache, property._PropertyName, property._PropertyDesc);
+                                }
+                            }
+                        }
                     }
                 }
-            }
 
-            return cache;
+                return cache;
+            });
+        }
+
+        static void ProcessGlobalSearch(object value, DataFile file, DataItem data, List<(string, DataFile, DataItem)> cache, string propertyName, string propertyDesc = "")
+        {
+            if (value is string)
+            {
+                string key = $"{file._FileName}({file._Desc})-{data._ID}({data._Desc})-{propertyName}({propertyDesc})-{value}";
+
+                cache.Add((key, file, data));
+            }
+            else if (IsNumber(value))
+            {
+                string key = $"{file._FileName}({file._Desc})-{data._ID}({data._Desc})-{propertyName}({propertyDesc})-{value}";
+
+                cache.Add((key, file, data));
+            }
+            else if (value is Enum)
+            {
+                string key = $"{file._FileName}({file._Desc})-{data._ID}({data._Desc})-{propertyName}({propertyDesc})-{value.ToString()}";
+
+                cache.Add((key, file, data));
+            }
+            else if(value is IMessage)
+            {
+                var type = value.GetType();
+
+                var ps = type.GetProperties();
+                foreach(var p in ps)
+                {
+                    ProcessGlobalSearch(p.GetValue(value), file, data, cache, p.Name, "");
+                }
+            }
+            else if (typeof(IList).IsAssignableFrom(value.GetType()))
+            {
+                var listValue = value as IList;
+                int index = 0;
+                foreach (var item in listValue)
+                {
+                    ProcessGlobalSearch(item, file, data, cache, $"{propertyName}{index}", "");
+                    index++;
+                }
+            }
+        }
+        public static bool IsNumber(object value)
+        {
+            if (value == null) return false;
+
+            TypeCode typeCode = Type.GetTypeCode(value.GetType());
+            return typeCode == TypeCode.Int32 || typeCode == TypeCode.Int64 || typeCode == TypeCode.Single || typeCode == TypeCode.Double;
         }
 
         public static Dictionary<string, string> GenerateFirstDescConfig(List<DataFile> fileList)
@@ -452,6 +540,27 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             }
 
             return md5Config;
+        }
+
+        public static Dictionary<string, byte[]> CollectItemBytes(List<DataFile> fileList)
+        {
+            Dictionary<string, byte[]> itemData = new Dictionary<string, byte[]>();
+
+            foreach (var file in fileList)
+            {
+                file.LoadData();
+                if (file._FileDataItemList != null && file._FileDataItemList.Count > 0)
+                {
+                    foreach (var data in file._FileDataItemList)
+                    {
+                        var key = file._FileData.GetType().Name + "_" + data._ID;
+                        var bytes = data._Data.ToByteArray();
+                        itemData.TryAdd(key, bytes);
+                    }
+                }
+            }
+
+            return itemData;
         }
 
         public static bool IsSameAsMd5(DataItem item, Dictionary<string, string> md5Config)

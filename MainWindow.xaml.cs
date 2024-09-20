@@ -16,8 +16,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using System.Xml.Serialization;
+using UnrealEngine.Runtime;
 using Wukong_PBData_ReadWriter_GUI.src;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace Wukong_PBData_ReadWriter_GUI
 {
@@ -27,8 +29,9 @@ namespace Wukong_PBData_ReadWriter_GUI
     public partial class MainWindow : Window
     {
         public List<DataFile> _DataFiles = new List<DataFile>();
-        public Dictionary<string, string> _DescriptionConfig = new Dictionary<string, string>();
+        public static Dictionary<string, string> _DescriptionConfig = new Dictionary<string, string>();
         public Dictionary<string, string> _MD5Config = new Dictionary<string, string>();
+        public Dictionary<string, byte[]> _OrigItemData = new Dictionary<string, byte[]>();
         public DataFile _CurrentOpenFile = null;
         public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
         public DispatcherTimer _SearchTimer;
@@ -40,10 +43,22 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             _DescriptionConfig = Exporter.ImportDescriptionConfig("DefaultDescConfig.json");
             _MD5Config = Exporter.ImportDescriptionConfig("DefaultMD5Config.json");
+            _OrigItemData = Exporter.ImportItemDataBytes("DefaultOriData.oridata");
             _SearchTimer = new DispatcherTimer();
             _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
             _SearchTimer.Tick += SearchTimer_Tick;
             this.Title = "黑猴配表编辑器" + version;
+        }
+
+        private void GlobalSearchBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                _SearchTimer.Stop();
+                _SearchTimer.Start();
+                // 重新执行搜索
+                //SearchTimer_Tick(null, null);
+            }
         }
 
         private void CloseAllOtherWindow(bool isClearDataGrid = true)
@@ -218,15 +233,22 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
             dialog.AddExtension = true;
+            //dialog.Filter = "Data|*.oridata";
             dialog.Filter = "Json|*.json";
             dialog.Title = "导出备注配置";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 Exporter.ExportDescriptionConfig(_DescriptionConfig, dialog.FileName);
+                //Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
             }
         }
 
-        private void OpenDataFolder(object sender, RoutedEventArgs e)
+        private async Task CacheGlobalSearchAsync(List<DataFile> fileList)
+        {
+            _GlobalSearchCache = await Exporter.GlobalSearchCacheAsync(fileList);
+        }
+
+        private async void OpenDataFolder(object sender, RoutedEventArgs e)
         {
             //选择文件夹,并返回选择的文件夹路径，FolderBrowserDialog是一个选择文件夹的对话框
             System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
@@ -234,13 +256,16 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 RefreshFolderFile(dialog.SelectedPath);
-
-                _GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
-                //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
-                // _MD5Config = Exporter.CollectItemMD5(_DataFiles);
-                
                 CloseAllOtherWindow();
                 _CurrentOpenFile = null;
+
+                await CacheGlobalSearchAsync(_DataFiles);
+                
+                //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
+                // _MD5Config = Exporter.CollectItemMD5(_DataFiles);
+                //_OrigItemData = Exporter.CollectItemBytes(_DataFiles);
+
+                
             }
         }
 
@@ -545,9 +570,12 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 ListBoxItem listItem = new ListBoxItem();
                 listItem.Content = item._ID + "  " + item._Desc;
-                
-                if(!Exporter.IsSameAsMd5(item, _MD5Config))
+
+                if (!Exporter.IsSameAsMd5(item, _MD5Config))
+                {
                     listItem.Foreground = new SolidColorBrush(Colors.Red);
+                    item._IsModified = true;
+                }
                 
                 listItem.DataContext = item;
                 item._ListBoxItem = listItem;
@@ -760,15 +788,104 @@ namespace Wukong_PBData_ReadWriter_GUI
                     RefreshDataItemList(data._DataPropertyItems);
 
                     CloseAllOtherWindow(false);
+
+                    if(data._IsModified)
+                    {
+                        var key = data._File._FileData.GetType().Name + "_" + data._ID;
+                        if (_OrigItemData.TryGetValue(key, out var itemDataBytes))
+                        {
+                            OpenOriDataWindow(itemDataBytes, data);
+                        }
+                    }
                 }
             }
         }
 
-        private void RefreshDataItemList(List<DataPropertyItem> propertyItemList)
+        private void OpenOriDataWindow(byte[] itemData, DataItem curData)
         {
-            DataGrid.RowDefinitions.Clear();
-            DataGrid.Children.Clear();
-            DataGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            if (itemData == null || itemData.Length <= 0)
+                return;
+
+            //IMessage
+            var dataPropertyItems = new List<DataPropertyItem>();
+
+            var dataType = curData._Data.GetType();
+            var parser = dataType.GetProperty("Parser", BindingFlags.Static | BindingFlags.Public);
+            if (parser != null)
+            {
+                try
+                {
+                    MessageParser parserValue = parser.GetMethod.Invoke(null, null) as MessageParser;
+                    var message = parserValue.ParseFrom(itemData);
+                    if (message != null)
+                    {
+                        var properties = dataType.GetProperties();
+
+                        foreach (var property in properties)
+                        {
+                            DataPropertyItem dataPropertyItem = new DataPropertyItem();
+                            dataPropertyItem._PropertyName = property.Name;
+                            dataPropertyItem._PropertyDesc = "";
+                            dataPropertyItem._PropertyInfo = property;
+                            dataPropertyItem._BelongData = message;
+                            dataPropertyItem._DataItem = curData;
+                            dataPropertyItems.Add(dataPropertyItem);
+                        }
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("Data Failed ");
+                }
+            }
+
+            if(dataPropertyItems == null || dataPropertyItems.Count <= 0)
+            {
+                return;
+            }
+
+            Window window = new Window();
+            window.Title = "原始数据";
+            window.Width = 640;
+            window.Height = 720;
+
+            StackPanel stackPanel = new StackPanel();
+            window.Content = stackPanel;
+            stackPanel.Margin = new Thickness(5);
+            TextBlock textBlock = new TextBlock();
+            textBlock.Text = "原始配置数据";
+            textBlock.FontWeight = FontWeights.Bold;
+            textBlock.Margin = new Thickness(0, 0, 0, 10);
+            stackPanel.Children.Add(textBlock);
+
+            ScrollViewer scrollViewer = new ScrollViewer();
+            scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            scrollViewer.Height = 600;
+            stackPanel.Children.Add(scrollViewer);
+
+            Grid grid = new Grid();
+            grid.Width = 640;
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(320) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(320) });
+            scrollViewer.Content = grid;
+
+            RefreshDataItemList(dataPropertyItems, grid);
+
+            var mainWindowRect = new Rect(this.Left, this.Top, this.ActualWidth, this.ActualHeight);
+
+            // 设置子窗口的位置，使其吸附在主窗口的右边
+            window.Left = mainWindowRect.Right;
+            window.Top = mainWindowRect.Top;
+
+            window.Show();
+        }
+
+        private void RefreshDataItemList(List<DataPropertyItem> propertyItemList, Grid grid = null)
+        {
+            if (grid == null) grid = DataGrid;
+            grid.RowDefinitions.Clear();
+            grid.Children.Clear();
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             int rowIndex = 0;
             foreach (var item in propertyItemList)
             {
@@ -809,10 +926,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                 menuItem.Click += OpenDescriptionWindow;
                 label.ContextMenu.Items.Add(menuItem);
 
-                DataGrid.Children.Add(label);
+                grid.Children.Add(label);
 
                 var valueType = item._PropertyInfo.PropertyType;
-                ProcessPropertyType(valueType, item, rowIndex, DataGrid, 300);
+                ProcessPropertyType(valueType, item, rowIndex, grid, 300);
                 rowIndex++;
             }
         }
@@ -830,6 +947,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 numberTextBox.VerticalAlignment = VerticalAlignment.Top;
                 numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
                 numberTextBox.DataContext = item;
+                numberTextBox.IsReadOnly = curGrid != DataGrid;
                 numberTextBox.TextChanged += NumberTextBox_TextChanged;
                 Grid.SetRow(numberTextBox, rowIndex);
                 Grid.SetColumn(numberTextBox, 1);
@@ -843,6 +961,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 stringTextBox.VerticalAlignment = VerticalAlignment.Top;
                 stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
                 stringTextBox.DataContext = item;
+                stringTextBox.IsReadOnly = curGrid != DataGrid;
                 stringTextBox.TextChanged += StringTextBox_TextChanged;
                 Grid.SetRow(stringTextBox, rowIndex);
                 Grid.SetColumn(stringTextBox, 1);
@@ -858,6 +977,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 comboBox.ItemsSource = Enum.GetValues(valueType);
                 comboBox.SelectedItem = item._PropertyInfo.GetValue(item._BelongData);
                 comboBox.DataContext = item;
+                comboBox.IsReadOnly = curGrid != DataGrid;
                 comboBox.SelectionChanged += ComboBox_SelectionChanged;
                 Grid.SetRow(comboBox, rowIndex);
                 Grid.SetColumn(comboBox, 1);
@@ -899,6 +1019,29 @@ namespace Wukong_PBData_ReadWriter_GUI
             var textBox = sender as System.Windows.Controls.TextBox;
             if (textBox != null)
             {
+                string text = textBox.Text;
+                string numericText = new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
+
+                // 确保负号只能出现在第一个字符位置
+                if (numericText.IndexOf('-') > 0)
+                {
+                    numericText = numericText.Replace("-", "");
+                    numericText = "-" + numericText;
+                }
+
+                // 确保小数点只能出现一次
+                int dotIndex = numericText.IndexOf('.');
+                if (dotIndex != -1)
+                {
+                    numericText = numericText.Substring(0, dotIndex + 1) + numericText.Substring(dotIndex + 1).Replace(".", "");
+                }
+
+                if (text != numericText)
+                {
+                    textBox.Text = numericText;
+                    textBox.CaretIndex = numericText.Length; // 保持光标在文本末尾
+                }
+
                 var item = textBox.DataContext as DataPropertyItem;
 
 
@@ -1183,6 +1326,28 @@ namespace Wukong_PBData_ReadWriter_GUI
             var textBox = sender as System.Windows.Controls.TextBox;
             if (textBox != null)
             {
+                string text = textBox.Text;
+                string numericText = new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
+
+                // 确保负号只能出现在第一个字符位置
+                if (numericText.IndexOf('-') > 0)
+                {
+                    numericText = numericText.Replace("-", "");
+                    numericText = "-" + numericText;
+                }
+
+                // 确保小数点只能出现一次
+                int dotIndex = numericText.IndexOf('.');
+                if (dotIndex != -1)
+                {
+                    numericText = numericText.Substring(0, dotIndex + 1) + numericText.Substring(dotIndex + 1).Replace(".", "");
+                }
+
+                if (text != numericText)
+                {
+                    textBox.Text = numericText;
+                    textBox.CaretIndex = numericText.Length; // 保持光标在文本末尾
+                }
                 var data = textBox.DataContext as Tuple<int, IList, Type>;
 
                 if (data.Item3 == typeof(int))
@@ -1308,7 +1473,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             // 允许使用退格键、删除键、Tab键、箭头键等
             if (e.Key == Key.Back || e.Key == Key.Delete || e.Key == Key.Tab ||
-                e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
+                e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.LeftCtrl || e.Key == Key.C || e.Key == Key.V)
             {
                 e.Handled = false;
             }
@@ -1602,8 +1767,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void GlobalSearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            _SearchTimer.Stop();
-            _SearchTimer.Start();
+            
 
             
         }
@@ -1620,10 +1784,34 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             if (!string.IsNullOrWhiteSpace(searchText) && searchText != "全局搜索")
             {
+                bool isRegex = RegexRadioButton.IsChecked == true;
+                bool isWildcard = WildcardRadioButton.IsChecked == true;
+                bool isExactMatch = ExactMatchRadioButton.IsChecked == true;
+
+                // 将通配符转换为正则表达式
+                if (isWildcard)
+                {
+                    searchText = "^" + Regex.Escape(searchText).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                }
 
                 foreach (var item in _GlobalSearchCache)
                 {
-                    if (item.Item1.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                    bool isMatch = false;
+
+                    if (isRegex || isWildcard)
+                    {
+                        isMatch = Regex.IsMatch(item.Item1, searchText, RegexOptions.IgnoreCase);
+                    }
+                    else if (isExactMatch)
+                    {
+                        isMatch = string.Equals(item.Item1, searchText, StringComparison.OrdinalIgnoreCase);
+                    }
+                    else
+                    {
+                        isMatch = item.Item1.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+                    }
+
+                    if (isMatch)
                     {
                         ListBoxItem listItem = new ListBoxItem();
                         listItem.Content = item.Item1;
@@ -1644,6 +1832,12 @@ namespace Wukong_PBData_ReadWriter_GUI
                 SearchResultsExpander.Visibility = Visibility.Collapsed;
                 this.Height = 720;
             }
+        }
+
+        private void SearchModeRadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            // 重新执行搜索
+            SearchTimer_Tick(null, null);
         }
 
         private void OpenGlobalSearchItem(object sender, MouseButtonEventArgs e)

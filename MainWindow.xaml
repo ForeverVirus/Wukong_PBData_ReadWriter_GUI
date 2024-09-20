@@ -41,7 +41,7 @@
                 <Separator />
                 <MenuItem Header="生成PAK" Click="CreatePak" />
                 <MenuItem Header="解包PAK" Click="UncompressPak" />
-                <MenuItem Header="合并PAK" Click="CreateUnpackWindow" />
+                <!--<MenuItem Header="合并PAK" Click="CreateUnpackWindow" />-->
                 <Separator />
                 <MenuItem Header="退出" Click="Close_Click" />
             </MenuItem>
@@ -52,7 +52,15 @@
         </Menu>
 
         <StackPanel DockPanel.Dock="Top" Margin="5">
-            <TextBox Name="GlobalSearchBox" Width="Auto" Margin="0,0,0,10" Text="全局搜索" Foreground="Gray" GotFocus="GlobalSearchBox_GotFocus" LostFocus="GlobalSearchBox_LostFocus" TextChanged="GlobalSearchBox_TextChanged"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBox Name="GlobalSearchBox" Width="600" Margin="0,0,10,0" Text="全局搜索" Foreground="Gray" GotFocus="GlobalSearchBox_GotFocus" LostFocus="GlobalSearchBox_LostFocus" TextChanged="GlobalSearchBox_TextChanged" KeyDown="GlobalSearchBox_KeyDown"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <RadioButton x:Name="RegexRadioButton" Content="正则" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
+                    <RadioButton x:Name="WildcardRadioButton" Content="通配符" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
+                    <RadioButton x:Name="ExactMatchRadioButton" Content="全字匹配" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
+                    <RadioButton x:Name="ContainsRadioButton" Content="包含" GroupName="SearchMode" IsChecked="True" Checked="SearchModeRadioButton_Checked"/>
+                </StackPanel>
+            </StackPanel>
             <Expander Name="SearchResultsExpander" Header="搜索结果" IsExpanded="False" Visibility="Collapsed">
                 <ListBox Name="SearchResultsList" Width="Auto" Height="200" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
             </Expander>
@@ -73,15 +81,15 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>-->
                 <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Grid.Row="0" Text="搜索配表文件" Foreground="Gray" GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus" TextChanged="FileSearch_TextChanged"/>
-                <ListBox Name="TopFileList" Width="Auto" Height="120" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox Name="TopFileList" Width="Auto" Height="120" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto" d:ItemsSource="{d:SampleData ItemCount=5}">
                 </ListBox>
-                <ListBox Name="FileList" Width="Auto" Height="440" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.RowSpan="2" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}"/>
+                <ListBox Name="FileList" Width="Auto" Height="440" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.RowSpan="2" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}" d:ItemsSource="{d:SampleData ItemCount=5}"/>
             </StackPanel>
 
             <!-- 第二个区块 -->
             <StackPanel Grid.Column="1" Margin="5">
                 <TextBox Name="ItemSearch" Width="Auto" Margin="0,0,0,10" Text="搜索ID或备注" Foreground="Gray" GotFocus="ItemSearch_GotFocus" LostFocus="ItemSearch_LostFocus" TextChanged="ItemSearch_TextChanged"/>
-                <ListBox Name="DataItemList" Width="Auto" Height="540" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}"/>
+                <ListBox Name="DataItemList" Width="Auto" Height="540" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}" d:ItemsSource="{d:SampleData ItemCount=5}"/>
                 <Button x:Name="AddNewDataItem" Content="新增一项" Width="Auto" Height="20" Click="AddNewDataItem_Click"/>
             </StackPanel>
 

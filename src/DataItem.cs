@@ -18,8 +18,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             {
                 if(_File != null)
                 {
-                    var mainWindow = System.Windows.Application.Current.MainWindow as MainWindow;
-                    if(mainWindow._DescriptionConfig.TryGetValue(_File._FileData.GetType().Name + "_" + _ID, out var desc))
+                    if(MainWindow._DescriptionConfig.TryGetValue(_File._FileData.GetType().Name + "_" + _ID, out var desc))
                     {
                         return desc;
                     }
@@ -36,6 +35,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public DataFile _File;
         public bool _IsShow = true;
         public ListBoxItem _ListBoxItem;
+        public bool _IsModified = false;
 
         private string _desc;
 
