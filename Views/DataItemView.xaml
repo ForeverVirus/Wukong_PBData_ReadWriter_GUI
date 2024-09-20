@@ -4,7 +4,87 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:hc="https://handyorg.github.io/handycontrol"
-             mc:Ignorable="d">
-    <hc:ScrollViewer x:Name="PropertyViewer"
-                     VerticalScrollBarVisibility="Auto" />
+             xmlns:m="clr-namespace:Wukong_PBData_ReadWriter_GUI.Models"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=m:DataItem}">
+    <UserControl.Resources>
+        <DataTemplate x:Key="PropertyTemplate" DataType="{x:Type m:DataProperty}">
+            <hc:Row Margin="5">
+                <hc:Col Span="8">
+                    <hc:SimpleText Text="{Binding PropertyName}" VerticalAlignment="Center"/>
+                </hc:Col>
+                <hc:Col Span="16">
+                    <ContentControl Content="{Binding}">
+                        <ContentControl.ContentTemplateSelector>
+                            <m:PropertyTemplateSelector>
+                                <m:PropertyTemplateSelector.NumberTemplate>
+                                    <DataTemplate>
+                                        <hc:NumericUpDown Value="{Binding AsDouble}" IsEnabled="{Binding CanWrite}"/>
+                                    </DataTemplate>
+                                </m:PropertyTemplateSelector.NumberTemplate>
+                                <m:PropertyTemplateSelector.StringTemplate>
+                                    <DataTemplate>
+                                        <hc:TextBox Text="{Binding AsString}" IsEnabled="{Binding CanWrite}"/>
+                                    </DataTemplate>
+                                </m:PropertyTemplateSelector.StringTemplate>
+                                <m:PropertyTemplateSelector.EnumTemplate>
+                                    <DataTemplate>
+                                        <hc:ComboBox ItemsSource="{Binding EnumType}" SelectedValue="{Binding AsEnum}" IsEnabled="{Binding CanWrite}"/>
+                                    </DataTemplate>
+                                </m:PropertyTemplateSelector.EnumTemplate>
+                                <m:PropertyTemplateSelector.ObjectTemplate>
+                                    <DataTemplate>
+                                        <Expander Header="展开">
+                                            <ItemsControl ItemsSource="{Binding AsObject}" ItemTemplate="{DynamicResource PropertyTemplate}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <hc:SimpleStackPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </Expander>
+                                    </DataTemplate>
+                                </m:PropertyTemplateSelector.ObjectTemplate>
+                                <m:PropertyTemplateSelector.ListTemplate>
+                                    <DataTemplate>
+                                        <Expander Header="展开">
+                                            <ItemsControl ItemsSource="{Binding AsList}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <hc:SimpleStackPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Expander Header="展开">
+                                                            <ItemsControl ItemsSource="{Binding}" ItemTemplate="{DynamicResource PropertyTemplate}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <hc:SimpleStackPanel />
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                            </ItemsControl>
+                                                        </Expander>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Expander>
+                                    </DataTemplate>
+                                </m:PropertyTemplateSelector.ListTemplate>
+                            </m:PropertyTemplateSelector>
+                        </ContentControl.ContentTemplateSelector>
+                    </ContentControl>
+                </hc:Col>
+            </hc:Row>
+        </DataTemplate>
+    </UserControl.Resources>
+    <hc:ScrollViewer x:Name="PropertyViewer">
+        <ItemsControl ItemsSource="{Binding PropertyInfos}" ItemTemplate="{StaticResource PropertyTemplate}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <hc:SimpleStackPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </hc:ScrollViewer>
 </UserControl>

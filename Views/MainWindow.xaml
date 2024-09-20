@@ -10,12 +10,17 @@
         xmlns:hc="https://handyorg.github.io/handycontrol"
         mc:Ignorable="d"
         Title="黑猴配表编辑器" Height="720" Width="1280"
+        ResizeMode="CanMinimize"
         Closed="MainWindowClosed">
     <Window.DataContext>
         <vm:MainWindowViewModel />
     </Window.DataContext>
     <Window.Resources>
         <conv:DirtyToForeground x:Key="DirtyToForeground" />
+        <Style x:Key="ListBoxItemFullWidth" 
+            BasedOn="{StaticResource ListBoxBaseStyle}" TargetType="ListBox">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
     </Window.Resources>
     <DockPanel>
         <!-- 顶部菜单栏 -->
@@ -28,15 +33,16 @@
                 <MenuItem Header="导入备注配置" Command="{Binding ImportDescriptionCommand}" />
                 <MenuItem Header="导出备注配置" Command="{Binding ExportDescriptionCommand}" />
                 <Separator />
-                <MenuItem Header="生成PAK" Click="CreatePak" />
-                <MenuItem Header="解包PAK" Click="UncompressPak" />
-                <MenuItem Header="合并PAK" Click="CreateUnpackWindow" />
+                <MenuItem Header="PAK工具" Click="ShowPakWindow" />
+                <!-- <MenuItem Header="生成PAK" Click="CreatePak" /> -->
+                <!-- <MenuItem Header="解包PAK" Click="UncompressPak" /> -->
+                <!-- <MenuItem Header="合并PAK" Click="CreateUnpackWindow" /> -->
                 <Separator />
                 <MenuItem Header="退出" Click="CloseButtonClick" />
             </MenuItem>
             <MenuItem Header="帮助">
-                <MenuItem Header="查看帮助" Click="HelpMenuItem_Click" />
-                <MenuItem Header="关于作者🔗" Click="AuthorMenuItem_Click" />
+                <MenuItem Header="查看帮助" Click="ShowHelpWindow" />
+                <MenuItem Header="关于作者🔗" Click="OpenAuthorHomeLink" />
             </MenuItem>
         </Menu>
 
@@ -55,53 +61,80 @@
                 <ColumnDefinition Width="5*" />
             </Grid.ColumnDefinitions>
             <!-- 第一个区块 -->
-            <StackPanel Grid.Column="0" Margin="5">
+            <Grid Grid.Column="0" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="120"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <!-- <hc:SearchBar hc:InfoElement.Placeholder="？？？？？？？？" hc:InfoElement.Necessary="True" /> -->
-                <hc:TextBox Width="Auto" Margin="0,0,0,10"
+                <hc:TextBox Grid.Row="0" Margin="0,0,0,10"
                             hc:InfoElement.Placeholder="搜索配表文件"
-                            Text="{Binding FileSearchText}" />
-                <ListBox Width="Auto" Height="120">
+                            Text="{Binding FileSearchText, UpdateSourceTrigger=PropertyChanged}" />
+
+                <ListBox Grid.Row="1" Margin="0,0,0,10" Height="110" VerticalAlignment="Bottom">
                 </ListBox>
-                <ListBox x:Name="DataFileListBox" Width="Auto" Height="440"
-                         SelectedValuePath="DataItemList"
+
+                <ListBox x:Name="DataFileListBox" Grid.Row="2"
+                         SelectedValue="{Binding SelectedFile}"
+                         Style="{StaticResource ListBoxItemFullWidth}"
                          ItemsSource="{Binding FilteredDataFiles}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding DisplayName}"
                                        Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}">
+                                <TextBlock.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="保存文件" IsEnabled="{Binding IsDirty}"/>
+                                        <MenuItem Header="另存文件"/>
+                                    </ContextMenu>
+                                </TextBlock.ContextMenu>
                             </TextBlock>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-            </StackPanel>
-
+            </Grid>
             <!-- 第二个区块 -->
-            <StackPanel Grid.Column="1" Margin="5">
-                <hc:TextBox Width="Auto" Margin="0,0,0,10"
-                            hc:InfoElement.Placeholder="搜索ID或备注" />
-                <ListBox x:Name="DataItemListBox" Width="Auto" Height="520"
-                         ItemsSource="{Binding SelectedValue, ElementName=DataFileListBox}">
+            <Grid Grid.Column="1" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+                <hc:TextBox Grid.Row="0" Margin="0,0,0,10" 
+                            hc:InfoElement.Placeholder="搜索ID或备注"
+                            Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                <ListBox x:Name="DataItemListBox" Grid.Row="1"
+                         Style="{StaticResource ListBoxItemFullWidth}"
+                         ItemsSource="{Binding FilteredDataItems}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock d:DataContext="{d:DesignInstance m:DataItem}"
                                        Text="{Binding Desc}"
-                                       Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}" />
+                                       Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}">
+                                <TextBlock.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="备注"/>
+                                        <MenuItem Header="克隆"/>
+                                        <MenuItem Header="删除"/>
+                                    </ContextMenu>
+                                </TextBlock.ContextMenu>
+                            </TextBlock>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <Button Content="新增一项" Width="Auto" Height="40" Click="AddNewDataItem_Click" />
-            </StackPanel>
+                <Button Content="新增一项" Grid.Row="2" Click="AddNewDataItem_Click" />
+            </Grid>
 
             <!-- 第三个区块 -->
-            <StackPanel Grid.Column="2" Margin="5">
-                <TextBlock Text="配置数据" FontWeight="Bold" Margin="0,0,0,10" />
-                <!-- <hc:PropertyGrid ShowSortButton="False" -->
-                <!--                  Description="123" -->
-                <!--                  SelectedObject="{Binding SelectedValue, ElementName=DataItemListBox}"> -->
-                <!-- </hc:PropertyGrid> -->
-                <v:DataItemView Height="580" Item="{Binding SelectedValue, ElementName=DataItemListBox}" />
-                <!-- <v:DataItemView Data="{Binding SelectedValue, ElementName=DataItemListBox}" /> -->
-            </StackPanel>
+            <Grid Grid.Column="2" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Stretch">配置数据</Label>
+                <v:DataItemView Grid.Row="1" DataContext="{Binding SelectedValue, ElementName=DataItemListBox}" />
+            </Grid>
         </Grid>
     </DockPanel>
 </Window>

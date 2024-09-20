@@ -1,0 +1,50 @@
+﻿<Window x:Class="Wukong_PBData_ReadWriter_GUI.Views.PakWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        mc:Ignorable="d"
+        Title="Pak工具" Height="600" Width="800"
+        WindowStartupLocation="CenterScreen">
+    <hc:SimplePanel>
+        <TabControl Style="{StaticResource TabControlCapsuleSolid}">
+            <TabItem Header="生成PAK">
+                <hc:SimplePanel Background="Transparent"
+                                AllowDrop="True" Drop="PackPakFile">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center">
+                        拖拽要生成Pak的Data文件夹到此处
+                    </TextBlock>
+                </hc:SimplePanel>
+            </TabItem>
+            <TabItem Header="解包PAK">
+                <hc:SimplePanel Background="Transparent"
+                                AllowDrop="True" Drop="UnpackPakFile">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center">
+                        拖拽要解包的Pak文件夹到此处
+                    </TextBlock>
+                </hc:SimplePanel>
+            </TabItem>
+            <TabItem Header="合并PAK">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" CornerRadius="5" BorderBrush="Black" BorderThickness="1" Margin="5" Padding="10" AllowDrop="True" DragEnter="Border_DragEnter" Drop="LeftBorder_Drop">
+                        <Label Content="请拖入需要合并的Pak文件" Width="260" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                    </Border>
+                    <Button Grid.Column="1" Height="Auto" Click="Merge_Click">
+                        <TextBlock TextWrapping="Wrap" Width="{Binding RelativeSource={RelativeSource Self},Path=FontSize}" Text="合并"/>
+                    </Button>
+                    <Border Grid.Column="2" Grid.Row="0" CornerRadius="5" BorderBrush="Black" BorderThickness="1" Margin="5" Padding="10" AllowDrop="True" DragEnter="Border_DragEnter" Drop="RightBorder_Drop">
+                        <Label Content="请拖入需要合并的Pak文件" Width="260" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </hc:SimplePanel>
+</Window>

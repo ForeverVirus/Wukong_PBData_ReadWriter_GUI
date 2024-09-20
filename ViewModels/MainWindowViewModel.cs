@@ -14,16 +14,32 @@ public partial class MainWindowViewModel : ObservableObject
     // [ObservableProperty] [NotifyPropertyChangedFor(nameof(FilteredDataFiles))]
     // private string _fileSearchText = string.Empty;
     [ObservableProperty] private DataFile[] _filteredDataFiles = [];
+    [ObservableProperty] private DataItem[] _filteredDataItems = [];
+    [ObservableProperty] private DataFile? _selectedFile;
 
     public string FileSearchText
     {
         set
         {
             FilteredDataFiles = _dataFiles
-                .Where(f =>
-                    f.DisplayName.Contains(value, StringComparison.OrdinalIgnoreCase)
-                ).ToArray();
+                .Where(f =>  f.DisplayName.Contains(value, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
         }
+    }
+
+    public string ItemSearchText
+    {
+        set
+        {
+            FilteredDataItems = SelectedFile == null ? [] : SelectedFile.DataItemList
+                .Where(i => i.Desc.Contains(value, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+        }
+    }
+
+    partial void OnSelectedFileChanged(DataFile? value)
+    {
+        FilteredDataItems = value == null ? [] : value.DataItemList.ToArray();
     }
 
     // public List<DataFile> FilteredDataFiles => _dataFiles
@@ -34,7 +50,7 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void OpenFolder()
     {
-        var dialog = new Microsoft.Win32.OpenFolderDialog
+        var dialog = new OpenFolderDialog
         {
             Title = "请选择Data数据文件夹"
         };
@@ -123,7 +139,7 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ImportDescription()
     {
-        var dialog = new Microsoft.Win32.OpenFileDialog
+        var dialog = new OpenFileDialog
         {
             Filter = "Json|*.json",
             Title = "导入备注配置"
@@ -139,7 +155,7 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ExportDescription()
     {
-        var dialog = new Microsoft.Win32.SaveFileDialog
+        var dialog = new SaveFileDialog
         {
             AddExtension = true,
             Filter = "Json|*.json",
