@@ -20,6 +20,7 @@ using UnrealEngine.Runtime;
 using Wukong_PBData_ReadWriter_GUI.src;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using System.Windows.Controls.Primitives;
 
 namespace Wukong_PBData_ReadWriter_GUI
 {
@@ -579,7 +580,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 
                 listItem.DataContext = item;
                 item._ListBoxItem = listItem;
-                listItem.MouseDoubleClick += new MouseButtonEventHandler(OpenDataItem);
+                // listItem.MouseLeftButtonDown += new MouseButtonEventHandler(OpenDataItem);
                 listItem.ContextMenu = new ContextMenu();
                 MenuItem menuItem = new MenuItem();
                 menuItem.Header = "备注";
@@ -769,9 +770,30 @@ namespace Wukong_PBData_ReadWriter_GUI
             grid.Children.Add(button);
         }
 
+        private ListBoxItem FindListBoxItem(DependencyObject child)  
+        {  
+            // 检查child是否是ListBoxItem  
+            if (child is ListBoxItem listBoxItem)  
+            {  
+                return listBoxItem;  
+            }  
+  
+            // 如果child不是ListBoxItem，则检查其父元素  
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);  
+  
+            // 如果找到了根元素或Popup，则返回null（通常不应该发生，但这里作为检查）  
+            if (parentObject == null || parentObject is Popup) 
+            {  
+                return null;  
+            }  
+  
+            // 递归查找ListBoxItem  
+            return FindListBoxItem(parentObject);  
+        }  
+        
         private void OpenDataItem(object sender, MouseButtonEventArgs e)
         {
-            ListBoxItem listBoxItem = sender as ListBoxItem;
+            ListBoxItem listBoxItem = FindListBoxItem(e.OriginalSource as DependencyObject);
             if (listBoxItem != null)
             {
                 var data = listBoxItem.DataContext as DataItem;
@@ -1816,7 +1838,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                         ListBoxItem listItem = new ListBoxItem();
                         listItem.Content = item.Item1;
                         listItem.DataContext = new Tuple<DataFile, DataItem>(item.Item2, item.Item3);
-                        listItem.MouseDoubleClick += OpenGlobalSearchItem;
+                        // listItem.MouseDoubleClick += OpenGlobalSearchItem;
                         SearchResultsList.Items.Add(listItem);
                     }
                 }
@@ -1842,7 +1864,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void OpenGlobalSearchItem(object sender, MouseButtonEventArgs e)
         {
-            var listBoxItem = sender as ListBoxItem;
+            ListBoxItem listBoxItem = FindListBoxItem(e.OriginalSource as DependencyObject);
             if (listBoxItem != null)
             {
                 var data = listBoxItem.DataContext as Tuple<DataFile, DataItem>;
