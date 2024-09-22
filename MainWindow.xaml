@@ -43,11 +43,24 @@
                 <MenuItem Header="解包PAK" Click="UncompressPak" />
                 <!--<MenuItem Header="合并PAK" Click="CreateUnpackWindow" />-->
                 <Separator />
+                <MenuItem Header="加载翻译项" Click="LoadComparisonInformation" />
+                <MenuItem Header="保存翻译项" Click="LoadComparisonInformationTest" />
+                <Separator />
                 <MenuItem Header="退出" Click="Close_Click" />
+            </MenuItem>
+            
+            <MenuItem Header="配置">
+                <CheckBox x:Name="AutoSaveFileCheck" Content="自动保存" Checked="AutoSaveFileCheck_OnCheckedOrUnChecked" Unchecked="AutoSaveFileCheck_OnCheckedOrUnChecked"/>
+                <CheckBox x:Name="DisplaysSourceInformationCheck" Content="显示旧数据" Checked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked" Unchecked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked"/>
+                <CheckBox x:Name="AutoSearchInEffectCheck" Content="搜索功能自动生效" Checked="AutoSearchInEffectCheck_OnCheckedOrUnChecked" Unchecked="AutoSearchInEffectCheck_OnCheckedOrUnChecked"/>
+            </MenuItem>
+            <MenuItem Header="菜单">
+                <MenuItem Header="清理修改记录" Click="ClearLastUpdateLog"/>
             </MenuItem>
             <MenuItem Header="帮助">
                 <MenuItem Header="查看帮助" Click="HelpMenuItem_Click"/>
                 <MenuItem Header="关于作者" Click="AuthorMenuItem_Click_1"/>
+                <MenuItem Header="来自Jmdch的二次修改" Click="ShowChangelog"/>
             </MenuItem>
         </Menu>
 

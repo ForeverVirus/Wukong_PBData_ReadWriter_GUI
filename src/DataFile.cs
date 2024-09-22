@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -42,9 +43,27 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public List<int> _IDList;
         public ListBoxItem _ListBoxItem;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public object Tag;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool CanOpen = true;
+
         public void LoadData()
         {
-            var data = Exporter.GetDataByFile(_FileName, _FilePath);
+            var filePath = _FilePath;
+            if (Tag is string path && File.Exists(path))
+            {
+                filePath = path;
+            }
+            if (!CanOpen)
+                return;
+            var data = Exporter.GetDataByFile(_FileName, filePath);
+            CanOpen = false;
             if (data != null)
             {
                 _FileData = data;
