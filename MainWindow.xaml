@@ -75,7 +75,7 @@
                 </StackPanel>
             </StackPanel>
             <Expander Name="SearchResultsExpander" Header="搜索结果" IsExpanded="False" Visibility="Collapsed">
-                <ListBox Name="SearchResultsList" Width="Auto" Height="200" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <ListBox Name="SearchResultsList" PreviewMouseLeftButtonDown="OpenGlobalSearchItem" Width="Auto" Height="200" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
             </Expander>
         </StackPanel>
 
@@ -102,7 +102,7 @@
             <!-- 第二个区块 -->
             <StackPanel Grid.Column="1" Margin="5">
                 <TextBox Name="ItemSearch" Width="Auto" Margin="0,0,0,10" Text="搜索ID或备注" Foreground="Gray" GotFocus="ItemSearch_GotFocus" LostFocus="ItemSearch_LostFocus" TextChanged="ItemSearch_TextChanged"/>
-                <ListBox Name="DataItemList" Width="Auto" Height="540" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}" d:ItemsSource="{d:SampleData ItemCount=5}"/>
+                <ListBox Name="DataItemList" PreviewMouseLeftButtonDown="OpenDataItem" Width="Auto" Height="540" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}" d:ItemsSource="{d:SampleData ItemCount=5}"/>
                 <Button x:Name="AddNewDataItem" Content="新增一项" Width="Auto" Height="20" Click="AddNewDataItem_Click"/>
             </StackPanel>
 
