@@ -18,7 +18,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             {
                 if(_File != null)
                 {
-                    if(MainWindow._DescriptionConfig.TryGetValue(_File._FileData.GetType().Name + "_" + _ID, out var desc))
+                    if(MainWindow.s_DescriptionConfig.TryGetValue(_File._FileData.GetType().Name + "_" + _ID, out var desc))
                     {
                         return desc;
                     }

@@ -30,8 +30,10 @@ namespace Wukong_PBData_ReadWriter_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static Dictionary<string, string> s_DescriptionConfig = new Dictionary<string, string>();
+        public static List<(string, DataFile, DataItem)> s_TraditionGlobalSearchCache = new List<(string, DataFile, DataItem)>();
+        
         public List<DataFile> _DataFiles = new List<DataFile>();
-        public static Dictionary<string, string> _DescriptionConfig = new Dictionary<string, string>();
         public Dictionary<string, string> _MD5Config = new Dictionary<string, string>();
         public Dictionary<string, byte[]> _OrigItemData = new Dictionary<string, byte[]>();
         public DataFile _CurrentOpenFile = null;
@@ -40,10 +42,11 @@ namespace Wukong_PBData_ReadWriter_GUI
         public string _CurrentOpenFolder = "";
         public string version = "V1.5.0";
         public MergeWindow _MergeWindow;
+        public Task _GlobalSearchTask = null;
 
         public MainWindow()
         {
-            _DescriptionConfig = Exporter.ImportDescriptionConfig("DefaultDescConfig.json");
+            s_DescriptionConfig = Exporter.ImportDescriptionConfig("DefaultDescConfig.json");
             _MD5Config = Exporter.ImportDescriptionConfig("DefaultMD5Config.json");
             _OrigItemData = Exporter.ImportItemDataBytes("DefaultOriData.oridata");
             _SearchTimer = new DispatcherTimer();
@@ -96,13 +99,13 @@ namespace Wukong_PBData_ReadWriter_GUI
                 var newDict = Exporter.ImportDescriptionConfig(dialog.FileName);
                 foreach (var kvp in newDict)
                 {
-                    if(_DescriptionConfig.ContainsKey(kvp.Key))
+                    if(s_DescriptionConfig.ContainsKey(kvp.Key))
                     {
-                        _DescriptionConfig[kvp.Key] = kvp.Value;
+                        s_DescriptionConfig[kvp.Key] = kvp.Value;
                     }
                     else
                     {
-                        _DescriptionConfig.Add(kvp.Key, kvp.Value);
+                        s_DescriptionConfig.Add(kvp.Key, kvp.Value);
                     }
                 }
             }
@@ -240,7 +243,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             dialog.Title = "导出备注配置";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                Exporter.ExportDescriptionConfig(_DescriptionConfig, dialog.FileName);
+                Exporter.ExportDescriptionConfig(s_DescriptionConfig, dialog.FileName);
                 //Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
             }
         }
@@ -261,13 +264,22 @@ namespace Wukong_PBData_ReadWriter_GUI
                 CloseAllOtherWindow();
                 _CurrentOpenFile = null;
 
-                await CacheGlobalSearchAsync(_DataFiles);
-                
+
+                if (_GlobalSearchTask != null && !_GlobalSearchTask.IsCompleted)
+                {
+                    _GlobalSearchTask = null;
+                    _GlobalSearchCache.Clear();
+                    s_TraditionGlobalSearchCache.Clear();
+                }
+
+                _GlobalSearchTask = CacheGlobalSearchAsync(_DataFiles);
+                await _GlobalSearchTask;
+
                 //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
                 // _MD5Config = Exporter.CollectItemMD5(_DataFiles);
                 //_OrigItemData = Exporter.CollectItemBytes(_DataFiles);
 
-                
+
             }
         }
 
@@ -674,7 +686,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                     list.Add(newItem);
 
-                    _DescriptionConfig.Add(newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID, dataItem._Desc);
+                    s_DescriptionConfig.Add(newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID, dataItem._Desc);
 
                     RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
                 }
@@ -744,7 +756,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             textBox.AcceptsReturn = true;
             textBox.TextWrapping = TextWrapping.Wrap;
             string desc = "这里写备注";
-            _DescriptionConfig.TryGetValue(data.Item1, out desc);
+            s_DescriptionConfig.TryGetValue(data.Item1, out desc);
             textBox.Text = desc;
             Grid.SetRow(textBox, 0);
             Grid.SetColumn(textBox, 1);
@@ -757,12 +769,12 @@ namespace Wukong_PBData_ReadWriter_GUI
             button.Content = "确定";
             button.Click += (sender, e) =>
             {
-                if(_DescriptionConfig.ContainsKey(data.Item1))
+                if(s_DescriptionConfig.ContainsKey(data.Item1))
                 {
-                    _DescriptionConfig.Remove(data.Item1);
+                    s_DescriptionConfig.Remove(data.Item1);
                 }
 
-                _DescriptionConfig.TryAdd(data.Item1, textBox.Text);
+                s_DescriptionConfig.TryAdd(data.Item1, textBox.Text);
                 data.Item2?.Invoke();
                 window.Close();
             };
@@ -936,7 +948,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 string descKey = item._DataItem._File._FileData.GetType().Name + "_" + item._PropertyName;
 
-                if (_DescriptionConfig.ContainsKey(descKey))
+                if (s_DescriptionConfig.ContainsKey(descKey))
                 {
                     label.Foreground = new SolidColorBrush(Colors.Blue);
                 }
@@ -1811,6 +1823,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 bool isRegex = RegexRadioButton.IsChecked == true;
                 bool isWildcard = WildcardRadioButton.IsChecked == true;
                 bool isExactMatch = ExactMatchRadioButton.IsChecked == true;
+                bool isTradition = TraditionContainsRadioButton.IsChecked == true;
 
                 // 将通配符转换为正则表达式
                 if (isWildcard)
@@ -1818,7 +1831,11 @@ namespace Wukong_PBData_ReadWriter_GUI
                     searchText = "^" + Regex.Escape(searchText).Replace("\\*", ".*").Replace("\\?", ".") + "$";
                 }
 
-                foreach (var item in _GlobalSearchCache)
+                var cache = _GlobalSearchCache;
+                if (isTradition)
+                    cache = s_TraditionGlobalSearchCache;
+
+                foreach (var item in cache)
                 {
                     bool isMatch = false;
 

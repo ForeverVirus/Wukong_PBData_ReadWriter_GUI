@@ -21,7 +21,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             get
             {
                 //var mainWindow = System.Windows.Application.Current.MainWindow as MainWindow;
-                if (MainWindow._DescriptionConfig.TryGetValue(_FileName, out var desc))
+                if (MainWindow.s_DescriptionConfig.TryGetValue(_FileName, out var desc))
                 {
                     return desc;
                 }

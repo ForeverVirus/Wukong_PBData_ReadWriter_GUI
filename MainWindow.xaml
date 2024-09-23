@@ -61,6 +61,7 @@
                     <RadioButton x:Name="WildcardRadioButton" Content="通配符" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
                     <RadioButton x:Name="ExactMatchRadioButton" Content="全字匹配" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
                     <RadioButton x:Name="ContainsRadioButton" Content="包含" GroupName="SearchMode" IsChecked="True" Checked="SearchModeRadioButton_Checked"/>
+                    <RadioButton x:Name="TraditionContainsRadioButton" Content="传统" GroupName="SearchMode" IsChecked="True" Checked="SearchModeRadioButton_Checked"/>
                 </StackPanel>
                 
                 

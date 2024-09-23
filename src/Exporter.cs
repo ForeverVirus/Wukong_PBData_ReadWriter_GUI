@@ -388,6 +388,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                         {
                             string cacheKey = $"{file._FileName}({file._Desc})-{data._ID}({data._Desc})";
                             cache.Add((cacheKey, file, data));
+                            MainWindow.s_TraditionGlobalSearchCache.Add((cacheKey, file, data));
 
                             data.LoadData();
 
