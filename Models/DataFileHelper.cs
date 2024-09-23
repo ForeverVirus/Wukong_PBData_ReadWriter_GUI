@@ -152,34 +152,21 @@ public static class DataFileHelper
 
     public static IMessage? GetDataByFile(string filePath)
     {
-        var type = GetTypeByFileName(Path.GetFileNameWithoutExtension(filePath));
-        if (type == null)
-        {
-            return null;
-        }
-
-        var parser = type.GetProperty("Parser", BindingFlags.Static | BindingFlags.Public);
-        if (parser == null)
-        {
-            return null;
-        }
-
         try
         {
-            var parserValue = parser.GetMethod?.Invoke(null, null) as MessageParser;
-            var bytes = File.ReadAllBytes(filePath);
-            var message = parserValue?.ParseFrom(bytes);
-            if (message != null)
+            var type = GetTypeByFileName(Path.GetFileNameWithoutExtension(filePath));
+            if (type?.GetProperty("Parser", BindingFlags.Static | BindingFlags.Public)?.GetValue(null)
+                is not MessageParser parser)
             {
-                return message;
+                throw new InvalidDataException();
             }
+            return parser.ParseFrom(File.ReadAllBytes(filePath));
         }
         catch
         {
             Console.WriteLine("Data Failed File : " + filePath);
+            return null;
         }
-
-        return null;
     }
 
     // static void ExportToJson(Assembly? assembly, Type? type, string filePath, string outputDir)
@@ -258,16 +245,22 @@ public static class DataFileHelper
         return JsonConvert.DeserializeObject<Dictionary<string, string>>(json)!;
     }
 
-    public static void SaveDataFile(string path, DataFile dataFile)
+    public static void SaveDataFile(this DataFile dataFile, string? newPath = null)
     {
-        if (dataFile.FileData == null) return;
-        //
-        // string dir = Path.GetDirectoryName(path);
-        //
-        // if (!Directory.Exists(dir))
-        // {
-        //     Directory.CreateDirectory(dir);
-        // }
+        foreach (var item in dataFile.DataItemList)
+        {
+            if (item.IsDirty && newPath == null)
+            {
+                item.Save();
+            }
+        }
+        var path = newPath ?? dataFile.FilePath;
+
+        var dir = Path.GetDirectoryName(path);
+        if (dir != null && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
         //
         // if (File.Exists(path))
         // {

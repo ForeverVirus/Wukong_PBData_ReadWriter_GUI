@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wukong_PBData_ReadWriter_GUI"
         xmlns:m="clr-namespace:Wukong_PBData_ReadWriter_GUI.Models"
         xmlns:v="clr-namespace:Wukong_PBData_ReadWriter_GUI.Views"
         xmlns:vm="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
@@ -17,10 +18,11 @@
     </Window.DataContext>
     <Window.Resources>
         <conv:DirtyToForeground x:Key="DirtyToForeground" />
-        <Style x:Key="ListBoxItemFullWidth" 
-            BasedOn="{StaticResource ListBoxBaseStyle}" TargetType="ListBox">
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Style x:Key="ListBoxItemFullWidth"
+               BasedOn="{StaticResource ListBoxBaseStyle}" TargetType="ListBox">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         </Style>
+        <local:BindingProxy Data="{Binding}" x:Key="MainVM"/>
     </Window.Resources>
     <DockPanel>
         <!-- 顶部菜单栏 -->
@@ -63,14 +65,14 @@
             <!-- 第一个区块 -->
             <Grid Grid.Column="0" Margin="5">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="120"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="120" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <!-- <hc:SearchBar hc:InfoElement.Placeholder="？？？？？？？？" hc:InfoElement.Necessary="True" /> -->
                 <hc:TextBox Grid.Row="0" Margin="0,0,0,10"
                             hc:InfoElement.Placeholder="搜索配表文件"
-                            Text="{Binding FileSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                            Text="{Binding FileSearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
 
                 <ListBox Grid.Row="1" Margin="0,0,0,10" Height="110" VerticalAlignment="Bottom">
                 </ListBox>
@@ -85,8 +87,8 @@
                                        Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}">
                                 <TextBlock.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="保存文件" IsEnabled="{Binding IsDirty}"/>
-                                        <MenuItem Header="另存文件"/>
+                                        <MenuItem Header="保存文件" CommandParameter="{Binding}" Command="{Binding Data.SaveFileCommand, Source={StaticResource MainVM}}"/>
+                                        <MenuItem Header="另存文件" CommandParameter="{Binding}" Command="{Binding Data.SaveFileAsCommand, Source={StaticResource MainVM}}"/>
                                     </ContextMenu>
                                 </TextBlock.ContextMenu>
                             </TextBlock>
@@ -97,13 +99,13 @@
             <!-- 第二个区块 -->
             <Grid Grid.Column="1" Margin="5">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="40" />
                 </Grid.RowDefinitions>
-                <hc:TextBox Grid.Row="0" Margin="0,0,0,10" 
+                <hc:TextBox Grid.Row="0" Margin="0,0,0,10"
                             hc:InfoElement.Placeholder="搜索ID或备注"
-                            Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                            Text="{Binding ItemSearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
                 <ListBox x:Name="DataItemListBox" Grid.Row="1"
                          Style="{StaticResource ListBoxItemFullWidth}"
                          ItemsSource="{Binding FilteredDataItems}">
@@ -114,23 +116,23 @@
                                        Foreground="{Binding IsDirty, Converter={StaticResource DirtyToForeground}}">
                                 <TextBlock.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="备注"/>
-                                        <MenuItem Header="克隆"/>
-                                        <MenuItem Header="删除"/>
+                                        <MenuItem Header="备注" />
+                                        <MenuItem Header="克隆" />
+                                        <MenuItem Header="删除" />
                                     </ContextMenu>
                                 </TextBlock.ContextMenu>
                             </TextBlock>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <Button Content="新增一项" Grid.Row="2" Click="AddNewDataItem_Click" />
+                <Button Content="新增一项" Grid.Row="2" Command="{Binding AddNewItemCommand}" />
             </Grid>
 
             <!-- 第三个区块 -->
             <Grid Grid.Column="2" Margin="5">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Stretch">配置数据</Label>
                 <v:DataItemView Grid.Row="1" DataContext="{Binding SelectedValue, ElementName=DataItemListBox}" />

@@ -4,14 +4,16 @@ using Google.Protobuf;
 
 namespace Wukong_PBData_ReadWriter_GUI.Models;
 
-public class DataFile : ObservableObject
+public partial class DataFile : ObservableObject
 {
     // private readonly Lazy<IMessage?> _fileData;
     private readonly string _filePath;
     private readonly Lazy<List<DataItem>> _dataItemList;
 
     public string DisplayName => Path.GetFileNameWithoutExtension(_filePath);
+
     // public dynamic? FileData => _fileData.Value;
+    public string FilePath => _filePath;
     public dynamic FileData { get; }
     public List<DataItem> DataItemList => _dataItemList.Value;
     public bool IsDirty => _dataItemList.IsValueCreated && DataItemList.Any(item => item.IsDirty);

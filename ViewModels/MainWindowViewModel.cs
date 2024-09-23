@@ -8,7 +8,7 @@ namespace Wukong_PBData_ReadWriter_GUI.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    private List<DataFile> _dataFiles = [];
+    private DataFile[] _dataFiles = [];
     public string CurrentOpenFolder { get; set; } = string.Empty;
 
     // [ObservableProperty] [NotifyPropertyChangedFor(nameof(FilteredDataFiles))]
@@ -22,7 +22,7 @@ public partial class MainWindowViewModel : ObservableObject
         set
         {
             FilteredDataFiles = _dataFiles
-                .Where(f =>  f.DisplayName.Contains(value, StringComparison.OrdinalIgnoreCase))
+                .Where(f => f.DisplayName.Contains(value, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
         }
     }
@@ -31,9 +31,11 @@ public partial class MainWindowViewModel : ObservableObject
     {
         set
         {
-            FilteredDataItems = SelectedFile == null ? [] : SelectedFile.DataItemList
-                .Where(i => i.Desc.Contains(value, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
+            FilteredDataItems = SelectedFile == null
+                ? []
+                : SelectedFile.DataItemList
+                    .Where(i => i.Desc.Contains(value, StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
         }
     }
 
@@ -41,11 +43,6 @@ public partial class MainWindowViewModel : ObservableObject
     {
         FilteredDataItems = value == null ? [] : value.DataItemList.ToArray();
     }
-
-    // public List<DataFile> FilteredDataFiles => _dataFiles
-    //     .Where(f =>
-    //         f.DisplayName.Contains(FileSearchText, StringComparison.OrdinalIgnoreCase)
-    //     ).ToList();
 
     [RelayCommand]
     private void OpenFolder()
@@ -61,13 +58,18 @@ public partial class MainWindowViewModel : ObservableObject
             .Select(file => (data: DataFileHelper.GetDataByFile(file), file))
             .Where(tuple => tuple.data != null)
             .Select(tuple => new DataFile(tuple.file, tuple.data!))
-            .ToList();
+            .ToArray();
         FileSearchText = "";
     }
 
     [RelayCommand]
     private void SaveAll()
     {
+        foreach (var file in _dataFiles)
+        {
+            if (!file.IsDirty) continue;
+            file.SaveDataFile();
+        }
         // var pakPath = _CurrentOpenFile._FilePath;
         //
         // //rename pakPath file if exist
@@ -122,6 +124,11 @@ public partial class MainWindowViewModel : ObservableObject
         if (dialog.ShowDialog() == true)
         {
             var dir = dialog.FolderName;
+            foreach (var file in _dataFiles)
+            {
+                var newPath = file.FilePath.Replace(CurrentOpenFolder, dir);
+                file.SaveDataFile(newPath);
+            }
             //
             //     var pakPath = _CurrentOpenFile._FilePath;
             //
@@ -163,5 +170,80 @@ public partial class MainWindowViewModel : ObservableObject
         };
         if (dialog.ShowDialog() != true) return;
         DataFileHelper.ExportDescriptionConfig(dialog.FileName);
+    }
+
+    [RelayCommand]
+    private void SaveFile(DataFile file)
+    {
+        if (!file.IsDirty) return;
+        file.SaveDataFile();
+    }
+
+    [RelayCommand]
+    private void SaveFileAs(DataFile file)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "请选择要保存Data数据的文件夹"
+        };
+        if (dialog.ShowDialog() is not true) return;
+
+        var dir = dialog.FolderName;
+        var newPath = file.FilePath.Replace(CurrentOpenFolder, dir);
+        file.SaveDataFile(newPath);
+    }
+    
+    [RelayCommand]
+    private void AddNewItem()
+    {
+        if (SelectedFile == null) return;
+        //
+        // var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile.FileData, null) as IList;
+        //
+        // if (_CurrentOpenFile.DataItemList != null)
+        // {
+        //     var newItemType = list.GetType().GetGenericArguments()[0];
+        //     if (newItemType != null)
+        //     {
+        //         var newItem = Activator.CreateInstance(newItemType) as IMessage;
+        //
+        //         if (newItem == null)
+        //             return;
+        //
+        //         var property = newItemType.GetProperty("Id");
+        //         if (property == null)
+        //         {
+        //             property = newItemType.GetProperty("ID");
+        //         }
+        //
+        //         if (property == null)
+        //             return;
+        //
+        //         DataItem dataItem = new DataItem();
+        //         dataItem.Id = _CurrentOpenFile.GetNewID();
+        //         property.SetValue(newItem, dataItem.Id, null);
+        //         _CurrentOpenFile._IDList.Add(dataItem.Id);
+        //         dataItem._Data = newItem;
+        //         dataItem._File = _CurrentOpenFile;
+        //         _CurrentOpenFile.DataItemList.Add(dataItem);
+        //
+        //         list.Add(newItem);
+        //
+        //         //_CurrentOpenFile._ListPropertyInfo.SetValue(_CurrentOpenFile._FileData, list, null);
+        //
+        //         RefreshFileDataItemList(_CurrentOpenFile.DataItemList);
+        //     }
+    }
+    
+    [RelayCommand]
+    private void CloneItem()
+    {
+        
+    }
+
+    [RelayCommand]
+    private void DeleteItem()
+    {
+        
     }
 }

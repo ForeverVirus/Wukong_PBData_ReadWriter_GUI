@@ -42,7 +42,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
             var window = new PakWindow();
             window.Show();
         }
-        
+
         private void ShowHelpWindow(object sender, RoutedEventArgs e)
         {
             var window = new HelpWindowView();
@@ -52,50 +52,6 @@ namespace Wukong_PBData_ReadWriter_GUI.Views
         private void OpenAuthorHomeLink(object sender, RoutedEventArgs e)
         {
             Process.Start(new ProcessStartInfo("https://space.bilibili.com/8729996") { UseShellExecute = true });
-        }
-
-
-        private void AddNewDataItem_Click(object sender, RoutedEventArgs e)
-        {
-            // if (_CurrentOpenFile == null)
-            //     return;
-            //
-            // var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile.FileData, null) as IList;
-            //
-            // if (_CurrentOpenFile.DataItemList != null)
-            // {
-            //     var newItemType = list.GetType().GetGenericArguments()[0];
-            //     if (newItemType != null)
-            //     {
-            //         var newItem = Activator.CreateInstance(newItemType) as IMessage;
-            //
-            //         if (newItem == null)
-            //             return;
-            //
-            //         var property = newItemType.GetProperty("Id");
-            //         if (property == null)
-            //         {
-            //             property = newItemType.GetProperty("ID");
-            //         }
-            //
-            //         if (property == null)
-            //             return;
-            //
-            //         DataItem dataItem = new DataItem();
-            //         dataItem.Id = _CurrentOpenFile.GetNewID();
-            //         property.SetValue(newItem, dataItem.Id, null);
-            //         _CurrentOpenFile._IDList.Add(dataItem.Id);
-            //         dataItem._Data = newItem;
-            //         dataItem._File = _CurrentOpenFile;
-            //         _CurrentOpenFile.DataItemList.Add(dataItem);
-            //
-            //         list.Add(newItem);
-            //
-            //         //_CurrentOpenFile._ListPropertyInfo.SetValue(_CurrentOpenFile._FileData, list, null);
-            //
-            //         RefreshFileDataItemList(_CurrentOpenFile.DataItemList);
-            //     }
-            // }
         }
 
         private void SearchTimer_Tick(object sender, EventArgs e)

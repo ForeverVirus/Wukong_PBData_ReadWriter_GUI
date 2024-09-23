@@ -1,14 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Google.Protobuf;
-using System.Security.Cryptography;
 
 namespace Wukong_PBData_ReadWriter_GUI.Models;
 
 public class DataItem : ObservableObject
 {
     private readonly int _id;
-    private readonly IMessage _originData;
-    private readonly IMessage _data;
+    private IMessage _originData;
+    private readonly dynamic _data;
     private readonly DataFile _file;
 
     public string Desc => DataFileHelper.DescriptionConfig.TryGetValue(
@@ -32,6 +31,12 @@ public class DataItem : ObservableObject
             .GetProperties().Where(p => p.Name != "Parser")
             .Select(p => new DataProperty(p, data, (Action)Changed))
             .ToArray();
+    }
+
+    public void Save()
+    {
+        _originData = _data.Clone();
+        Changed();
     }
 
     public void Changed()

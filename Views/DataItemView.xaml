@@ -57,13 +57,7 @@
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <Expander Header="展开">
-                                                            <ItemsControl ItemsSource="{Binding}" ItemTemplate="{DynamicResource PropertyTemplate}">
-                                                                <ItemsControl.ItemsPanel>
-                                                                    <ItemsPanelTemplate>
-                                                                        <hc:SimpleStackPanel />
-                                                                    </ItemsPanelTemplate>
-                                                                </ItemsControl.ItemsPanel>
-                                                            </ItemsControl>
+                                                            <ItemsControl ItemsSource="{Binding}" ItemTemplate="{DynamicResource PropertyTemplate}"/>
                                                         </Expander>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
@@ -80,11 +74,7 @@
     </UserControl.Resources>
     <hc:ScrollViewer x:Name="PropertyViewer">
         <ItemsControl ItemsSource="{Binding PropertyInfos}" ItemTemplate="{StaticResource PropertyTemplate}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <hc:SimpleStackPanel />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
+           
         </ItemsControl>
     </hc:ScrollViewer>
 </UserControl>
