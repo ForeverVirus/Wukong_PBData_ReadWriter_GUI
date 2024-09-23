@@ -39,6 +39,8 @@ namespace Wukong_PBData_ReadWriter_GUI
         public MergeWindow()
         {
             InitializeComponent();
+
+            this.Title = "合并PAK";
         }
 
         private void Border_DragEnter(object sender, DragEventArgs e)
