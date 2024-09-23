@@ -90,4 +90,8 @@
     <Folder Include="Json\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" Version="4.0.0-rc.2" />
+  </ItemGroup>
+
 </Project>

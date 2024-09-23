@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Wukong_PBData_ReadWriter_GUI"
         mc:Ignorable="d"
-        Title="黑猴配表编辑器" Height="720" Width="1280">
+        SizeToContent="WidthAndHeight"
+        Title="黑猴配表编辑器" Height="800" Width="1280">
     <Window.Resources>
         <!-- 自定义ListBoxItem的选中样式 -->
         <Style x:Key="CustomListBoxItemStyle" TargetType="ListBoxItem">
@@ -28,9 +28,16 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <DockPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- 菜单行 -->
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
         <!-- 顶部菜单栏 -->
-        <Menu DockPanel.Dock="Top">
+        <Menu Grid.Row="0" Background="LightGray" Padding="8">
             <MenuItem Header="文件">
                 <MenuItem Header="打开Data目录" Click="OpenDataFolder" />
                 <MenuItem Header="保存Data文件" Click="SaveDataFile" />
@@ -48,58 +55,59 @@
                 <Separator />
                 <MenuItem Header="退出" Click="Close_Click" />
             </MenuItem>
-            
+
             <MenuItem Header="配置">
-                <CheckBox x:Name="AutoSaveFileCheck" Content="自动保存" Checked="AutoSaveFileCheck_OnCheckedOrUnChecked" Unchecked="AutoSaveFileCheck_OnCheckedOrUnChecked"/>
-                <CheckBox x:Name="DisplaysSourceInformationCheck" Content="显示旧数据" Checked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked" Unchecked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked"/>
-                <CheckBox x:Name="AutoSearchInEffectCheck" Content="搜索功能自动生效" Checked="AutoSearchInEffectCheck_OnCheckedOrUnChecked" Unchecked="AutoSearchInEffectCheck_OnCheckedOrUnChecked"/>
+                <CheckBox x:Name="AutoSaveFileCheck" Content="自动保存" Checked="AutoSaveFileCheck_OnCheckedOrUnChecked"
+                          Unchecked="AutoSaveFileCheck_OnCheckedOrUnChecked" />
+                <CheckBox x:Name="DisplaysSourceInformationCheck" Content="显示旧数据"
+                          Checked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked"
+                          Unchecked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked" />
+                <CheckBox x:Name="AutoSearchInEffectCheck" Content="搜索功能自动生效"
+                          Checked="AutoSearchInEffectCheck_OnCheckedOrUnChecked"
+                          Unchecked="AutoSearchInEffectCheck_OnCheckedOrUnChecked" />
             </MenuItem>
             <MenuItem Header="菜单">
-                <MenuItem Header="清理修改记录" Click="ClearLastUpdateLog"/>
+                <MenuItem Header="清理修改记录" Click="ClearLastUpdateLog" />
             </MenuItem>
-            <MenuItem Header="帮助"  Click="HelpMenuItem_Click">
-            </MenuItem>
+            <MenuItem Header="帮助" Click="HelpMenuItem_Click" />
         </Menu>
 
-        <StackPanel DockPanel.Dock="Top" Margin="5">
+        <StackPanel Grid.Row="1" Margin="5">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Column="0">
-                    <TextBox Grid.Column="0" Name="GlobalSearchBox" Width="600" Margin="0,0,10,0" Text="全局搜索" Foreground="Gray" GotFocus="GlobalSearchBox_GotFocus" LostFocus="GlobalSearchBox_LostFocus" TextChanged="GlobalSearchBox_TextChanged" KeyDown="GlobalSearchBox_KeyDown"/>
-                    <RadioButton x:Name="RegexRadioButton" Content="正则" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
-                    <RadioButton x:Name="WildcardRadioButton" Content="通配符" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
-                    <RadioButton x:Name="ExactMatchRadioButton" Content="全字匹配" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
-                    <RadioButton x:Name="ContainsRadioButton" Content="包含" GroupName="SearchMode" IsChecked="True" Checked="SearchModeRadioButton_Checked"/>
-                    <RadioButton x:Name="TraditionContainsRadioButton" Content="传统" GroupName="SearchMode" IsChecked="True" Checked="SearchModeRadioButton_Checked"/>
+                    <TextBox Name="GlobalSearchBox" Width="800" Margin="0,0,10,0" Text="全局搜索" Foreground="Gray"
+                             GotFocus="GlobalSearchBox_GotFocus" LostFocus="GlobalSearchBox_LostFocus"
+                             TextChanged="GlobalSearchBox_TextChanged" KeyDown="GlobalSearchBox_KeyDown" />
+                    <RadioButton x:Name="RegexRadioButton" Content="正则" GroupName="SearchMode"
+                                 Checked="SearchModeRadioButton_Checked" />
+                    <RadioButton x:Name="WildcardRadioButton" Content="通配符" GroupName="SearchMode"
+                                 Checked="SearchModeRadioButton_Checked" />
+                    <RadioButton x:Name="ExactMatchRadioButton" Content="全字匹配" GroupName="SearchMode"
+                                 Checked="SearchModeRadioButton_Checked" />
+                    <RadioButton x:Name="ContainsRadioButton" Content="包含" GroupName="SearchMode" IsChecked="True"
+                                 Checked="SearchModeRadioButton_Checked" />
+                    <RadioButton x:Name="TraditionContainsRadioButton" Content="传统" GroupName="SearchMode"
+                                 IsChecked="True" Checked="SearchModeRadioButton_Checked" />
                 </StackPanel>
-                
-                
-                <TextBlock Name="Authors" Text="作者：" HorizontalAlignment="Right" Grid.Column="1">
-                    <Hyperlink NavigateUri="https://space.bilibili.com/8729996" RequestNavigate="Hyperlink_RequestNavigate">
-                        禽兽-云轩
-                    </Hyperlink>
-                    <Hyperlink NavigateUri="https://space.bilibili.com/267309207/" RequestNavigate="Hyperlink_RequestNavigate">
-                        richelieu_bee
-                    </Hyperlink>
-                    <Hyperlink NavigateUri="https://space.bilibili.com/18686483" RequestNavigate="Hyperlink_RequestNavigate">
-                        jmdch
-                    </Hyperlink>
-                </TextBlock>
+
             </Grid>
             <Expander Name="SearchResultsExpander" Header="搜索结果" IsExpanded="False" Visibility="Collapsed">
-                <ListBox Name="SearchResultsList" PreviewMouseLeftButtonDown="OpenGlobalSearchItem" Width="Auto" Height="200" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <Border BorderBrush="LightGray" BorderThickness="1" Margin="0,0,0,0" Padding="0">
+                <ListBox Name="SearchResultsList" PreviewMouseLeftButtonDown="OpenGlobalSearchItem" Width="Auto"
+                         Height="200" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </Border>
             </Expander>
         </StackPanel>
 
         <!-- 主体内容 -->
-        <Grid>
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="3*"/>
-                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="5*" />
             </Grid.ColumnDefinitions>
             <!-- 第一个区块 -->
             <StackPanel Grid.Column="0" Margin="5">
@@ -108,32 +116,65 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>-->
-                <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Grid.Row="0" Text="搜索配表文件" Foreground="Gray" GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus" TextChanged="FileSearch_TextChanged"/>
-                <ListBox Name="TopFileList" Width="Auto" Height="120" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto" d:ItemsSource="{d:SampleData ItemCount=5}">
-                </ListBox>
-                <ListBox Name="FileList" Width="Auto" Height="440" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.RowSpan="2" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}" d:ItemsSource="{d:SampleData ItemCount=5}"/>
+                <TextBox Name="FileSearch" Width="Auto" Margin="0,0,0,10" Text="搜索配表文件" Foreground="Gray"
+                         GotFocus="FileSearch_GotFocus" LostFocus="FileSearch_LostFocus"
+                         TextChanged="FileSearch_TextChanged" TextAlignment="Left"/>
+                <Border BorderBrush="LightGray" BorderThickness="1" Padding="2">
+                    <ListBox Name="TopFileList" Width="Auto" Height="120"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" d:ItemsSource="{d:SampleData ItemCount=5}" />
+                </Border>
+                <Border BorderBrush="LightGray" BorderThickness="1" Margin="0,5,0,0" Padding="2">
+                    <ListBox Name="FileList" Width="Auto" Height="440" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ItemContainerStyle="{StaticResource CustomListBoxItemStyle}"
+                             d:ItemsSource="{d:SampleData ItemCount=5}" />
+                </Border>
             </StackPanel>
 
             <!-- 第二个区块 -->
             <StackPanel Grid.Column="1" Margin="5">
-                <TextBox Name="ItemSearch" Width="Auto" Margin="0,0,0,10" Text="搜索ID或备注" Foreground="Gray" GotFocus="ItemSearch_GotFocus" LostFocus="ItemSearch_LostFocus" TextChanged="ItemSearch_TextChanged"/>
-                <ListBox Name="DataItemList" PreviewMouseLeftButtonDown="OpenDataItem" Width="Auto" Height="540" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}" d:ItemsSource="{d:SampleData ItemCount=5}"/>
-                <Button x:Name="AddNewDataItem" Content="新增一项" Width="Auto" Height="20" Click="AddNewDataItem_Click"/>
+                <TextBox Name="ItemSearch" Width="Auto" Margin="0,0,0,10" Text="搜索ID或备注" Foreground="Gray"
+                         GotFocus="ItemSearch_GotFocus" LostFocus="ItemSearch_LostFocus"
+                         TextChanged="ItemSearch_TextChanged" />
+                <Border BorderBrush="LightGray" BorderThickness="1" Margin="0,2,0,0" Padding="2">
+                <ListBox Name="DataItemList" PreviewMouseLeftButtonDown="OpenDataItem" Width="Auto" Height="540"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ItemContainerStyle="{StaticResource CustomListBoxItemStyle}"
+                         SizeChanged="DataItemList_SizeChanged"
+                         d:ItemsSource="{d:SampleData ItemCount=5}" />
+                </Border>
+                <Button x:Name="AddNewDataItem" Background="LightGray" HorizontalAlignment="Center" Content="新增一项" Width="Auto" Height="30" Click="AddNewDataItem_Click" />
             </StackPanel>
 
             <!-- 第三个区块 -->
             <StackPanel Grid.Column="2" Margin="5">
-                <TextBlock Name="DataFilePath" Text="配置数据" FontWeight="Bold" Margin="0,0,0,10"/>
+                <TextBlock Text="配置数据" FontSize="18" FontWeight="Bold" Margin="10,4,0,5"/>
+                <TextBlock Name="DataFilePath"  Foreground="DarkGray" FontSize="14" Margin="10,0,0,5"/>
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="600">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="570">
                     <Grid Name="DataGrid" Width="640">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="320"/>
-                            <ColumnDefinition Width="320"/>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="440" />
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
             </StackPanel>
         </Grid>
-    </DockPanel>
+
+        <Grid Grid.Row="3" Margin="5">
+            <TextBlock Name="Authors" Text="作者：" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                <Hyperlink NavigateUri="https://space.bilibili.com/8729996" RequestNavigate="Hyperlink_RequestNavigate">
+                    禽兽-云轩
+                </Hyperlink>
+                <Hyperlink NavigateUri="https://space.bilibili.com/267309207/"
+                           RequestNavigate="Hyperlink_RequestNavigate">
+                    richelieu_bee
+                </Hyperlink>
+                <Hyperlink NavigateUri="https://space.bilibili.com/18686483"
+                           RequestNavigate="Hyperlink_RequestNavigate">
+                    jmdch
+                </Hyperlink>
+            </TextBlock>
+        </Grid>
+    </Grid>
 </Window>
