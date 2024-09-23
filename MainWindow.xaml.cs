@@ -54,7 +54,8 @@ namespace Wukong_PBData_ReadWriter_GUI
         public string version = "V1.5.0";
         public MergeWindow _MergeWindow;
         public Task _GlobalSearchTask = null;
-        private bool _isSelectASaveFolder = false;
+        private string _selectedSaveFolder = string.Empty;
+        private DispatcherTimer _autoSaveTimer;
 
         /// <summary>
         /// 日志工具
@@ -250,6 +251,52 @@ namespace Wukong_PBData_ReadWriter_GUI
             AutoSaveFileCheck.IsChecked = _config.AutoSaveFile;
             DisplaysSourceInformationCheck.IsChecked = _config.DisplaysSourceInformation;
             AutoSearchInEffectCheck.IsChecked = _config.AutoSearchInEffect;
+
+            if (_config.AutoSaveFile)
+            {
+                if (string.IsNullOrEmpty(_selectedSaveFolder))
+                {
+                    System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+                    dialog.Description = "请选择要保存Data数据的文件夹";
+                    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        _selectedSaveFolder = dialog.SelectedPath;
+                        StartAutoSaveTick();
+                    }
+                }
+            }
+        }
+
+        private void StartAutoSaveTick()
+        {
+            StopAutoSaveTimer();
+            _autoSaveTimer = new DispatcherTimer();
+            _autoSaveTimer.Interval = TimeSpan.FromMinutes(5); // 设置自动保存间隔时间为5分钟
+            _autoSaveTimer.Tick += AutoSaveTimer_Tick;
+            _autoSaveTimer.Start();
+        }
+        
+        private void AutoSaveTimer_Tick(object sender, EventArgs e)
+        {
+            if (_config.AutoSaveFile && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
+            {
+                // 调用自动保存方法
+                foreach (var file in _updateFiles.Values)
+                {
+                    SaveDataFile(file, _selectedSaveFolder);
+                }
+                _updateFiles.Clear();
+            }
+        }
+        
+        private void StopAutoSaveTimer()
+        {
+            if (_autoSaveTimer != null)
+            {
+                _autoSaveTimer.Stop();
+                _autoSaveTimer.Tick -= AutoSaveTimer_Tick;
+                _autoSaveTimer = null;
+            }
         }
 
         public void ClearTempFiles()
@@ -546,6 +593,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 RefreshFolderFile(dialog.SelectedPath);
                 CloseAllOtherWindow();
                 _CurrentOpenFile = null;
+                _selectedSaveFolder = string.Empty;
 
 
                 if (_GlobalSearchTask != null && !_GlobalSearchTask.IsCompleted)
@@ -821,30 +869,72 @@ namespace Wukong_PBData_ReadWriter_GUI
             }
         }
 
+        void SaveDataFile(DataFile file, string dir)
+        {
+            var pakPath = file._FilePath;
+            
+            var b1Index = file._FilePath.IndexOf("b1");
+            if (b1Index != -1)
+                pakPath = file._FilePath.Substring(b1Index,
+                    file._FilePath.Length - b1Index);
+
+            var outPath = Path.Combine(dir, pakPath);
+
+            Exporter.SaveDataFile(outPath, file);
+    
+
+        }
+        
         private void SaveDataFile(object sender, RoutedEventArgs e)
         {
-            if (_config.AutoSaveFile && !_updateFiles.IsEmpty)
+            // if (_config.AutoSaveFile && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
+            // {
+            //     foreach (var file in _updateFiles.Values)
+            //     {
+            //         SaveDataFile(file, _selectedSaveFolder);
+            //     }
+            //     _updateFiles.Clear();
+            //     return;
+            // }
+            
+            if (string.IsNullOrEmpty(_selectedSaveFolder))
             {
-                foreach (var key in _updateFiles.Keys)
+                System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+                dialog.Description = "请选择要保存Data数据的文件夹";
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    SavePakFile(_updateFiles[key]._FilePath);
+                    _selectedSaveFolder = dialog.SelectedPath;
+
+                    foreach (var file in _updateFiles.Values)
+                    {
+                        SaveDataFile(file, _selectedSaveFolder);
+                    }
+                    
+                    RefreshFolderFile(_CurrentOpenFolder);
+                    DataItemList.Items.Clear();
+                    DataGrid.Children.Clear();
+                    CloseAllOtherWindow();
+                    _CurrentOpenFile = null;
                 }
-                //_updateFiles.Clear();
-                return;
+            }
+            else
+            {
+                foreach (var file in _updateFiles.Values)
+                {
+                    SaveDataFile(file, _selectedSaveFolder);
+                }
+                    
+                RefreshFolderFile(_CurrentOpenFolder);
+                DataItemList.Items.Clear();
+                DataGrid.Children.Clear();
+                CloseAllOtherWindow();
+                _CurrentOpenFile = null;
             }
 
-            var pakPath = _CurrentOpenFile._FilePath;
-
-            SavePakFile(pakPath);
-
-
-            RefreshFolderFile(_CurrentOpenFolder);
+            
 
             //_GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
-            DataItemList.Items.Clear();
-            DataGrid.Children.Clear();
-            CloseAllOtherWindow();
-            _CurrentOpenFile = null;
+            
 
         }
 
@@ -857,15 +947,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             //rename pakPath file if exist
             if (File.Exists(pakPath))
             {
-                var dir = Path.GetDirectoryName(pakPath);
-                var fileName = Path.GetFileNameWithoutExtension(pakPath);
-                var extension = Path.GetExtension(pakPath);
-
-                var newPath = dir + "\\" + fileName + ".bak" + extension;
-                if (File.Exists(newPath))
-                    File.Delete(newPath);
-
-                File.Move(pakPath, newPath);
+                File.Delete(pakPath);
             }
 
             Exporter.SaveDataFile(pakPath, _CurrentOpenFile);
@@ -885,24 +967,24 @@ namespace Wukong_PBData_ReadWriter_GUI
                     var pakPath = "";
                     var b1Index = -1;
                     var outPath = "";
-                    if (_config.AutoSaveFile && !_updateFiles.IsEmpty)
-                    {
-                        foreach (var key in _updateFiles.Keys)
-                        {
-                            pakPath = _updateFiles[key]._FilePath;
-
-                            b1Index = _updateFiles[key]._FilePath.IndexOf("b1");
-                            if (b1Index != -1)
-                                pakPath = _updateFiles[key]._FilePath.Substring(b1Index,
-                                    _updateFiles[key]._FilePath.Length - b1Index);
-
-                            outPath = Path.Combine(dir, pakPath);
-
-                            Exporter.SaveDataFile(outPath, _updateFiles[key]);
-                        }
-                        //_updateFiles.Clear();
-                        return;
-                    }
+                    // if (_config.AutoSaveFile && !_updateFiles.IsEmpty)
+                    // {
+                    //     foreach (var key in _updateFiles.Keys)
+                    //     {
+                    //         pakPath = _updateFiles[key]._FilePath;
+                    //
+                    //         b1Index = _updateFiles[key]._FilePath.IndexOf("b1");
+                    //         if (b1Index != -1)
+                    //             pakPath = _updateFiles[key]._FilePath.Substring(b1Index,
+                    //                 _updateFiles[key]._FilePath.Length - b1Index);
+                    //
+                    //         outPath = Path.Combine(dir, pakPath);
+                    //
+                    //         Exporter.SaveDataFile(outPath, _updateFiles[key]);
+                    //     }
+                    //     //_updateFiles.Clear();
+                    //     return;
+                    // }
 
                     pakPath = _CurrentOpenFile._FilePath;
 
@@ -2441,61 +2523,61 @@ namespace Wukong_PBData_ReadWriter_GUI
                         _lastActionComponent = listBoxItem;
                     if (data.Item1 != null)
                     {
-                        if (_CurrentOpenFile != null && _CurrentOpenFile._IsDirty)
+                        // if (_CurrentOpenFile != null && _CurrentOpenFile._IsDirty)
+                        // {
+                        //     if (_config.AutoSaveFile)
+                        //     {
+                        //         //todo 等待操作
+                        //     }
+                        //
+                        //     MessageBoxResult result = System.Windows.MessageBox.Show("切换data文件，当前修改将被还原", "确认", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        //
+                        //     // 根据用户的选择执行相应的逻辑
+                        //     if (result == MessageBoxResult.Yes)
+                        //     {
+                        //         _CurrentOpenFile._IsDirty = false;
+                        //         OpenFile(data.Item1);
+                        //
+                        //         if (data.Item2 != null)
+                        //         {
+                        //             data.Item2.LoadData();
+                        //             RefreshDataItemList(data.Item2._DataPropertyItems);
+                        //
+                        //             foreach (var item2 in data.Item1._FileDataItemList)
+                        //             {
+                        //                 if (item2._ID == data.Item2._ID)
+                        //                 {
+                        //
+                        //                     DataItemList.ScrollIntoView(item2._ListBoxItem);
+                        //                     DataItemList.SelectedItem = item2._ListBoxItem;
+                        //                     break;
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+                        // }
+                        // else
+                        // {
+                        DataFile file = listBoxItem.DataContext as DataFile;
+                        OpenFile(data.Item1);
+
+                        if (data.Item2 != null)
                         {
-                            if (_config.AutoSaveFile)
+
+
+                            foreach (var item2 in data.Item1._FileDataItemList)
                             {
-                                //todo 等待操作
-                            }
-
-                            MessageBoxResult result = System.Windows.MessageBox.Show("切换data文件，当前修改将被还原", "确认", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-                            // 根据用户的选择执行相应的逻辑
-                            if (result == MessageBoxResult.Yes)
-                            {
-                                _CurrentOpenFile._IsDirty = false;
-                                OpenFile(data.Item1);
-
-                                if (data.Item2 != null)
+                                if (item2._ID == data.Item2._ID)
                                 {
-                                    data.Item2.LoadData();
-                                    RefreshDataItemList(data.Item2._DataPropertyItems);
-
-                                    foreach (var item2 in data.Item1._FileDataItemList)
-                                    {
-                                        if (item2._ID == data.Item2._ID)
-                                        {
-
-                                            DataItemList.ScrollIntoView(item2._ListBoxItem);
-                                            DataItemList.SelectedItem = item2._ListBoxItem;
-                                            break;
-                                        }
-                                    }
+                                    item2.LoadData();
+                                    RefreshDataItemList(item2._DataPropertyItems);
+                                    DataItemList.ScrollIntoView(item2._ListBoxItem);
+                                    DataItemList.SelectedItem = item2._ListBoxItem;
+                                    break;
                                 }
                             }
                         }
-                        else
-                        {
-                            DataFile file = listBoxItem.DataContext as DataFile;
-                            OpenFile(data.Item1);
-
-                            if (data.Item2 != null)
-                            {
-
-
-                                foreach (var item2 in data.Item1._FileDataItemList)
-                                {
-                                    if (item2._ID == data.Item2._ID)
-                                    {
-                                        item2.LoadData();
-                                        RefreshDataItemList(item2._DataPropertyItems);
-                                        DataItemList.ScrollIntoView(item2._ListBoxItem);
-                                        DataItemList.SelectedItem = item2._ListBoxItem;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
+                        // }
 
                         FileList.ScrollIntoView(data.Item1._ListBoxItem);
                         FileList.SelectedItem = data.Item1._ListBoxItem;
@@ -2608,6 +2690,27 @@ namespace Wukong_PBData_ReadWriter_GUI
         private void AutoSaveFileCheck_OnCheckedOrUnChecked(object sender, RoutedEventArgs e)
         {
             _config.AutoSaveFile = ((CheckBox)sender).IsChecked!.Value;
+            if (_config.AutoSaveFile)
+            {
+                if (string.IsNullOrEmpty(_selectedSaveFolder))
+                {
+                    System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+                    dialog.Description = "请选择要保存Data数据的文件夹";
+                    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        _selectedSaveFolder = dialog.SelectedPath;
+                        StartAutoSaveTick();
+                    }
+                }
+                else
+                {
+                    StartAutoSaveTick();
+                }
+            }
+            else
+            {
+                StopAutoSaveTimer();
+            }
         }
 
         /// <summary>
