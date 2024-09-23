@@ -70,10 +70,13 @@ namespace Wukong_PBData_ReadWriter_GUI
         private object _lastActionComponent;
 
         /// <summary>
-        /// 
+        /// 配置项目文件夹路径
         /// </summary>
-        private Task _task;
+        private const string ConfigDirPath = ".\\Config";
 
+        /// <summary>
+        /// 构造
+        /// </summary>
         public MainWindow()
         {
             Console.WriteLine();
@@ -87,32 +90,6 @@ namespace Wukong_PBData_ReadWriter_GUI
             _SearchTimer.Tick += SearchTimer_Tick;
             this.Title = "黑猴配表编辑器" + version;
             _logUtil = new("main", AppDomain.CurrentDomain.BaseDirectory, 0.5, null, true, 3, 3);
-            //处理非UI线程异常  
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
-            {
-                var str = GetExceptionMsg(e.ExceptionObject as Exception, e.ToString());
-                //WriteLog(str);
-                //_logUtil.Error(str);
-                _logUtil.Error(str);
-            };
-            //处理UI线程异常  
-            System.Windows.Forms.Application.ThreadException += (sender, e) =>
-            {
-                var str = GetExceptionMsg(e.Exception, e.ToString());
-                //WriteLog(str);
-                _logUtil.Error(str);
-            };
-            //Task线程内未捕获异常处理事件
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
-            {
-                _logUtil.Error($"Error", args.Exception);
-            };
-
-            //UI线程未捕获异常处理事件（UI主线程）
-            this.Dispatcher.UnhandledException += (sender, args) =>
-            {
-                _logUtil.Error($"Error", args.Exception);
-            };
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
@@ -165,7 +142,38 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// </summary>
         private void Init()
         {
-            var configPath = Path.Combine(".", "config.cfg");
+            #region 异常捕获
+
+            //处理非UI线程异常  
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                var str = GetExceptionMsg(e.ExceptionObject as Exception, e.ToString());
+                //WriteLog(str);
+                //_logUtil.Error(str);
+                _logUtil.Error(str);
+            };
+            //处理UI线程异常  
+            System.Windows.Forms.Application.ThreadException += (sender, e) =>
+            {
+                var str = GetExceptionMsg(e.Exception, e.ToString());
+                //WriteLog(str);
+                _logUtil.Error(str);
+            };
+            //Task线程内未捕获异常处理事件
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                _logUtil.Error($"Error", args.Exception);
+            };
+
+            //UI线程未捕获异常处理事件（UI主线程）
+            this.Dispatcher.UnhandledException += (sender, args) =>
+            {
+                _logUtil.Error($"Error", args.Exception);
+            };
+
+            #endregion
+
+            var configPath = Path.Combine(ConfigDirPath, "config.cfg");
             if (!File.Exists(configPath))
                 return;
             var content = File.ReadAllText(configPath);
@@ -276,7 +284,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <param name="e"></param>
         private void OnClosed(object? sender, EventArgs e)
         {
-            var configPath = Path.Combine(".", "config.cfg");
+            var configPath = Path.Combine(ConfigDirPath, "config.cfg");
             File.WriteAllText(configPath, GetConfig(_config));
         }
 
