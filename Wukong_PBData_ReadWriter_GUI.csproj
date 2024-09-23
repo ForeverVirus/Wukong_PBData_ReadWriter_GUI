@@ -12,16 +12,16 @@
   <ItemGroup>
     <None Remove="vx.jpg" />
     <None Remove="zfb.jpg" />
-    <None Update="Config\ComparisonTable.json">
+    <None Update="ComparisonTable.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Config\config.cfg">
+    <None Update="config.cfg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="defaultConfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Config\defaultRemark.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="DefaultMd5Config.json">
+    <None Update="Config\DefaultMd5Config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -54,10 +54,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="DefaultDescConfig.json">
+    <None Update="Config\DefaultDescConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="DefaultOriData.oridata">
+    <None Update="Config\DefaultOriData.oridata">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="README.md">
@@ -84,10 +84,6 @@
     <Page Update="MainWindow - 复制.xaml">
       <SubType>Designer</SubType>
     </Page>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Json\" />
   </ItemGroup>
 
 </Project>
