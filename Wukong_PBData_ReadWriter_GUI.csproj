@@ -12,6 +12,15 @@
   <ItemGroup>
     <None Remove="vx.jpg" />
     <None Remove="zfb.jpg" />
+    <None Update="Config\ComparisonTable.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\config.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\defaultRemark.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="DefaultMd5Config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -66,12 +75,19 @@
     <None Update="ref\settings.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="UpdateLog.log">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Page Update="MainWindow - 复制.xaml">
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Json\" />
   </ItemGroup>
 
 </Project>
