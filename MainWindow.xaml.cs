@@ -415,11 +415,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             var newDict = Exporter.ImportDescriptionConfig(dialogFileName);
             foreach (var kvp in newDict)
             {
-                if (s_DescriptionConfig.ContainsKey(kvp.Key))
-                {
-                    s_DescriptionConfig[kvp.Key] = kvp.Value;
-                }
-                else
+                if(!s_DescriptionConfig.ContainsKey(kvp.Key))
                 {
                     s_DescriptionConfig.Add(kvp.Key, kvp.Value);
                 }
@@ -553,14 +549,14 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
             dialog.AddExtension = true;
-            // dialog.Filter = "Data|*.oridata";
+             //dialog.Filter = "Data|*.oridata";
             dialog.Filter = "Json|*.json";
             dialog.Title = "导出备注配置";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 Exporter.ExportDescriptionConfig(s_DescriptionConfig, dialog.FileName);
-                // Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
-                // Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
+                 //Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
+                //Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
             }
         }
 
@@ -596,11 +592,11 @@ namespace Wukong_PBData_ReadWriter_GUI
                 await _GlobalSearchTask;
 
                 
-                // var files = _DataFiles.Values.ToList();
-                // files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
+                 //var files = _DataFiles.Values.ToList();
+                //files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
                 //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
-                // _MD5Config = Exporter.CollectItemMD5(files);
-                // _OrigItemData = Exporter.CollectItemBytes(files);
+                //_MD5Config = Exporter.CollectItemMD5(files);
+                //_OrigItemData = Exporter.CollectItemBytes(files);
 
 
             }
