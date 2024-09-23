@@ -57,8 +57,7 @@
             <MenuItem Header="菜单">
                 <MenuItem Header="清理修改记录" Click="ClearLastUpdateLog"/>
             </MenuItem>
-            <MenuItem Header="帮助">
-                <MenuItem Header="查看帮助" Click="HelpMenuItem_Click"/>
+            <MenuItem Header="帮助"  Click="HelpMenuItem_Click">
             </MenuItem>
         </Menu>
 

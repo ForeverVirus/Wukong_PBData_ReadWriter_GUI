@@ -95,7 +95,15 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                                     continue;
 
                                 DataItem dataItem = new DataItem();
-                                dataItem._ID = property.GetValue(item) as int? ?? 0;
+                                var idValue = property.GetValue(item);
+                                if (idValue is int id)
+                                    dataItem._ID = id;
+                                else
+                                {
+                                    dataItem._ID = System.Convert.ToInt32(idValue);
+                                }
+                                
+                                // dataItem._ID = property.GetValue(item) as int? ?? 0;
                                 _IDList.Add(dataItem._ID);
                                 dataItem._Data = item as IMessage;
                                 dataItem._File = this;
