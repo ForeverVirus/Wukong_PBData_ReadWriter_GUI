@@ -42,8 +42,8 @@ namespace Wukong_PBData_ReadWriter_GUI
         public ConcurrentDictionary<string, DataFile> _DataFiles = new();
         public static Dictionary<string, string> s_DescriptionConfig = new Dictionary<string, string>();
         public static List<(string, DataFile, DataItem)> s_TraditionGlobalSearchCache = new List<(string, DataFile, DataItem)>();
-        
-        public List<DataFile> _DataFiles = new List<DataFile>();
+
+        //public List<DataFile> _DataFiles = new List<DataFile>();
         public Dictionary<string, string> _MD5Config = new Dictionary<string, string>();
         public Dictionary<string, byte[]> _OrigItemData = new Dictionary<string, byte[]>();
         public DataFile _CurrentOpenFile = null;
@@ -83,7 +83,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// 构造
         /// </summary>
         public MainWindow()
-            Console.WriteLine();
+        {
             this.Closed += OnClosed;
             this.Loaded += OnLoaded;
             s_DescriptionConfig = Exporter.ImportDescriptionConfig("DefaultDescConfig.json");
@@ -333,19 +333,19 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <param name="dialogFileName"></param>
         private void LoadDescription(string dialogFileName)
         {
-        var newDict = Exporter.ImportDescriptionConfig(dialog.FileName);
-        foreach (var kvp in newDict)
-        {
-            if (s_DescriptionConfig.ContainsKey(kvp.Key))
+            var newDict = Exporter.ImportDescriptionConfig(dialogFileName);
+            foreach (var kvp in newDict)
             {
-                s_DescriptionConfig[kvp.Key] = kvp.Value;
-            }
-            else
-            {
-                s_DescriptionConfig.Add(kvp.Key, kvp.Value);
+                if (s_DescriptionConfig.ContainsKey(kvp.Key))
+                {
+                    s_DescriptionConfig[kvp.Key] = kvp.Value;
+                }
+                else
+                {
+                    s_DescriptionConfig.Add(kvp.Key, kvp.Value);
+                }
             }
         }
-    }
 
         private void CreatePak(object sender, RoutedEventArgs e)
         {
@@ -509,7 +509,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     s_TraditionGlobalSearchCache.Clear();
                 }
 
-                _GlobalSearchTask = CacheGlobalSearchAsync(_DataFiles);
+                _GlobalSearchTask = CacheGlobalSearchAsync(_DataFiles.Values.ToList());
                 await _GlobalSearchTask;
 
                 //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
@@ -1074,10 +1074,11 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                     list.Add(newItem);
                     var key = newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID;
-                    if (_DescriptionConfig.ContainsKey(key))
+                    //解决克隆新增ID重复 
+                    if (s_DescriptionConfig.ContainsKey(key))
                     {
                         _CurrentOpenFile._IDList.Remove(newDataItem._ID);
-                        while (_DescriptionConfig.ContainsKey(key))
+                        while (s_DescriptionConfig.ContainsKey(key))
                         {
                             newDataItem._ID++;
                             key = newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID;
@@ -1167,7 +1168,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             button.Content = "确定";
             button.Click += (sender, e) =>
             {
-                if(s_DescriptionConfig.ContainsKey(data.Item1))
+                if (s_DescriptionConfig.ContainsKey(data.Item1))
                 {
                     s_DescriptionConfig.Remove(data.Item1);
                 }
@@ -1181,27 +1182,27 @@ namespace Wukong_PBData_ReadWriter_GUI
             grid.Children.Add(button);
         }
 
-        private ListBoxItem FindListBoxItem(DependencyObject child)  
-        {  
+        private ListBoxItem FindListBoxItem(DependencyObject child)
+        {
             // 检查child是否是ListBoxItem  
-            if (child is ListBoxItem listBoxItem)  
-            {  
-                return listBoxItem;  
-            }  
-  
+            if (child is ListBoxItem listBoxItem)
+            {
+                return listBoxItem;
+            }
+
             // 如果child不是ListBoxItem，则检查其父元素  
-            DependencyObject parentObject = VisualTreeHelper.GetParent(child);  
-  
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+
             // 如果找到了根元素或Popup，则返回null（通常不应该发生，但这里作为检查）  
-            if (parentObject == null || parentObject is Popup) 
-            {  
-                return null;  
-            }  
-  
+            if (parentObject == null || parentObject is Popup)
+            {
+                return null;
+            }
+
             // 递归查找ListBoxItem  
-            return FindListBoxItem(parentObject);  
-        }  
-        
+            return FindListBoxItem(parentObject);
+        }
+
         private void OpenDataItem(object sender, MouseButtonEventArgs e)
         {
             ListBoxItem listBoxItem = FindListBoxItem(e.OriginalSource as DependencyObject);
