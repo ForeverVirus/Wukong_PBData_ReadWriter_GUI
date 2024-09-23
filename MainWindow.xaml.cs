@@ -2339,6 +2339,53 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             string helpText = "";
 
+            TextBlock tb1 = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                Text = "视频教程",
+                FontSize = 16
+            };
+
+            Hyperlink hl = new Hyperlink();
+            hl.NavigateUri = new Uri("https://www.bilibili.com/video/BV15usSe7ETf");
+            hl.RequestNavigate += Hyperlink_RequestNavigate;
+            //设置HyplerLink的文字
+            hl.Inlines.Add("禽兽-云轩 简易教程");
+            //将HyperLink添加到TextBlock
+            tb1.Inlines.Add(hl);
+
+            TextBlock tb2 = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                Text = "视频教程",
+                FontSize = 16
+            };
+
+            Hyperlink yh_hl1 = new Hyperlink();
+            yh_hl1.NavigateUri = new Uri("https://www.bilibili.com/video/BV1br4he8Eg1");
+            yh_hl1.RequestNavigate += Hyperlink_RequestNavigate;
+            //设置HyplerLink的文字
+            yh_hl1.Inlines.Add("银河Buster 详细制作教程一");
+            //将HyperLink添加到TextBlock
+            tb2.Inlines.Add(yh_hl1);
+
+            Hyperlink yh_hl2 = new Hyperlink();
+            yh_hl2.NavigateUri = new Uri("https://www.bilibili.com/video/BV1TZ4UekEKq");
+            yh_hl2.RequestNavigate += Hyperlink_RequestNavigate;
+            //设置HyplerLink的文字
+            yh_hl2.Inlines.Add(" 详细制作教程二");
+            //将HyperLink添加到TextBlock
+            tb2.Inlines.Add(yh_hl2);
+
+            Hyperlink yh_hl3 = new Hyperlink();
+            yh_hl3.NavigateUri = new Uri("https://www.bilibili.com/video/BV195t7eeEUc");
+            yh_hl3.RequestNavigate += Hyperlink_RequestNavigate;
+            //设置HyplerLink的文字
+            yh_hl3.Inlines.Add(" 详细制作教程三\n");
+            //将HyperLink添加到TextBlock
+            tb2.Inlines.Add(yh_hl3);
+
+
             if (File.Exists("README.md"))
             {
                 helpText = System.IO.File.ReadAllText("README.md");
@@ -2354,6 +2401,8 @@ namespace Wukong_PBData_ReadWriter_GUI
             // 将控件添加到StackPanel
             stackPanel.Children.Add(qrCodePanel);
             stackPanel.Children.Add(qrCodeText);
+            stackPanel.Children.Add(tb1);
+            stackPanel.Children.Add(tb2);
             stackPanel.Children.Add(helpTextBlock);
 
             // 将StackPanel添加到ScrollViewer
