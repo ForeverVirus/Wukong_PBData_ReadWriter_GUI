@@ -32,6 +32,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Navigation;
 using MessageBox = System.Windows.MessageBox;
 using TextBox = Wpf.Ui.Controls.TextBox;
+using Wukong_PBData_ReadWriter_GUI.Entity;
 
 
 namespace Wukong_PBData_ReadWriter_GUI
@@ -79,20 +80,16 @@ namespace Wukong_PBData_ReadWriter_GUI
         private object _lastActionComponent;
 
         /// <summary>
-        /// 配置项目文件夹路径
-        /// </summary>
-        private const string ConfigDirPath = ".\\Config";
-
-        /// <summary>
         /// 构造
         /// </summary>
         public MainWindow()
         {
+
             this.Closed += OnClosed;
             this.Loaded += OnLoaded;
-            s_DescriptionConfig = Exporter.ImportDescriptionConfig("DefaultDescConfig.json");
-            _MD5Config = Exporter.ImportDescriptionConfig("DefaultMD5Config.json");
-            _OrigItemData = Exporter.ImportItemDataBytes("DefaultOriData.oridata");
+            s_DescriptionConfig = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultDescConfig.json"));
+            _MD5Config = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultMD5Config.json"));
+            _OrigItemData = Exporter.ImportItemDataBytes(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultOriData.oridata"));
             _SearchTimer = new DispatcherTimer();
             _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
             _SearchTimer.Tick += SearchTimer_Tick;
@@ -148,42 +145,50 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <summary>
         /// 初始化
         /// </summary>
-        private void Init()
+        private void Init(bool isFirst = false)
         {
-            #region 异常捕获
-
-            //处理非UI线程异常  
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            if (!isFirst)
             {
-                var str = GetExceptionMsg(e.ExceptionObject as Exception, e.ToString());
-                //WriteLog(str);
-                //_logUtil.Error(str);
-                _logUtil.Error(str);
-            };
-            //处理UI线程异常  
-            System.Windows.Forms.Application.ThreadException += (sender, e) =>
-            {
-                var str = GetExceptionMsg(e.Exception, e.ToString());
-                //WriteLog(str);
-                _logUtil.Error(str);
-            };
-            //Task线程内未捕获异常处理事件
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
-            {
-                _logUtil.Error($"Error", args.Exception);
-            };
+                #region 异常捕获
 
-            //UI线程未捕获异常处理事件（UI主线程）
-            this.Dispatcher.UnhandledException += (sender, args) =>
-            {
-                _logUtil.Error($"Error", args.Exception);
-            };
+                //处理非UI线程异常  
+                AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+                {
+                    var str = GetExceptionMsg(e.ExceptionObject as Exception, e.ToString());
+                    //WriteLog(str);
+                    //_logUtil.Error(str);
+                    _logUtil.Error(str);
+                };
+                //处理UI线程异常  
+                System.Windows.Forms.Application.ThreadException += (sender, e) =>
+                {
+                    var str = GetExceptionMsg(e.Exception, e.ToString());
+                    //WriteLog(str);
+                    _logUtil.Error(str);
+                };
+                //Task线程内未捕获异常处理事件
+                TaskScheduler.UnobservedTaskException += (sender, args) =>
+                {
+                    _logUtil.Error($"Error", args.Exception);
+                };
 
-            #endregion
+                //UI线程未捕获异常处理事件（UI主线程）
+                this.Dispatcher.UnhandledException += (sender, args) =>
+                {
+                    _logUtil.Error($"Error", args.Exception);
+                };
 
-            var configPath = Path.Combine(ConfigDirPath, "config.cfg");
+                #endregion
+            }
+
+            var configPath = Path.Combine(GlobalConfig.ConfigDirPath, "config.cfg");
             if (!File.Exists(configPath))
+            {
+                SaveConfig();
+                Init(true);
                 return;
+            }
+
             var content = File.ReadAllText(configPath);
             var configData = JsonUtil.Deserialize<ConcurrentDictionary<string, ConfigData>>(content);
             if (configData == null)
@@ -336,6 +341,15 @@ namespace Wukong_PBData_ReadWriter_GUI
         }
 
         /// <summary>
+        /// 保存配置
+        /// </summary>
+        private void SaveConfig()
+        {
+            var configPath = Path.Combine(GlobalConfig.ConfigDirPath, "config.cfg");
+            File.WriteAllText(configPath, GetConfig(_config));
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="config"></param>
@@ -347,11 +361,12 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 if (!propertyInfo.CanRead)
                     continue;
-                var configParma = propertyInfo.GetCustomAttribute(typeof(ConfigParam));
+                var configParma = (ConfigParam?)propertyInfo.GetCustomAttribute(typeof(ConfigParam));
+                var data = propertyInfo.GetValue(config);
                 dic.TryAdd(propertyInfo.Name, new ConfigData
                 {
-                    Data = propertyInfo.GetValue(config),
-                    Desc = configParma is ConfigParam param ? param.Desc : ""
+                    Data = data != null ? data : configParma?.DefaultValue ?? data,
+                    Desc = configParma?.Desc ?? ""
                 });
             }
 
@@ -365,9 +380,8 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <param name="e"></param>
         private void OnClosed(object? sender, EventArgs e)
         {
-            var configPath = Path.Combine(ConfigDirPath, "config.cfg");
-            File.WriteAllText(configPath, GetConfig(_config));
-            
+            SaveConfig();
+
             CloseAllOtherWindow();
             this.Close();
         }
@@ -629,6 +643,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                 file._FileName = item;
                 file._FilePath = filePaths[index];
                 //_DataFiles.Add(file);
+                if (_updateFiles.TryGetValue(item, out var oldFile))
+                    file.Tag = oldFile.Tag;
                 _DataFiles.TryAdd(item, file);
                 index++;
             }
@@ -647,6 +663,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (FileList == null)
                 return;
             FileList.Items.Clear();
+            
             foreach (var item in files)
             {
                 if (!item._IsShow) continue;
@@ -673,7 +690,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 MenuItem menuItem = new MenuItem();
                 menuItem.Header = "备注";
                 string descKey = item._FileName;
-                Action descSuccessAction = () =>
+                var descSuccessAction = () =>
                 {
                     RefreshDataFile(files);
                 };
@@ -862,7 +879,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             }
         }
 
-        void SaveDataFile(DataFile file, string dir)
+        void SaveDataFile(DataFile file, string dir, bool useDir = false)
         {
             var pakPath = file._FilePath;
             
@@ -873,8 +890,8 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             var outPath = Path.Combine(dir, pakPath);
 
-            Exporter.SaveDataFile(outPath, file);
-    
+            Exporter.SaveDataFile(useDir ? dir : outPath, file);
+
 
         }
         
@@ -1110,6 +1127,10 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             if (DataItemList == null) return;
             DataItemList.Items.Clear();
+            var descSuccessAction = () =>
+            {
+                RefreshFileDataItemList(list);
+            };
             foreach (var item in list)
             {
                 if (!item._IsShow) continue;
@@ -1129,12 +1150,9 @@ namespace Wukong_PBData_ReadWriter_GUI
                 listItem.ContextMenu = new ContextMenu();
                 MenuItem menuItem = new MenuItem();
                 menuItem.Header = "备注";
-                string descKey = item._File._FileData.GetType().Name + "_" + item._ID;
-                Action descSuccessAction = () =>
-                {
-                    RefreshFileDataItemList(list);
-                };
-                menuItem.DataContext = new Tuple<string, Action>(descKey, descSuccessAction);
+                //string descKey = item._File._FileData.GetType().Name + "_" + item._ID;
+
+                menuItem.DataContext = new Tuple<string, Action>(item.DescKey, descSuccessAction);
                 menuItem.Click += OpenDescriptionWindow;
                 listItem.ContextMenu.Items.Add(menuItem);
 
@@ -1170,74 +1188,88 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile._FileData, null) as IList;
 
-            if (_CurrentOpenFile._FileDataItemList != null)
+            try
             {
-                var newItemType = list.GetType().GetGenericArguments()[0];
-                if (newItemType != null)
+                if (_CurrentOpenFile._FileDataItemList != null)
                 {
-                    IMessage newItem = null;
-
-                    var parser = newItemType.GetProperty("Parser", BindingFlags.Static | BindingFlags.Public);
-                    if (parser != null)
+                    var newItemType = list.GetType().GetGenericArguments()[0];
+                    if (newItemType != null)
                     {
-                        try
+                        IMessage newItem = null;
+
+                        var parser = newItemType.GetProperty("Parser", BindingFlags.Static | BindingFlags.Public);
+                        if (parser != null)
                         {
-                            MessageParser parserValue = parser.GetMethod.Invoke(null, null) as MessageParser;
-                            var message = parserValue.ParseFrom(bytes);
-                            if (message != null)
+                            try
                             {
-                                newItem = message;
+                                MessageParser parserValue = parser.GetMethod.Invoke(null, null) as MessageParser;
+                                var message = parserValue.ParseFrom(bytes);
+                                if (message != null)
+                                {
+                                    newItem = message;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.ToString());
                             }
                         }
-                        catch (Exception ex)
+
+                        if (newItem == null)
+                            return;
+
+
+                        var property = newItemType.GetProperty("Id");
+                        if (property == null)
                         {
-                            System.Windows.MessageBox.Show(ex.ToString());
+                            property = newItemType.GetProperty("ID");
                         }
-                    }
 
-                    if (newItem == null)
-                        return;
+                        if (property == null)
+                            return;
 
-
-                    var property = newItemType.GetProperty("Id");
-                    if (property == null)
-                    {
-                        property = newItemType.GetProperty("ID");
-                    }
-
-                    if (property == null)
-                        return;
-
-                    DataItem newDataItem = new DataItem();
-                    newDataItem._ID = _CurrentOpenFile.GetNewID();
-                    while (_CurrentOpenFile._IDList.Contains(newDataItem._ID))
-                    {
-                        newDataItem._ID++;
-                    }
-                    property.SetValue(newItem, newDataItem._ID, null);
-                    _CurrentOpenFile._IDList.Add(newDataItem._ID);
-                    property.SetValue(newItem, newDataItem._ID, null);
-                    newDataItem._Data = newItem;
-                    newDataItem._File = _CurrentOpenFile;
-                    _CurrentOpenFile._FileDataItemList.Add(newDataItem);
-
-                    list.Add(newItem);
-                    var key = newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID;
-                    //解决克隆新增ID重复 
-                    if (s_DescriptionConfig.ContainsKey(key))
-                    {
-                        _CurrentOpenFile._IDList.Remove(newDataItem._ID);
-                        while (s_DescriptionConfig.ContainsKey(key))
+                        DataItem newDataItem = new DataItem();
+                        newDataItem._ID = _CurrentOpenFile.GetNewID();
+                        while (_CurrentOpenFile._IDList.Contains(newDataItem._ID))
                         {
                             newDataItem._ID++;
-                            key = newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID;
                         }
+
+                        property.SetValue(newItem, newDataItem._ID, null);
+                        _CurrentOpenFile._IDList.Add(newDataItem._ID);
+                        property.SetValue(newItem, newDataItem._ID, null);
+                        newDataItem._Data = newItem;
+                        newDataItem._File = _CurrentOpenFile;
+                        _CurrentOpenFile._FileDataItemList.Add(newDataItem);
+
+                        list.Add(newItem);
+                        var key = newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID;
+                        //解决克隆新增ID重复 
+                        if (s_DescriptionConfig.ContainsKey(key))
+                        {
+                            _CurrentOpenFile._IDList.Remove(newDataItem._ID);
+                            while (s_DescriptionConfig.ContainsKey(key))
+                            {
+                                newDataItem._ID++;
+                                key = newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID;
+                            }
+
+                            newDataItem.DescKey = key;
+                        }
+
+                        //s_DescriptionConfig.Add(newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID, dataItem._Desc);
+                        s_DescriptionConfig.Add(newDataItem.DescKey, dataItem._Desc);
+                        RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
                     }
-
-                    s_DescriptionConfig.Add(newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID, dataItem._Desc);
-
-                    RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
                 }
+            }
+            catch
+            {
+                //
+            }
+            finally
+            {
+                bytes = null;
             }
         }
 
@@ -1394,7 +1426,8 @@ namespace Wukong_PBData_ReadWriter_GUI
             //IMessage
             var dataPropertyItems = new List<DataPropertyItem>();
 
-            var dataType = curData._Data.GetType();
+            //var dataType = curData._Data.GetType();
+            var dataType = curData.DataType;
             var parser = dataType.GetProperty("Parser", BindingFlags.Static | BindingFlags.Public);
             if (parser != null)
             {
@@ -1404,7 +1437,11 @@ namespace Wukong_PBData_ReadWriter_GUI
                     var message = parserValue.ParseFrom(itemData);
                     if (message != null)
                     {
-                        var properties = dataType.GetProperties();
+                        //PropertyInfo[] properties = dataType.GetProperties();
+                        if (!PropertiesDataController.Instance.Get(dataType, out var properties))
+                        {
+                            properties = PropertiesDataController.Instance.Add(dataType);
+                        }
 
                         foreach (var property in properties)
                         {
@@ -1474,6 +1511,10 @@ namespace Wukong_PBData_ReadWriter_GUI
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             
             int rowIndex = 0;
+            var descSuccessAction = () =>
+            {
+                RefreshDataItemList(propertyItemList);
+            };
             foreach (var item in propertyItemList)
             {
                 TextBlock label = new TextBlock();
@@ -1514,10 +1555,6 @@ namespace Wukong_PBData_ReadWriter_GUI
                     label.Foreground = new SolidColorBrush(Colors.Blue);
                 }
 
-                Action descSuccessAction = () =>
-                {
-                    RefreshDataItemList(propertyItemList);
-                };
                 menuItem.DataContext = new Tuple<string, Action>(descKey, descSuccessAction);
                 menuItem.Click += OpenDescriptionWindow;
                 label.ContextMenu.Items.Add(menuItem);
@@ -1969,7 +2006,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// </summary>
         private void AddCurrentFileInUpdateFiles()
         {
-            if (!_updateFiles.ContainsKey(_CurrentOpenFile._FileName))
+            if (!_updateFiles.ContainsKey(_CurrentOpenFile._FileName) || _CurrentOpenFile.Tag == null)
             {
                 var pakPath = _CurrentOpenFile._FilePath;
 
@@ -2053,9 +2090,11 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 if (data != null)
                 {
+                    var dataType = data.GetType();
+
                     //创建一个新的窗口
                     Window window = new Window();
-                    window.Title = data.GetType().Name;
+                    window.Title = dataType.Name;
                     window.Width = 800;
                     window.Height = 600;
                     window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -2072,7 +2111,12 @@ namespace Wukong_PBData_ReadWriter_GUI
                     grid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
 
                     //获取属性
-                    var properties = data.GetType().GetProperties();
+                    //var properties = data.GetType().GetProperties();
+                    if (!PropertiesDataController.Instance.Get(dataType, out var properties))
+                    {
+                        properties = PropertiesDataController.Instance.Add(dataType);
+                    }
+
                     int rowIndex = 0;
                     foreach (var property in properties)
                     {
@@ -2508,60 +2552,67 @@ namespace Wukong_PBData_ReadWriter_GUI
             // 清空之前的搜索结果
             SearchResultsList.Items.Clear();
 
-            if (!string.IsNullOrWhiteSpace(searchText) && searchText != "全局搜索")
+            try
             {
-                bool isRegex = RegexRadioButton.IsChecked == true;
-                bool isWildcard = WildcardRadioButton.IsChecked == true;
-                bool isExactMatch = ExactMatchRadioButton.IsChecked == true;
-                bool isTradition = TraditionContainsRadioButton.IsChecked == true;
-
-                // 将通配符转换为正则表达式
-                if (isWildcard)
+                if (!string.IsNullOrWhiteSpace(searchText) && searchText != "全局搜索")
                 {
-                    searchText = "^" + Regex.Escape(searchText).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                    bool isRegex = RegexRadioButton.IsChecked == true;
+                    bool isWildcard = WildcardRadioButton.IsChecked == true;
+                    bool isExactMatch = ExactMatchRadioButton.IsChecked == true;
+                    bool isTradition = TraditionContainsRadioButton.IsChecked == true;
+
+                    // 将通配符转换为正则表达式
+                    if (isWildcard)
+                    {
+                        searchText = "^" + Regex.Escape(searchText).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                    }
+
+                    var cache = _GlobalSearchCache;
+                    if (isTradition)
+                        cache = s_TraditionGlobalSearchCache;
+
+                    foreach (var item in cache)
+                    {
+                        bool isMatch = false;
+
+                        if (isRegex || isWildcard)
+                        {
+                            isMatch = Regex.IsMatch(item.Item1, searchText, RegexOptions.IgnoreCase);
+                        }
+                        else if (isExactMatch)
+                        {
+                            isMatch = string.Equals(item.Item1, searchText, StringComparison.OrdinalIgnoreCase);
+                        }
+                        else
+                        {
+                            isMatch = item.Item1.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+                        }
+
+                        if (isMatch)
+                        {
+                            ListBoxItem listItem = new ListBoxItem();
+                            listItem.Content = item.Item1;
+                            listItem.DataContext = new Tuple<DataFile, DataItem>(item.Item2, item.Item3);
+                            // listItem.MouseDoubleClick += OpenGlobalSearchItem;
+                            SearchResultsList.Items.Add(listItem);
+                        }
+                    }
+
+                    // 展开搜索结果
+                    SearchResultsExpander.Visibility = Visibility.Visible;
+                    SearchResultsExpander.IsExpanded = true;
+                    this.Height = 920;
                 }
-
-                var cache = _GlobalSearchCache;
-                if (isTradition)
-                    cache = s_TraditionGlobalSearchCache;
-
-                foreach (var item in cache)
+                else
                 {
-                    bool isMatch = false;
-
-                    if (isRegex || isWildcard)
-                    {
-                        isMatch = Regex.IsMatch(item.Item1, searchText, RegexOptions.IgnoreCase);
-                    }
-                    else if (isExactMatch)
-                    {
-                        isMatch = string.Equals(item.Item1, searchText, StringComparison.OrdinalIgnoreCase);
-                    }
-                    else
-                    {
-                        isMatch = item.Item1.Contains(searchText, StringComparison.OrdinalIgnoreCase);
-                    }
-
-                    if (isMatch)
-                    {
-                        ListBoxItem listItem = new ListBoxItem();
-                        listItem.Content = item.Item1;
-                        listItem.DataContext = new Tuple<DataFile, DataItem>(item.Item2, item.Item3);
-                        // listItem.MouseDoubleClick += OpenGlobalSearchItem;
-                        SearchResultsList.Items.Add(listItem);
-                    }
+                    // 折叠搜索结果
+                    SearchResultsExpander.Visibility = Visibility.Collapsed;
+                    this.Height = 720;
                 }
-
-                // 展开搜索结果
-                SearchResultsExpander.Visibility = Visibility.Visible;
-                SearchResultsExpander.IsExpanded = true;
-                this.Height = 920;
             }
-            else
+            catch (Exception exception)
             {
-                // 折叠搜索结果
-                SearchResultsExpander.Visibility = Visibility.Collapsed;
-                this.Height = 720;
+                _logUtil.Error($"Error", exception);
             }
         }
 
@@ -2583,6 +2634,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                         _lastActionComponent = listBoxItem;
                     if (data.Item1 != null)
                     {
+                        #region 注释代码块
+
                         // if (_CurrentOpenFile != null && _CurrentOpenFile._IsDirty)
                         // {
                         //     if (_config.AutoSaveFile)
@@ -2618,13 +2671,13 @@ namespace Wukong_PBData_ReadWriter_GUI
                         // }
                         // else
                         // {
+
+                        #endregion
                         DataFile file = listBoxItem.DataContext as DataFile;
                         OpenFile(data.Item1);
 
                         if (data.Item2 != null)
                         {
-
-
                             foreach (var item2 in data.Item1._FileDataItemList)
                             {
                                 if (item2._ID == data.Item2._ID)
@@ -2668,6 +2721,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void LoadComparisonInformationTest(object sender, EventArgs e)
         {
+            ComparisonTableController.Instance.NeedSave = true;
             ComparisonTableController.Instance.SaveData();
             return;
             var temp = new OpenFileDialog();

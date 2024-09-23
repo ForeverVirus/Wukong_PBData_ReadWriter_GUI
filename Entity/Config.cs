@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Wukong_PBData_ReadWriter_GUI.DataControllers
+namespace Wukong_PBData_ReadWriter_GUI.Entity
 {
 
     public class Config
@@ -12,13 +13,13 @@ namespace Wukong_PBData_ReadWriter_GUI.DataControllers
         /// <summary>
         /// 备注文件路径
         /// </summary>
-        [ConfigParam(Desc = "备注文件路径")]
+        [ConfigParam(Desc = "备注文件路径", DefaultValue = ".\\Config\\DefaultRemark.json")]
         public string RemarkFilePath { set; get; }
 
         /// <summary>
         /// 对照表文件路径
         /// </summary>
-        [ConfigParam(Desc = "对照表文件路径")]
+        [ConfigParam(Desc = "对照文件路径", DefaultValue = ".\\Config\\ComparisonTable.json")]
         public string ComparisonTableFilePath { set; get; }
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace Wukong_PBData_ReadWriter_GUI.DataControllers
         /// <summary>
         /// 自动保存文件
         /// </summary>
-        [ConfigParam(Desc = "自动保存文件-支持多文件修改", DataType = typeof(bool))]
+        [ConfigParam(Desc = "自动保存文件", DataType = typeof(bool))]
         public bool AutoSaveFile { set; get; }
 
         /// <summary>
@@ -69,6 +70,11 @@ namespace Wukong_PBData_ReadWriter_GUI.DataControllers
         /// 数据类型
         /// </summary>
         public Type DataType { set; get; } = typeof(string);
+
+        /// <summary>
+        /// 默认值
+        /// </summary>
+        public object DefaultValue { set; get; }
     }
 
     /// <summary>

@@ -36,6 +36,11 @@ namespace Wukong_PBData_ReadWriter_GUI.DataControllers
         private string _lastFilePath;
 
         /// <summary>
+        /// 需要保存
+        /// </summary>
+        public bool NeedSave = false;
+
+        /// <summary>
         /// 构造
         /// </summary>
         public ComparisonTableController()
@@ -127,7 +132,7 @@ namespace Wukong_PBData_ReadWriter_GUI.DataControllers
         private void CreateComparisonTable(string filePath)
         {
             _comparisonInformation ??= new();
-
+            NeedSave = true;
             SaveData();
         }
 
@@ -136,8 +141,13 @@ namespace Wukong_PBData_ReadWriter_GUI.DataControllers
         /// </summary>
         public void SaveData(string filePath = null)
         {
+            if (!NeedSave && string.IsNullOrWhiteSpace(filePath))
+            {
+                return;
+            }
+            NeedSave = false;
             if (string.IsNullOrWhiteSpace(_lastFilePath) && string.IsNullOrWhiteSpace(filePath))
-                filePath = Path.Combine(".", "ComparisonTable.json");
+                filePath = Path.Combine(GlobalConfig.ConfigDirPath, "ComparisonTable.json");
             File.WriteAllText(filePath ?? _lastFilePath, JsonUtil.Serialize(_comparisonInformation));
         }
 
@@ -153,8 +163,8 @@ namespace Wukong_PBData_ReadWriter_GUI.DataControllers
             {
                 _comparisonInformation.TryRemove(key.ToLower().Replace("enum_", ""), out _);
             }
-
-            _comparisonInformation.TryAdd(key, value);
+            if (_comparisonInformation.TryAdd(key, value))
+                NeedSave = true;
         }
 
     }

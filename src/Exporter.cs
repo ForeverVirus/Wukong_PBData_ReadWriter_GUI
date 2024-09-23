@@ -15,6 +15,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using Wukong_PBData_ReadWriter_GUI.DataControllers;
 
 namespace Wukong_PBData_ReadWriter_GUI.src
 {
@@ -22,6 +23,12 @@ namespace Wukong_PBData_ReadWriter_GUI.src
     {
         public static Assembly s_protobufDB = Assembly.Load("GSE.ProtobufDB");
         public static Assembly s_runtime = Assembly.Load("Protobuf.Runtime");
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private static MD5 _md5 = MD5.Create();
+
 
         public static Dictionary<string, (Type, Assembly)> s_speFileTypeMapping = new Dictionary<string, (Type, Assembly)>()
         {
@@ -268,6 +275,8 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public static void Director(string dir, List<string> list, List<string> filePathList)
         {
             DirectoryInfo d = new DirectoryInfo(dir);
+            if (!d.Exists)
+                return;
             FileInfo[] files = d.GetFiles();//文件
             DirectoryInfo[] directs = d.GetDirectories();//文件夹
             foreach (FileInfo f in files)
@@ -290,7 +299,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         {
             var json = JsonConvert.SerializeObject(config);
 
-            if(File.Exists(path))
+            if (File.Exists(path))
             {
                 File.Delete(path);
             }
@@ -306,7 +315,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             }
 
             //write itemData to file with BinaryWriter
-            using(BinaryWriter bw = new BinaryWriter(new FileStream(path, FileMode.CreateNew)))
+            using (BinaryWriter bw = new BinaryWriter(new FileStream(path, FileMode.CreateNew)))
             {
                 bw.Write(itemData.Count);
                 foreach (var item in itemData)
@@ -326,7 +335,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             using (BinaryReader br = new BinaryReader(new FileStream(path, FileMode.Open)))
             {
                 var count = br.ReadInt32();
-                for(int i = 0; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
                     var key = br.ReadString();
                     var byteLength = br.ReadInt32();
@@ -357,7 +366,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
 
             string dir = Path.GetDirectoryName(path);
 
-            if(!Directory.Exists(dir))
+            if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
@@ -369,6 +378,11 @@ namespace Wukong_PBData_ReadWriter_GUI.src
 
             using (FileStream output = File.Create(path))
             {
+                if (dataFile._FileData == null && dataFile.Tag is string)
+                {
+                    dataFile.LoadData();
+                }
+
                 dataFile._FileData.WriteTo(output);
             }
         }
@@ -430,12 +444,17 @@ namespace Wukong_PBData_ReadWriter_GUI.src
 
                 cache.Add((key, file, data));
             }
-            else if(value is IMessage)
+            else if (value is IMessage)
             {
                 var type = value.GetType();
 
-                var ps = type.GetProperties();
-                foreach(var p in ps)
+                //var ps = type.GetProperties();
+                if (!PropertiesDataController.Instance.Get(type, out var ps))
+                {
+                    ps = PropertiesDataController.Instance.Add(type);
+                }
+
+                foreach (var p in ps)
                 {
                     ProcessGlobalSearch(p.GetValue(value), file, data, cache, p.Name, "");
                 }
@@ -574,8 +593,9 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             if (md5Config.TryGetValue(key, out var md5))
             {
                 var bytes = item._Data.ToByteArray();
-                var itemMd5 = MD5.Create().ComputeHash(bytes);
+                var itemMd5 = _md5.ComputeHash(bytes);
                 var md5Str = BitConverter.ToString(itemMd5).Replace("-", "").ToLower();
+                bytes = null;
                 return md5Str.Equals(md5);
             }
 
