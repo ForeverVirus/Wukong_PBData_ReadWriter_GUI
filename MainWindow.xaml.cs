@@ -251,20 +251,6 @@ namespace Wukong_PBData_ReadWriter_GUI
             AutoSaveFileCheck.IsChecked = _config.AutoSaveFile;
             DisplaysSourceInformationCheck.IsChecked = _config.DisplaysSourceInformation;
             AutoSearchInEffectCheck.IsChecked = _config.AutoSearchInEffect;
-
-            if (_config.AutoSaveFile)
-            {
-                if (string.IsNullOrEmpty(_selectedSaveFolder))
-                {
-                    System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
-                    dialog.Description = "请选择要保存Data数据的文件夹";
-                    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    {
-                        _selectedSaveFolder = dialog.SelectedPath;
-                        StartAutoSaveTick();
-                    }
-                }
-            }
         }
 
         private void StartAutoSaveTick()
@@ -380,6 +366,9 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             var configPath = Path.Combine(ConfigDirPath, "config.cfg");
             File.WriteAllText(configPath, GetConfig(_config));
+            
+            CloseAllOtherWindow();
+            this.Close();
         }
 
         private void CloseAllOtherWindow(bool isClearDataGrid = true)
@@ -606,9 +595,12 @@ namespace Wukong_PBData_ReadWriter_GUI
                 _GlobalSearchTask = CacheGlobalSearchAsync(_DataFiles.Values.ToList());
                 await _GlobalSearchTask;
 
+                
+                // var files = _DataFiles.Values.ToList();
+                // files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
                 //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
-                // _MD5Config = Exporter.CollectItemMD5(_DataFiles.Values.ToList());
-                // _OrigItemData = Exporter.CollectItemBytes(_DataFiles.Values.ToList());
+                // _MD5Config = Exporter.CollectItemMD5(files);
+                // _OrigItemData = Exporter.CollectItemBytes(files);
 
 
             }
@@ -899,22 +891,26 @@ namespace Wukong_PBData_ReadWriter_GUI
             
             if (string.IsNullOrEmpty(_selectedSaveFolder))
             {
-                System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
-                dialog.Description = "请选择要保存Data数据的文件夹";
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                var result = MessageBox.Show("第一次保存，请选择一个Mod文件夹用于保存修改后的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (result == MessageBoxResult.OK)
                 {
-                    _selectedSaveFolder = dialog.SelectedPath;
-
-                    foreach (var file in _updateFiles.Values)
+                    System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+                    dialog.Description = "请选择要保存Data数据的文件夹";
+                    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
-                        SaveDataFile(file, _selectedSaveFolder);
+                        _selectedSaveFolder = dialog.SelectedPath;
+
+                        foreach (var file in _updateFiles.Values)
+                        {
+                            SaveDataFile(file, _selectedSaveFolder);
+                        }
+
+                        RefreshFolderFile(_CurrentOpenFolder);
+                        DataItemList.Items.Clear();
+                        DataGrid.Children.Clear();
+                        CloseAllOtherWindow();
+                        _CurrentOpenFile = null;
                     }
-                    
-                    RefreshFolderFile(_CurrentOpenFolder);
-                    DataItemList.Items.Clear();
-                    DataGrid.Children.Clear();
-                    CloseAllOtherWindow();
-                    _CurrentOpenFile = null;
                 }
             }
             else
@@ -1887,6 +1883,8 @@ namespace Wukong_PBData_ReadWriter_GUI
             var listType = data.Item2.GetType().GetGenericArguments()[0];
             data.Item2.RemoveAt(data.Item1);
 
+            _CurrentOpenFile._IsDirty = true;
+            AddCurrentFileInUpdateFiles();
             RefreshList(data.Item2, listType.Name, data.Item3);
         }
 
@@ -2694,12 +2692,22 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 if (string.IsNullOrEmpty(_selectedSaveFolder))
                 {
-                    System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
-                    dialog.Description = "请选择要保存Data数据的文件夹";
-                    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    var result = MessageBox.Show("因开启了自动保存，请选择一个Mod文件夹用于保存修改后的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (result == MessageBoxResult.OK)
                     {
-                        _selectedSaveFolder = dialog.SelectedPath;
-                        StartAutoSaveTick();
+                        System.Windows.Forms.FolderBrowserDialog
+                            dialog = new System.Windows.Forms.FolderBrowserDialog();
+                        dialog.Description = "请选择要保存Data数据的文件夹";
+                        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
+                            _selectedSaveFolder = dialog.SelectedPath;
+                            StartAutoSaveTick();
+                        }
+                        else
+                        {
+                            _config.AutoSaveFile = false;
+                            AutoSaveFileCheck.IsChecked = _config.AutoSaveFile;
+                        }
                     }
                 }
                 else
