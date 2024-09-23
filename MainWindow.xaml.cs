@@ -21,6 +21,7 @@ using Wukong_PBData_ReadWriter_GUI.src;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using System.Windows.Controls.Primitives;
+using System.Windows.Navigation;
 
 namespace Wukong_PBData_ReadWriter_GUI
 {
@@ -37,7 +38,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
         public DispatcherTimer _SearchTimer;
         public string _CurrentOpenFolder = "";
-        public string version = "V1.3.0";
+        public string version = "V1.5.0";
         public MergeWindow _MergeWindow;
 
         public MainWindow()
@@ -1621,9 +1622,10 @@ namespace Wukong_PBData_ReadWriter_GUI
             }
         }
 
-        private void AuthorMenuItem_Click_1(object sender, RoutedEventArgs e)
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            Process.Start(new ProcessStartInfo("https://space.bilibili.com/8729996") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            e.Handled = true;
         }
 
         private void HelpMenuItem_Click(object sender, RoutedEventArgs e)

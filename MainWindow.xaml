@@ -45,22 +45,37 @@
                 <Separator />
                 <MenuItem Header="退出" Click="Close_Click" />
             </MenuItem>
-            <MenuItem Header="帮助">
-                <MenuItem Header="查看帮助" Click="HelpMenuItem_Click"/>
-                <MenuItem Header="关于作者" Click="AuthorMenuItem_Click_1"/>
+            <MenuItem Header="帮助" Click="HelpMenuItem_Click">
             </MenuItem>
         </Menu>
 
         <StackPanel DockPanel.Dock="Top" Margin="5">
-            <StackPanel Orientation="Horizontal">
-                <TextBox Name="GlobalSearchBox" Width="600" Margin="0,0,10,0" Text="全局搜索" Foreground="Gray" GotFocus="GlobalSearchBox_GotFocus" LostFocus="GlobalSearchBox_LostFocus" TextChanged="GlobalSearchBox_TextChanged" KeyDown="GlobalSearchBox_KeyDown"/>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Column="0">
+                    <TextBox Grid.Column="0" Name="GlobalSearchBox" Width="600" Margin="0,0,10,0" Text="全局搜索" Foreground="Gray" GotFocus="GlobalSearchBox_GotFocus" LostFocus="GlobalSearchBox_LostFocus" TextChanged="GlobalSearchBox_TextChanged" KeyDown="GlobalSearchBox_KeyDown"/>
                     <RadioButton x:Name="RegexRadioButton" Content="正则" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
                     <RadioButton x:Name="WildcardRadioButton" Content="通配符" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
                     <RadioButton x:Name="ExactMatchRadioButton" Content="全字匹配" GroupName="SearchMode" Checked="SearchModeRadioButton_Checked"/>
                     <RadioButton x:Name="ContainsRadioButton" Content="包含" GroupName="SearchMode" IsChecked="True" Checked="SearchModeRadioButton_Checked"/>
                 </StackPanel>
-            </StackPanel>
+                
+                
+                <TextBlock Name="Authors" Text="作者：" HorizontalAlignment="Right" Grid.Column="1">
+                    <Hyperlink NavigateUri="https://space.bilibili.com/8729996" RequestNavigate="Hyperlink_RequestNavigate">
+                        禽兽-云轩
+                    </Hyperlink>
+                    <Hyperlink NavigateUri="https://space.bilibili.com/267309207/" RequestNavigate="Hyperlink_RequestNavigate">
+                        richelieu_bee
+                    </Hyperlink>
+                    <Hyperlink NavigateUri="https://space.bilibili.com/18686483" RequestNavigate="Hyperlink_RequestNavigate">
+                        jmdch
+                    </Hyperlink>
+                </TextBlock>
+            </Grid>
             <Expander Name="SearchResultsExpander" Header="搜索结果" IsExpanded="False" Visibility="Collapsed">
                 <ListBox Name="SearchResultsList" PreviewMouseLeftButtonDown="OpenGlobalSearchItem" Width="Auto" Height="200" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
             </Expander>
