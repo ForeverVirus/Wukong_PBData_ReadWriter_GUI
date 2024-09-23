@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Wukong_PBData_ReadWriter_GUI.DataControllers;
 
 namespace Wukong_PBData_ReadWriter_GUI.src
 {
@@ -16,9 +17,10 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         {
             get
             {
-                if(_File != null)
+                if (_File != null)
                 {
-                    if(MainWindow.s_DescriptionConfig.TryGetValue(_File._FileData.GetType().Name + "_" + _ID, out var desc))
+                    //if(MainWindow.s_DescriptionConfig.TryGetValue(_File._FileData.GetType().Name + "_" + _ID, out var desc))
+                    if (MainWindow.s_DescriptionConfig.TryGetValue(DescKey, out var desc))
                     {
                         return desc;
                     }
@@ -41,12 +43,57 @@ namespace Wukong_PBData_ReadWriter_GUI.src
 
         public List<DataPropertyItem> _DataPropertyItems;
 
+        /// <summary>
+        /// 描述键
+        /// </summary>
+        private string _descKey;
+
+        /// <summary>
+        /// 描述键
+        /// </summary>
+        public string DescKey
+        {
+            get
+            {
+                if (_File != null && string.IsNullOrWhiteSpace(_descKey))
+                {
+                    _descKey = _File._FileData.GetType().Name + "_" + _ID;
+                }
+                return _descKey;
+            }
+            set => _descKey =  value;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Type _dataType;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Type DataType
+        {
+            get
+            {
+                if (_dataType == null)
+                    _dataType = _Data.GetType();
+                return _dataType;
+            }
+        }
+
         public void LoadData()
         {
+            _DataPropertyItems?.Clear();
             _DataPropertyItems = new List<DataPropertyItem>();
 
             var type = _Data.GetType();
-            var properties = type.GetProperties();
+            //var properties = type.GetProperties();
+            System.Reflection.PropertyInfo[] properties;
+            if (!PropertiesDataController.Instance.Get(type, out properties))
+            {
+                properties = PropertiesDataController.Instance.Add(type);
+            }
 
             foreach (var property in properties)
             {

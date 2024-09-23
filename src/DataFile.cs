@@ -60,10 +60,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             {
                 filePath = path;
             }
-            if (!CanOpen)
-                return;
             var data = Exporter.GetDataByFile(_FileName, filePath);
-            CanOpen = false;
             if (data != null)
             {
                 _FileData = data;
