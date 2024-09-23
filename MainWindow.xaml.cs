@@ -248,10 +248,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                     }
                 }
             }
-
-            if (_DataFiles != null && _DataFiles.Values != null)
+            
+            if(_DataFiles != null && _DataFiles.Values != null)
                 CacheGlobalSearchAsync(_DataFiles.Values.ToList());
-
+            
 
             AutoSaveFileCheck.IsChecked = _config.AutoSaveFile;
             DisplaysSourceInformationCheck.IsChecked = _config.DisplaysSourceInformation;
@@ -266,7 +266,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             _autoSaveTimer.Tick += AutoSaveTimer_Tick;
             _autoSaveTimer.Start();
         }
-
+        
         private void AutoSaveTimer_Tick(object sender, EventArgs e)
         {
             if (_config.AutoSaveFile && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
@@ -279,7 +279,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 _updateFiles.Clear();
             }
         }
-
+        
         private void StopAutoSaveTimer()
         {
             if (_autoSaveTimer != null)
@@ -429,7 +429,11 @@ namespace Wukong_PBData_ReadWriter_GUI
             var newDict = Exporter.ImportDescriptionConfig(dialogFileName);
             foreach (var kvp in newDict)
             {
-                if (!s_DescriptionConfig.ContainsKey(kvp.Key))
+                if(s_DescriptionConfig.ContainsKey(kvp.Key))
+                {
+                    s_DescriptionConfig[kvp.Key] = kvp.Value;
+                }
+                else
                 {
                     s_DescriptionConfig.Add(kvp.Key, kvp.Value);
                 }
@@ -563,13 +567,13 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
             dialog.AddExtension = true;
-            //dialog.Filter = "Data|*.oridata";
+             //dialog.Filter = "Data|*.oridata";
             dialog.Filter = "Json|*.json";
             dialog.Title = "导出备注配置";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 Exporter.ExportDescriptionConfig(s_DescriptionConfig, dialog.FileName);
-                //Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
+                 //Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
                 //Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
             }
         }
@@ -605,10 +609,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                 _GlobalSearchTask = CacheGlobalSearchAsync(_DataFiles.Values.ToList());
                 await _GlobalSearchTask;
 
-
-                //var files = _DataFiles.Values.ToList();
+                
+                // var files = _DataFiles.Values.ToList();
                 //files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
-                //_DescriptionConfig = Exporter.GenerateFirstDescConfig(_DataFiles);
+                //s_DescriptionConfig = Exporter.GenerateFirstDescConfig(files);
                 //_MD5Config = Exporter.CollectItemMD5(files);
                 //_OrigItemData = Exporter.CollectItemBytes(files);
 
@@ -648,7 +652,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             //把 _DataFiles.Values to List 并按FileName的首字母排序 从小到大排序
             var files = _DataFiles.Values.ToList();
             files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
-
+            
             RefreshDataFile(files);
         }
 
@@ -680,7 +684,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 {
                     listBoxItem.Foreground = new SolidColorBrush(Colors.Red);
                 }
-
+                
                 listBoxItem.ContextMenu = new ContextMenu();
                 MenuItem menuItem = new MenuItem();
                 menuItem.Header = "备注";
@@ -877,7 +881,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         void SaveDataFile(DataFile file, string dir, bool useDir = false)
         {
             var pakPath = file._FilePath;
-
+            
             var b1Index = file._FilePath.IndexOf("b1");
             if (b1Index != -1)
                 pakPath = file._FilePath.Substring(b1Index,
@@ -889,7 +893,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
 
         }
-
+        
         private void SaveDataFile(object sender, RoutedEventArgs e)
         {
             // if (_config.AutoSaveFile && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
@@ -901,7 +905,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             //     _updateFiles.Clear();
             //     return;
             // }
-
+            
             if (string.IsNullOrEmpty(_selectedSaveFolder))
             {
                 var result = MessageBox.Show("第一次保存，请选择一个Mod文件夹用于保存修改后的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -932,7 +936,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 {
                     SaveDataFile(file, _selectedSaveFolder);
                 }
-
+                    
                 RefreshFolderFile(_CurrentOpenFolder);
                 DataItemList.Items.Clear();
                 DataGrid.Children.Clear();
@@ -940,10 +944,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                 _CurrentOpenFile = null;
             }
 
-
+            
 
             //_GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
-
+            
 
         }
 
@@ -1022,9 +1026,9 @@ namespace Wukong_PBData_ReadWriter_GUI
                 var file = listBoxItem.DataContext as DataFile;
                 if (_lastActionComponent != listBoxItem)
                     _lastActionComponent = listBoxItem;
-
+                
                 CurrentOpenFileChange(file);
-
+                
                 // if (_CurrentOpenFile != null && _config.AutoSaveFile)
                 // {
                 //     //if (!_updateFiles.TryGetValue(_CurrentOpenFile._FileName,out var data))
@@ -1622,7 +1626,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     ComparisonTableController.Instance.SaveData();
                 comboBox.ItemsSource = itemSource;
                 var selectContentIndex = Array.IndexOf(items, item._PropertyInfo.GetValue(item._BelongData));
-                if (selectContentIndex == -1)
+                if(selectContentIndex == -1)
                 {
                     selectContentIndex = 0;
                 }
