@@ -567,14 +567,14 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
             dialog.AddExtension = true;
-             //dialog.Filter = "Data|*.oridata";
+             // dialog.Filter = "Data|*.oridata";
             dialog.Filter = "Json|*.json";
             dialog.Title = "导出备注配置";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 Exporter.ExportDescriptionConfig(s_DescriptionConfig, dialog.FileName);
-                 //Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
-                //Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
+                 // Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
+                // Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
             }
         }
 
@@ -611,10 +611,10 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 
                 // var files = _DataFiles.Values.ToList();
-                //files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
-                //s_DescriptionConfig = Exporter.GenerateFirstDescConfig(files);
-                //_MD5Config = Exporter.CollectItemMD5(files);
-                //_OrigItemData = Exporter.CollectItemBytes(files);
+                // files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
+                // s_DescriptionConfig = Exporter.GenerateFirstDescConfig(files);
+                // _MD5Config = Exporter.CollectItemMD5(files);
+                // _OrigItemData = Exporter.CollectItemBytes(files);
 
 
             }
@@ -936,8 +936,9 @@ namespace Wukong_PBData_ReadWriter_GUI
                 {
                     SaveDataFile(file, _selectedSaveFolder);
                 }
+                _updateFiles.Clear();
                     
-                RefreshFolderFile(_CurrentOpenFolder);
+                RefreshFolderFile(_selectedSaveFolder);
                 DataItemList.Items.Clear();
                 DataGrid.Children.Clear();
                 CloseAllOtherWindow();

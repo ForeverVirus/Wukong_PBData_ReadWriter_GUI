@@ -459,7 +459,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                     ProcessGlobalSearch(p.GetValue(value), file, data, cache, p.Name, "");
                 }
             }
-            else if (typeof(IList).IsAssignableFrom(value.GetType()))
+            else if (value != null && typeof(IList).IsAssignableFrom(value.GetType()))
             {
                 var listValue = value as IList;
                 int index = 0;
