@@ -2226,17 +2226,34 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 if (!string.IsNullOrEmpty(textBox.Text) && textBox.Text != "搜索配表文件")
                 {
+                    var searchTerms = textBox.Text.Split(new[] { '|', '&' }, StringSplitOptions.RemoveEmptyEntries);
+                    bool isOrSearch = textBox.Text.Contains('|');
+                    bool isAndSearch = textBox.Text.Contains('&');
+                    
                     foreach (var file in _DataFiles.Values)
                     {
-                        if (file._FileName.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)
-                            || (!string.IsNullOrEmpty(file._Desc) && file._Desc.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)))
+                        bool isMatch = isOrSearch ? false : true;
+                        foreach (var term in searchTerms)
                         {
-                            file._IsShow = true;
+                            bool containsTerm = file._FileName.Contains(term, StringComparison.OrdinalIgnoreCase)
+                                                || (!string.IsNullOrEmpty(file._Desc) && file._Desc.Contains(term, StringComparison.OrdinalIgnoreCase));
+
+                            if (isOrSearch)
+                            {
+                                isMatch |= containsTerm;
+                                if (isMatch) break;
+                            }
+                            else if (isAndSearch)
+                            {
+                                isMatch &= containsTerm;
+                                if (!isMatch) break;
+                            }
+                            else
+                            {
+                                isMatch = containsTerm;
+                            }
                         }
-                        else
-                        {
-                            file._IsShow = false;
-                        }
+                        file._IsShow = isMatch;
                     }
 
                 }
@@ -2282,15 +2299,35 @@ namespace Wukong_PBData_ReadWriter_GUI
                 var itemList = _CurrentOpenFile._FileDataItemList;
                 if (!string.IsNullOrEmpty(textBox.Text) && textBox.Text != "搜索ID或备注")
                 {
+                    
+                    var searchTerms = textBox.Text.Split(new[] { '|', '&' }, StringSplitOptions.RemoveEmptyEntries);
+                    bool isOrSearch = textBox.Text.Contains('|');
+                    bool isAndSearch = textBox.Text.Contains('&');
+                    
                     foreach (var item in itemList)
                     {
-                        if (item._ID.ToString().Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)
-                            || (!string.IsNullOrEmpty(item._Desc) && item._Desc.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)))
+                        bool isMatch = isOrSearch ? false : true;
+                        foreach (var term in searchTerms)
                         {
-                            item._IsShow = true;
+                            bool containsTerm = item._ID.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                                                || (!string.IsNullOrEmpty(item._Desc) && item._Desc.Contains(term, StringComparison.OrdinalIgnoreCase));
+
+                            if (isOrSearch)
+                            {
+                                isMatch |= containsTerm;
+                                if (isMatch) break;
+                            }
+                            else if (isAndSearch)
+                            {
+                                isMatch &= containsTerm;
+                                if (!isMatch) break;
+                            }
+                            else
+                            {
+                                isMatch = containsTerm;
+                            }
                         }
-                        else
-                            item._IsShow = false;
+                        item._IsShow = isMatch;
                     }
                 }
                 else
