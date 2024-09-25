@@ -6,7 +6,7 @@
              xmlns:viewModels="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <ResourceDictionary>
+        <ResourceDictionary x:Key="">
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
