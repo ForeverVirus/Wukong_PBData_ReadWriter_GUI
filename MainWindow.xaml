@@ -40,7 +40,7 @@
                 <MenuItem Header="导出备注配置" Click="ExportDescription" />
                 <Separator />
                 <MenuItem Header="生成PAK" Click="CreatePak" />
-                <MenuItem Header="解包PAK" Click="UncompressPak" />
+                <MenuItem Header="解包PAK" Click="DecompressPak" />
                 <!--<MenuItem Header="合并PAK" Click="CreateUnpackWindow" />-->
                 <Separator />
                 <MenuItem Header="加载翻译项" Click="LoadComparisonInformation" />

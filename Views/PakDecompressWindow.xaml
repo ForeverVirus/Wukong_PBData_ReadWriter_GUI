@@ -1,0 +1,30 @@
+<!-- <Window x:Class="Wukong_PBData_ReadWriter_GUI.Views.PakDecompressWindow" -->
+<!--         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" -->
+<!--         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" -->
+<!--         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" -->
+<!--         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" -->
+<!--         xmlns:local="clr-namespace:Wukong_PBData_ReadWriter_GUI.Views" -->
+<!--         mc:Ignorable="d" -->
+<!--         Title="PakDecompressWindow" Height="450" Width="800"> -->
+<!--     <Grid> -->
+<!--          -->
+<!--     </Grid> -->
+<!-- </Window> -->
+<Window x:Class="Wukong_PBData_ReadWriter_GUI.Views.PakDecompressWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
+        Title="解包PAK" Width="600" Height="400" AllowDrop="True" WindowStartupLocation="CenterScreen"
+        DataContext="{Binding PakDecompressViewModel, Source={StaticResource Locator}}">
+    <!-- <Window.Resources> -->
+    <!--     <local:PakDecompressViewModel x:Key="PakDecompressViewModel"/> -->
+    <!-- </Window.Resources> -->
+    <Window.Resources>
+        <local:ViewModelLocator x:Key="Locator" />
+    </Window.Resources>
+    <Grid Drop="{Binding DropCommand}" Background="Aquamarine">
+        <TextBlock Text="拖拽要解包的Pak文件夹到此处"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+    </Grid>
+</Window>
