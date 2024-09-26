@@ -5,7 +5,7 @@ using DragEventArgs = System.Windows.DragEventArgs;
 
 namespace Wukong_PBData_ReadWriter_GUI.ViewModels;
 
-public class PakDecompressViewModel: ObservableObject
+public class PakDecompressViewModel : ObservableObject
 {
     public PakDecompressViewModel()
     {
@@ -13,24 +13,28 @@ public class PakDecompressViewModel: ObservableObject
         DropCommand = new RelayCommand<DragEventArgs>(OnDrop, CanDrop);
         Console.WriteLine("DropCommand initialized.");
     }
-    
-    
+
+
     public RelayCommand<DragEventArgs> DropCommand { get; }
 
     private void OnDrop(DragEventArgs? e)
     {
         Console.WriteLine("OnDrop executed");
         // 检查拖拽的数据是否是文件夹
-        if (e is not { Data: not null } || !e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)) 
+        if (e is not { Data: not null } || !e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
             return;
-        
+
         // 获取拖拽的文件路径
         var draggedItems = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop)!;
-        
-        Console.WriteLine("draggedItems: " + draggedItems[0]);
-        RunBatFileWithFolder(@".\\ref\\make_pak_uncompressed.bat", draggedItems[0]);
+
+        // 遍历拖拽的文件夹路径并执行.bat 文件
+        foreach (var item in draggedItems)
+        {
+            Console.WriteLine("draggedItems: " + item);
+            RunBatFileWithFolder(@".\\ref\\make_pak_uncompressed.bat", item);
+        }
     }
-    
+
     private bool CanDrop(DragEventArgs? e)
     {
         // 根据需要定义 CanExecute 逻辑
@@ -38,7 +42,7 @@ public class PakDecompressViewModel: ObservableObject
         Console.WriteLine("canDrop: " + canDrop);
         return canDrop;
     }
-    
+
     private void RunBatFileWithFolder(string batPath, string folderPath)
     {
         // 设置 .bat 文件的路径
@@ -49,10 +53,10 @@ public class PakDecompressViewModel: ObservableObject
         {
             FileName = batPath,
             Arguments = $"\"{folderPath}\"", // 将文件夹路径作为参数传递
-            UseShellExecute = false,  // 设置为 false 以便能够重定向输入/输出
-            CreateNoWindow = true,    // 如果你不想显示命令提示符窗口，设置为 true
-            RedirectStandardOutput = true,  // 如果你需要捕获输出
-            RedirectStandardError = true    // 捕获错误信息
+            UseShellExecute = false, // 设置为 false 以便能够重定向输入/输出
+            CreateNoWindow = true, // 如果你不想显示命令提示符窗口，设置为 true
+            RedirectStandardOutput = true, // 如果你需要捕获输出
+            RedirectStandardError = true // 捕获错误信息
         };
 
         // 启动进程

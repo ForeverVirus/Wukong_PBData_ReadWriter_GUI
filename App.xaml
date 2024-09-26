@@ -6,12 +6,14 @@
              xmlns:viewModels="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!-- <ResourceDictionary x:Key=""> -->
-        <!--     <ResourceDictionary.MergedDictionaries> -->
-        <!--         <ui:ThemesDictionary Theme="Light" /> -->
-        <!--         <ui:ControlsDictionary /> -->
-        <!--     </ResourceDictionary.MergedDictionaries> -->
-        <!-- </ResourceDictionary> -->
-        <viewModels:ViewModelLocator x:Key="Locator"/>
+        <ResourceDictionary x:Key="Wpfui">
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Light" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
+            <viewModels:ViewModelLocator x:Key="Locator"/>
+        </ResourceDictionary>
+        
+        <!-- <viewModels:ViewModelLocator x:Key="Locator"/> -->
     </Application.Resources>
 </Application>
