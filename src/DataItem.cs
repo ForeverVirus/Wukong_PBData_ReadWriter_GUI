@@ -61,7 +61,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                 }
                 return _descKey;
             }
-            set => _descKey =  value;
+            set => _descKey = value;
         }
 
         /// <summary>
@@ -82,6 +82,11 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             }
         }
 
+        /// <summary>
+        /// 显示名称
+        /// </summary>
+        public string DisplayName => _ID + "  " + _Desc;
+
         public void LoadData()
         {
             _DataPropertyItems?.Clear();
@@ -89,8 +94,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
 
             var type = _Data.GetType();
             //var properties = type.GetProperties();
-            System.Reflection.PropertyInfo[] properties;
-            if (!PropertiesDataController.Instance.Get(type, out properties))
+            if (!PropertiesDataController.Instance.Get(type, out var properties))
             {
                 properties = PropertiesDataController.Instance.Add(type);
             }

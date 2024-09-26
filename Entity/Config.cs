@@ -43,7 +43,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Entity
         /// <summary>
         /// 显示源数据
         /// </summary>
-        [ConfigParam(Desc = "显示源数据", DataType = typeof(bool))]
+        [ConfigParam(Desc = "显示源数据", DataType = typeof(bool),DefaultValue = true)]
         public bool DisplaysSourceInformation { set; get; } = true;
 
         /// <summary>
@@ -57,6 +57,12 @@ namespace Wukong_PBData_ReadWriter_GUI.Entity
         /// </summary>
         [ConfigParam(Desc = "搜索功能自动生效", DataType = typeof(bool))]
         public bool AutoSearchInEffect { set; get; }
+
+        /// <summary>
+        /// 默认保存地址
+        /// </summary>
+        [ConfigParam(Desc = "默认保存地址")]
+        public string DefaultSavePath { set; get; }
     }
 
     public class ConfigParam : Attribute
