@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DragEventArgs = System.Windows.DragEventArgs;
 
 namespace Wukong_PBData_ReadWriter_GUI.ViewModels;
 
@@ -8,24 +9,32 @@ public class PakDecompressViewModel: ObservableObject
 {
     public PakDecompressViewModel()
     {
-        
-        DropCommand = new RelayCommand<DragEventArgs>(OnDrop);
-        Console.WriteLine("PakDecompressViewModel initialized");
+        // 初始化 DropCommand
+        DropCommand = new RelayCommand<DragEventArgs>(OnDrop, CanDrop);
+        Console.WriteLine("DropCommand initialized.");
     }
-
+    
+    
     public RelayCommand<DragEventArgs> DropCommand { get; }
 
     private void OnDrop(DragEventArgs? e)
     {
         Console.WriteLine("OnDrop executed");
-
-        // // 检查拖拽的数据是否是文件夹
-        // if (e is not { Data: not null } || !e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)) 
-        //     return;
-        //
-        // // 获取拖拽的文件路径
-        // var draggedItems = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop)!;
-        // RunBatFileWithFolder(@"ref\\make_pak_uncompressed.bat", draggedItems[0]);
+        // 检查拖拽的数据是否是文件夹
+        if (e is not { Data: not null } || !e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)) 
+            return;
+        
+        // 获取拖拽的文件路径
+        var draggedItems = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop)!;
+        RunBatFileWithFolder(@"ref\\make_pak_uncompressed.bat", draggedItems[0]);
+    }
+    
+    private bool CanDrop(DragEventArgs? e)
+    {
+        // 根据需要定义 CanExecute 逻辑
+        bool canDrop = e is { Data: not null } && e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop);
+        Console.WriteLine("canDrop: " + canDrop);
+        return canDrop;
     }
     
     private void RunBatFileWithFolder(string batPath, string folderPath)
