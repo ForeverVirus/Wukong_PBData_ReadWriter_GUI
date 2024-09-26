@@ -26,7 +26,9 @@ public class PakDecompressViewModel: ObservableObject
         
         // 获取拖拽的文件路径
         var draggedItems = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop)!;
-        RunBatFileWithFolder(@"ref\\make_pak_uncompressed.bat", draggedItems[0]);
+        
+        Console.WriteLine("draggedItems: " + draggedItems[0]);
+        RunBatFileWithFolder(@".\\ref\\make_pak_uncompressed.bat", draggedItems[0]);
     }
     
     private bool CanDrop(DragEventArgs? e)

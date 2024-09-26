@@ -7,7 +7,7 @@
     <Window.Resources>
         <local:ViewModelLocator x:Key="Locator" />
     </Window.Resources>
-    <Grid Background="Aquamarine" Drop="Grid_OnDrop">
+    <Grid Drop="Grid_OnDrop">
         <TextBlock Text="拖拽要解包的Pak文件夹到此处" 
                    HorizontalAlignment="Center" 
                    VerticalAlignment="Center"/>
