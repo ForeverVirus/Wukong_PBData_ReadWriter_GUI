@@ -444,28 +444,19 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void CreatePak(object sender, RoutedEventArgs e)
         {
-            Window window = new Window();
-            window.Title = "生成PAK";
-            window.Width = 600;
-            window.Height = 400;
-            window.AllowDrop = true;
-            window.Drop += Window_Drop;
-            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            window.Show();
-
-            Grid grid = new Grid();
-            window.Content = grid;
-
-            TextBlock textBlock = new TextBlock();
-            textBlock.Text = "拖拽要生成Pak的Data文件夹到此处";
-            textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-            textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            grid.Children.Add(textBlock);
+            try
+            {
+                PakCompressWindow pakDecompress = new PakCompressWindow();
+                pakDecompress.Show();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"xxxxxxxxxxxxxxxxxxError in PakCompressWindow#OnDrop: {ex.Message}");
+            }
         }
 
         private void DecompressPak(object sender, RoutedEventArgs e)
         {
-            
             try
             {
                 PakDecompressWindow pakDecompress = new PakDecompressWindow();
@@ -473,27 +464,8 @@ namespace Wukong_PBData_ReadWriter_GUI
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"xxxxxxxxxxxxxxxxxxError in OnDrop: {ex.Message}");
+                Console.WriteLine($"xxxxxxxxxxxxxxxxxxError in PakDecompressWindow#OnDrop: {ex.Message}");
             }
-            
-
-            // Window window = new Window();
-            // window.Title = "解包PAK";
-            // window.Width = 600;
-            // window.Height = 400;
-            // window.AllowDrop = true;
-            // window.Drop += Window_Drop_Uncompress;
-            // window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            // window.Show();
-            //
-            // Grid grid = new Grid();
-            // window.Content = grid;
-            //
-            // TextBlock textBlock = new TextBlock();
-            // textBlock.Text = "拖拽要解包的Pak文件夹到此处";
-            // textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-            // textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            // grid.Children.Add(textBlock);
         }
 
         private void Window_Drop_Uncompress(object sender, System.Windows.DragEventArgs e)

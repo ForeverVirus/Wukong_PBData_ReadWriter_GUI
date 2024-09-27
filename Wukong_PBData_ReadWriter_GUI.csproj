@@ -91,6 +91,11 @@
         <Page Update="MainWindow - 复制.xaml">
             <SubType>Designer</SubType>
         </Page>
+        <Page Update="Views\PakCompressWindow.xaml">
+          <Generator>MSBuild:Compile</Generator>
+          <XamlRuntime>Wpf</XamlRuntime>
+          <SubType>Designer</SubType>
+        </Page>
     </ItemGroup>
 
     <ItemGroup>

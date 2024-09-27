@@ -13,6 +13,7 @@ namespace Wukong_PBData_ReadWriter_GUI.ViewModels
             Ioc.Default.ConfigureServices(
                 new ServiceCollection()
                     .AddSingleton<PakDecompressViewModel>() // 注册 PakDecompressViewModel
+                    .AddSingleton<PakCompressViewModel>()
                     .BuildServiceProvider());
 
             // 检查 ViewModel 是否被正确注册
@@ -32,6 +33,23 @@ namespace Wukong_PBData_ReadWriter_GUI.ViewModels
             get
             {
                 var viewModel = Ioc.Default.GetService<PakDecompressViewModel>();
+                if (viewModel == null)
+                {
+                    Console.WriteLine("PakDecompressViewModel is null when accessed.");
+                }
+                else
+                {
+                    Console.WriteLine("PakDecompressViewModel retrieved successfully when accessed.");
+                }
+                return viewModel;
+            }
+        }
+        
+        public PakCompressViewModel PakCompressViewModel 
+        {
+            get
+            {
+                var viewModel = Ioc.Default.GetService<PakCompressViewModel>();
                 if (viewModel == null)
                 {
                     Console.WriteLine("PakDecompressViewModel is null when accessed.");
