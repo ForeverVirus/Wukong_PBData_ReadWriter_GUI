@@ -2,11 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:Wukong_PBData_ReadWriter_GUI.ViewModels"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         SizeToContent="WidthAndHeight"
+        DataContext="{Binding MenuViewModel, Source={StaticResource Locator}}"
         Title="黑猴配表编辑器" Height="800" Width="1280">
     <Window.Resources>
+        <local:ViewModelLocator x:Key="Locator" />
         <!-- 自定义ListBoxItem的选中样式 -->
         <Style x:Key="CustomListBoxItemStyle" TargetType="ListBoxItem">
             <Setter Property="Template">
@@ -38,38 +41,39 @@
 
         <!-- 顶部菜单栏 -->
         <Menu Grid.Row="0" Background="LightGray" Padding="8">
+            <!-- 文件菜单 -->
             <MenuItem Header="文件">
-                <MenuItem Header="打开Data目录" Click="OpenDataFolder" />
-                <MenuItem Header="保存Data文件" Click="SaveDataFile" />
-                <MenuItem Header="另存为Data文件" Click="SaveAsNewDataFile" />
-                <Separator />
-                <MenuItem Header="导入备注配置" Click="ImportDescription" />
-                <MenuItem Header="导出备注配置" Click="ExportDescription" />
-                <Separator />
-                <MenuItem Header="生成PAK" Click="CreatePak" />
-                <MenuItem Header="解包PAK" Click="DecompressPak" />
-                <!--<MenuItem Header="合并PAK" Click="CreateUnpackWindow" />-->
-                <Separator />
-                <MenuItem Header="加载翻译项" Click="LoadComparisonInformation" />
-                <MenuItem Header="保存翻译项" Click="LoadComparisonInformationTest" />
-                <Separator />
-                <MenuItem Header="退出" Click="Close_Click" />
+            <MenuItem Header="打开Data目录" Command="{Binding OpenDataFolderCommand}" />
+            <MenuItem Header="保存Data文件" Command="{Binding SaveDataFileCommand}" />
+            <MenuItem Header="另存为Data文件" Command="{Binding SaveAsNewDataFileCommand}" />
+            <Separator />
+            <MenuItem Header="导入备注配置" Command="{Binding ImportDescriptionCommand}" />
+            <MenuItem Header="导出备注配置" Command="{Binding ExportDescriptionCommand}" />
+            <Separator />
+            <MenuItem Header="生成PAK" Command="{Binding CreatePakCommand}" />
+            <MenuItem Header="解包PAK" Command="{Binding DecompressPakCommand}" />
+            <!--<MenuItem Header="合并PAK" Click="CreateUnpackWindow" />-->
+            <Separator />
+            <MenuItem Header="加载翻译项" Command="{Binding LoadComparisonInformationCommand}" />
+            <MenuItem Header="保存翻译项" Command="{Binding LoadComparisonInformationTestCommand}" />
+            <Separator />
+            <MenuItem Header="退出" Command="{Binding CloseCommand}" />
             </MenuItem>
 
+            <!-- 配置菜单 -->
             <MenuItem Header="配置">
-                <CheckBox x:Name="AutoSaveFileCheck" Content="自动保存" Checked="AutoSaveFileCheck_OnCheckedOrUnChecked"
-                          Unchecked="AutoSaveFileCheck_OnCheckedOrUnChecked" />
-                <CheckBox x:Name="DisplaysSourceInformationCheck" Content="显示旧数据"
-                          Checked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked"
-                          Unchecked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked" />
-                <CheckBox x:Name="AutoSearchInEffectCheck" Content="搜索功能自动生效"
-                          Checked="AutoSearchInEffectCheck_OnCheckedOrUnChecked"
-                          Unchecked="AutoSearchInEffectCheck_OnCheckedOrUnChecked" />
+                <CheckBox x:Name="AutoSaveFileCheck" Content="自动保存" Command="{Binding ToggleAutoSaveCommand}" />
+                <CheckBox x:Name="DisplaysSourceInformationCheck" Content="显示旧数据" Command="{Binding ToggleDisplaySourceInformationCommand}" />
+                <CheckBox x:Name="AutoSearchInEffectCheck" Content="搜索功能自动生效" Command="{Binding ToggleAutoSearchInEffectCommand}" />
             </MenuItem>
+
+            <!-- 菜单菜单 -->
             <MenuItem Header="菜单">
-                <MenuItem Header="清理修改记录" Click="ClearLastUpdateLog" />
+                <MenuItem Header="清理修改记录" Command="{Binding ClearLastUpdateLogCommand}" />
             </MenuItem>
-            <MenuItem Header="帮助" Click="HelpMenuItem_Click" />
+
+            <!-- 帮助菜单 -->
+            <MenuItem Header="帮助" Command="{Binding HelpCommand}" />
         </Menu>
 
         <StackPanel Grid.Row="1" Margin="5">

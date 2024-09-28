@@ -14,6 +14,7 @@ namespace Wukong_PBData_ReadWriter_GUI.ViewModels
                 new ServiceCollection()
                     .AddSingleton<PakDecompressViewModel>() // 注册 PakDecompressViewModel
                     .AddSingleton<PakCompressViewModel>()
+                    .AddSingleton<MenuViewModel>()
                     .BuildServiceProvider());
 
             // 检查 ViewModel 是否被正确注册
@@ -57,6 +58,23 @@ namespace Wukong_PBData_ReadWriter_GUI.ViewModels
                 else
                 {
                     Console.WriteLine("PakDecompressViewModel retrieved successfully when accessed.");
+                }
+                return viewModel;
+            }
+        }
+
+        public MenuViewModel MenuViewModel
+        {
+            get
+            {
+                var viewModel = Ioc.Default.GetService<MenuViewModel>();
+                if (viewModel == null)
+                {
+                    Console.WriteLine("MenuViewModel is null when accessed.");
+                }
+                else
+                {
+                    Console.WriteLine("MenuViewModel retrieved successfully when accessed.");
                 }
                 return viewModel;
             }
