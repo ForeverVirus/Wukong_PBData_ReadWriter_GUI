@@ -1210,6 +1210,11 @@ namespace Wukong_PBData_ReadWriter_GUI
                 delOtherMenuItem.Click += DelOtherMenuItem_Click;
                 listItem.ContextMenu.Items.Add(delOtherMenuItem);
 
+                MenuItem delNotModifiedMenuItem = new MenuItem();
+                delNotModifiedMenuItem.Header = "未修改的全部删除";
+                delNotModifiedMenuItem.DataContext = item;
+                delNotModifiedMenuItem.Click += DelNotModifiedMenuItem_Click;
+                listItem.ContextMenu.Items.Add(delNotModifiedMenuItem);
 
                 //TODO 等待更改Tag
                 DataItemList.Items.Add(listItem);
@@ -1357,6 +1362,29 @@ namespace Wukong_PBData_ReadWriter_GUI
             dataItem._File._FileDataItemList.Clear();
             dataItem._File._FileDataItemList.Add(dataItem);
 
+            RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
+        }
+        private void DelNotModifiedMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem == null) return;
+
+
+            var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile._FileData, null) as IList;
+
+            if (list == null || list.Count <= 0)
+                return;
+
+            var tmplist=_CurrentOpenFile._FileDataItemList.ToList<DataItem>();
+
+            _CurrentOpenFile._FileDataItemList.Clear();
+            list.Clear();
+            foreach (var dataItem in tmplist)
+                if (dataItem._IsModified)
+                {
+                    _CurrentOpenFile._FileDataItemList.Add(dataItem);
+                    list.Add(dataItem._Data);
+                }
             RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
         }
 
