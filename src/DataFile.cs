@@ -26,7 +26,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                 {
                     return desc;
                 }
-                    //var windows = Application.Current.Windows;
+                //var windows = Application.Current.Windows;
                 return _desc;
             }
             set
@@ -51,7 +51,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         /// <summary>
         /// 
         /// </summary>
-        public bool CanOpen = true;
+        public bool CanOpen { set; get; } = true;
 
         public void LoadData()
         {
@@ -60,11 +60,13 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             {
                 filePath = path;
             }
+            if (!CanOpen)
+                return;
             var data = Exporter.GetDataByFile(_FileName, filePath);
             if (data != null)
             {
                 _FileData = data;
-
+                CanOpen = false;
                 _FileDataItemList = new List<DataItem>();
                 _IDList = new List<int>();
 
@@ -83,12 +85,12 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                             {
                                 var itemType = item.GetType();
                                 var property = itemType.GetProperty("Id");
-                                if(property == null)
+                                if (property == null)
                                 {
                                     property = itemType.GetProperty("ID");
                                 }
 
-                                if(property == null)
+                                if (property == null)
                                     continue;
 
                                 DataItem dataItem = new DataItem();
@@ -99,7 +101,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                                 {
                                     dataItem._ID = System.Convert.ToInt32(idValue);
                                 }
-                                
+
                                 // dataItem._ID = property.GetValue(item) as int? ?? 0;
                                 _IDList.Add(dataItem._ID);
                                 dataItem._Data = item as IMessage;

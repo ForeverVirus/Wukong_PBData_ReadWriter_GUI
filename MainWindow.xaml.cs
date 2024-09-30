@@ -58,6 +58,10 @@ namespace Wukong_PBData_ReadWriter_GUI
         private string _selectedSaveFolder = string.Empty;
         private DispatcherTimer _autoSaveTimer;
 
+        /*
+             试试 System.Timers.Timer
+         */
+
         /// <summary>
         /// 日志工具
         /// </summary>
@@ -79,28 +83,35 @@ namespace Wukong_PBData_ReadWriter_GUI
         private object _lastActionComponent;
 
         /// <summary>
+        /// 加载
+        /// </summary>
+        private bool _init;
+
+        #region 委托
+
+        private Action<ListBoxItem?, System.Windows.Media.Color?, string?> _listBoxItemAction;
+
+        #endregion
+
+        /// <summary>
         /// 构造
         /// </summary>
         public MainWindow()
         {
-
             this.Closed += OnClosed;
             this.Loaded += OnLoaded;
-            s_DescriptionConfig = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultDescConfig.json"));
-            _MD5Config = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultMD5Config.json"));
-            _OrigItemData = Exporter.ImportItemDataBytes(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultOriData.oridata"));
-            _SearchTimer = new DispatcherTimer();
-            _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
-            _SearchTimer.Tick += SearchTimer_Tick;
             this.Title = "黑猴配表编辑器" + version;
             _logUtil = new("main", AppDomain.CurrentDomain.BaseDirectory, 0.5, null, true, 3, 3);
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            _listBoxItemAction += SetListBox;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             Init();
+            _init = true;
         }
 
         /// <summary>  
@@ -179,7 +190,12 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 #endregion
             }
-
+            s_DescriptionConfig = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultDescConfig.json"));
+            _MD5Config = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultMD5Config.json"));
+            _OrigItemData = Exporter.ImportItemDataBytes(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultOriData.oridata"));
+            _SearchTimer = new DispatcherTimer();
+            _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
+            _SearchTimer.Tick += SearchTimer_Tick;
             var configPath = Path.Combine(GlobalConfig.ConfigDirPath, "config.cfg");
             if (!File.Exists(configPath))
             {
@@ -214,7 +230,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 var files = Directory.GetFiles(_config.TempFileDicPath, "", SearchOption.AllDirectories);
                 if (files != null && files.Length > 0)
                 {
-                    var result = MessageBox.Show("检测到上次未保存的文件，是否恢复？", "提示", MessageBoxButton.YesNo, MessageBoxImage.Information);
+                    var result = MessageBox.Show("检测到上次修改的文件，是否恢复？", "提示", MessageBoxButton.YesNo, MessageBoxImage.Information);
 
                     if (result == MessageBoxResult.Yes)
                     {
@@ -241,6 +257,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                     }
                     else
                     {
+                        //加个是否删除上次修改
+                        //否则建个Bak文件去覆盖会不会好点？
                         foreach (var file in files)
                         {
                             File.Delete(file);
@@ -248,10 +266,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                     }
                 }
             }
-            
-            if(_DataFiles != null && _DataFiles.Values != null)
+
+            if (_DataFiles != null && _DataFiles.Values != null)
                 CacheGlobalSearchAsync(_DataFiles.Values.ToList());
-            
+
 
             AutoSaveFileCheck.IsChecked = _config.AutoSaveFile;
             DisplaysSourceInformationCheck.IsChecked = _config.DisplaysSourceInformation;
@@ -266,7 +284,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             _autoSaveTimer.Tick += AutoSaveTimer_Tick;
             _autoSaveTimer.Start();
         }
-        
+
         private void AutoSaveTimer_Tick(object sender, EventArgs e)
         {
             if (_config.AutoSaveFile && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
@@ -279,7 +297,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 _updateFiles.Clear();
             }
         }
-        
+
         private void StopAutoSaveTimer()
         {
             if (_autoSaveTimer != null)
@@ -429,7 +447,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             var newDict = Exporter.ImportDescriptionConfig(dialogFileName);
             foreach (var kvp in newDict)
             {
-                if(s_DescriptionConfig.ContainsKey(kvp.Key))
+                if (s_DescriptionConfig.ContainsKey(kvp.Key))
                 {
                     s_DescriptionConfig[kvp.Key] = kvp.Value;
                 }
@@ -567,13 +585,13 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
             dialog.AddExtension = true;
-             // dialog.Filter = "Data|*.oridata";
+            // dialog.Filter = "Data|*.oridata";
             dialog.Filter = "Json|*.json";
             dialog.Title = "导出备注配置";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 Exporter.ExportDescriptionConfig(s_DescriptionConfig, dialog.FileName);
-                 // Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
+                // Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
                 // Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
             }
         }
@@ -609,7 +627,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 _GlobalSearchTask = CacheGlobalSearchAsync(_DataFiles.Values.ToList());
                 await _GlobalSearchTask;
 
-                
+
                 // var files = _DataFiles.Values.ToList();
                 // files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
                 // s_DescriptionConfig = Exporter.GenerateFirstDescConfig(files);
@@ -643,7 +661,11 @@ namespace Wukong_PBData_ReadWriter_GUI
                 file._FilePath = filePaths[index];
                 //_DataFiles.Add(file);
                 if (_updateFiles.TryGetValue(item, out var oldFile))
+                {
                     file.Tag = oldFile.Tag;
+                    file.CanOpen = true;
+                }
+
                 _DataFiles.TryAdd(item, file);
                 index++;
             }
@@ -652,7 +674,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             //把 _DataFiles.Values to List 并按FileName的首字母排序 从小到大排序
             var files = _DataFiles.Values.ToList();
             files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
-            
+
             RefreshDataFile(files);
         }
 
@@ -662,7 +684,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (FileList == null)
                 return;
             FileList.Items.Clear();
-            
+
             foreach (var item in files)
             {
                 if (!item._IsShow) continue;
@@ -684,7 +706,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 {
                     listBoxItem.Foreground = new SolidColorBrush(Colors.Red);
                 }
-                
+
                 listBoxItem.ContextMenu = new ContextMenu();
                 MenuItem menuItem = new MenuItem();
                 menuItem.Header = "备注";
@@ -880,20 +902,26 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         void SaveDataFile(DataFile file, string dir, bool useDir = false)
         {
-            var pakPath = file._FilePath;
-            
-            var b1Index = file._FilePath.IndexOf("b1");
-            if (b1Index != -1)
-                pakPath = file._FilePath.Substring(b1Index,
-                    file._FilePath.Length - b1Index);
+            try
+            {
+                var pakPath = file._FilePath;
 
-            var outPath = Path.Combine(dir, pakPath);
+                var b1Index = file._FilePath.IndexOf("b1");
+                if (b1Index != -1)
+                    pakPath = file._FilePath.Substring(b1Index,
+                        file._FilePath.Length - b1Index);
 
-            Exporter.SaveDataFile(useDir ? dir : outPath, file);
+                var outPath = Path.Combine(dir, pakPath);
 
+                Exporter.SaveDataFile(useDir ? dir : outPath, file);
+            }
+            catch (Exception e)
+            {
+                _logUtil.Error($"Error", e);
+            }
 
         }
-        
+
         private void SaveDataFile(object sender, RoutedEventArgs e)
         {
             // if (_config.AutoSaveFile && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
@@ -905,7 +933,13 @@ namespace Wukong_PBData_ReadWriter_GUI
             //     _updateFiles.Clear();
             //     return;
             // }
-            
+            /*
+                    建议将文件先写入Temp文件夹
+                    然后再将Temp文件夹覆盖到输出路径
+                    然后重新载入的时候这些被标记的文件需要从temp路径去读
+
+                    这个时候引出了一个问题，保存的时候要不要删掉Temp文件的数据,如果删掉就要去读输出目录的文件,目前先不删Temp文件夹的内容先用着        
+            */
             if (string.IsNullOrEmpty(_selectedSaveFolder))
             {
                 var result = MessageBox.Show("第一次保存，请选择一个Mod文件夹用于保存修改后的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -920,35 +954,43 @@ namespace Wukong_PBData_ReadWriter_GUI
                         foreach (var file in _updateFiles.Values)
                         {
                             SaveDataFile(file, _selectedSaveFolder);
+                            if (file.Tag is string tempPath)
+                                SaveDataFile(file, tempPath, true);
                         }
 
-                        RefreshFolderFile(_CurrentOpenFolder);
+                        RefreshFolderFile(_config.DataFilePath);
                         DataItemList.Items.Clear();
                         DataGrid.Children.Clear();
                         CloseAllOtherWindow();
                         _CurrentOpenFile = null;
+                        if (MessageBox.Show("是否保存该路径为默认保存位置？", "提示", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                            _config.DefaultSavePath = _selectedSaveFolder;
                     }
                 }
             }
             else
             {
+
+
                 foreach (var file in _updateFiles.Values)
                 {
                     SaveDataFile(file, _selectedSaveFolder);
+                    if (file.Tag is string tempPath)
+                        SaveDataFile(file, tempPath, true);
                 }
-                _updateFiles.Clear();
-                    
-                RefreshFolderFile(_selectedSaveFolder);
+                //_updateFiles.Clear();
+
+                RefreshFolderFile(_config.DataFilePath);
                 DataItemList.Items.Clear();
                 DataGrid.Children.Clear();
                 CloseAllOtherWindow();
                 _CurrentOpenFile = null;
             }
 
-            
+
 
             //_GlobalSearchCache = Exporter.GlobalSearchCache(_DataFiles);
-            
+
 
         }
 
@@ -1027,9 +1069,9 @@ namespace Wukong_PBData_ReadWriter_GUI
                 var file = listBoxItem.DataContext as DataFile;
                 if (_lastActionComponent != listBoxItem)
                     _lastActionComponent = listBoxItem;
-                
+
                 CurrentOpenFileChange(file);
-                
+
                 // if (_CurrentOpenFile != null && _config.AutoSaveFile)
                 // {
                 //     //if (!_updateFiles.TryGetValue(_CurrentOpenFile._FileName,out var data))
@@ -1132,7 +1174,6 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 ListBoxItem listItem = new ListBoxItem();
                 listItem.Content = item._ID + "  " + item._Desc;
-
                 if (!Exporter.IsSameAsMd5(item, _MD5Config))
                 {
                     listItem.Foreground = new SolidColorBrush(Colors.Red);
@@ -1169,6 +1210,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                 delOtherMenuItem.Click += DelOtherMenuItem_Click;
                 listItem.ContextMenu.Items.Add(delOtherMenuItem);
 
+
+                //TODO 等待更改Tag
                 DataItemList.Items.Add(listItem);
             }
         }
@@ -1605,7 +1648,9 @@ namespace Wukong_PBData_ReadWriter_GUI
                 numberTextBox.DataContext = item;
                 //numberTextBox.IsReadOnly = curGrid != DataGrid;
                 numberTextBox.IsReadOnly = false;
-                numberTextBox.TextChanged += NumberTextBox_TextChanged;
+                numberTextBox.Tag = "numberTextBox";
+                //numberTextBox.TextChanged += NumberTextBox_TextChanged;
+                numberTextBox.TextChanged += ChangeEvent;
                 Grid.SetRow(numberTextBox, rowIndex);
                 Grid.SetColumn(numberTextBox, 1);
                 curGrid.Children.Add(numberTextBox);
@@ -1620,7 +1665,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                 stringTextBox.DataContext = item;
                 //stringTextBox.IsReadOnly = curGrid != DataGrid;
                 stringTextBox.IsReadOnly = false;
-                stringTextBox.TextChanged += StringTextBox_TextChanged;
+                //stringTextBox.TextChanged += StringTextBox_TextChanged;
+                stringTextBox.TextChanged += ChangeEvent;
                 Grid.SetRow(stringTextBox, rowIndex);
                 Grid.SetColumn(stringTextBox, 1);
 
@@ -1656,14 +1702,15 @@ namespace Wukong_PBData_ReadWriter_GUI
                     ComparisonTableController.Instance.SaveData();
                 comboBox.ItemsSource = itemSource;
                 var selectContentIndex = Array.IndexOf(items, item._PropertyInfo.GetValue(item._BelongData));
-                if(selectContentIndex == -1)
+                if (selectContentIndex == -1)
                 {
                     selectContentIndex = 0;
                 }
                 comboBox.SelectedItem = itemSource[selectContentIndex];
                 comboBox.DataContext = item;
                 comboBox.IsReadOnly = curGrid != DataGrid;
-                comboBox.SelectionChanged += ComboBox_SelectionChanged;
+                //comboBox.SelectionChanged += ComboBox_SelectionChanged;
+                comboBox.SelectionChanged += ChangeEvent;
                 comboBox.Tag = items;
                 Grid.SetRow(comboBox, rowIndex);
                 Grid.SetColumn(comboBox, 1);
@@ -1787,6 +1834,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 item._PropertyInfo.SetValue(item._BelongData, value);
                 _CurrentOpenFile._IsDirty = true;
                 AddCurrentFileInUpdateFiles();
+                //item._DataItem._ListBoxItem
             }
         }
 
@@ -1848,7 +1896,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                 MenuItem delMenu = new MenuItem();
                 delMenu.Header = "删除";
                 delMenu.DataContext = new Tuple<int, IList, Grid>(rowIndex, data, grid);
-                delMenu.Click += DelMenu_Click;
+                //delMenu.Click += DelMenu_Click;
+                delMenu.Click += ChangeEvent;
                 groupLabel.ContextMenu.Items.Add(delMenu);
 
                 grid.Children.Add(groupLabel);
@@ -1865,7 +1914,9 @@ namespace Wukong_PBData_ReadWriter_GUI
                     numberTextBox.VerticalAlignment = VerticalAlignment.Top;
                     numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
                     numberTextBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
-                    numberTextBox.TextChanged += NumberTextBox_TextChanged1;
+                    numberTextBox.Tag = "numberTextBox";
+                    //numberTextBox.TextChanged += NumberTextBox_TextChanged1;
+                    numberTextBox.TextChanged += ChangeEvent;
 
                     Grid.SetRow(numberTextBox, rowIndex);
                     Grid.SetColumn(numberTextBox, 1);
@@ -1879,7 +1930,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                     stringTextBox.VerticalAlignment = VerticalAlignment.Top;
                     stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
                     stringTextBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
-                    stringTextBox.TextChanged += StringTextBox_TextChanged1;
+                    //stringTextBox.TextChanged += StringTextBox_TextChanged1;
+                    stringTextBox.TextChanged += ChangeEvent;
                     Grid.SetRow(stringTextBox, rowIndex);
                     Grid.SetColumn(stringTextBox, 1);
 
@@ -1894,7 +1946,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                     comboBox.ItemsSource = Enum.GetValues(valueType);
                     comboBox.SelectedItem = item;
                     comboBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
-                    comboBox.SelectionChanged += ComboBox_SelectionChanged1;
+                    //comboBox.SelectionChanged += ComboBox_SelectionChanged1;
+                    comboBox.SelectionChanged += ChangeEvent;
                     Grid.SetRow(comboBox, rowIndex);
                     Grid.SetColumn(comboBox, 1);
                     grid.Children.Add(comboBox);
@@ -1935,7 +1988,8 @@ namespace Wukong_PBData_ReadWriter_GUI
             addItemButton.VerticalAlignment = VerticalAlignment.Top;
             addItemButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
             addItemButton.DataContext = new Tuple<IList, Grid>(data, grid);
-            addItemButton.Click += AddItemButton_Click;
+            //addItemButton.Click += AddItemButton_Click;
+            addItemButton.Click += ChangeEvent;
             grid.Children.Add(addItemButton);
         }
 
@@ -2039,6 +2093,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 Exporter.SaveDataFile(outPath, _CurrentOpenFile);
 
             }
+            //标红
         }
 
         private void NumberTextBox_TextChanged1(object sender, TextChangedEventArgs e)
@@ -2255,17 +2310,34 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 if (!string.IsNullOrEmpty(textBox.Text) && textBox.Text != "搜索配表文件")
                 {
+                    var searchTerms = textBox.Text.Split(new[] { '|', '&' }, StringSplitOptions.RemoveEmptyEntries);
+                    bool isOrSearch = textBox.Text.Contains('|');
+                    bool isAndSearch = textBox.Text.Contains('&');
+
                     foreach (var file in _DataFiles.Values)
                     {
-                        if (file._FileName.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)
-                            || (!string.IsNullOrEmpty(file._Desc) && file._Desc.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)))
+                        bool isMatch = isOrSearch ? false : true;
+                        foreach (var term in searchTerms)
                         {
-                            file._IsShow = true;
+                            bool containsTerm = file._FileName.Contains(term, StringComparison.OrdinalIgnoreCase)
+                                                || (!string.IsNullOrEmpty(file._Desc) && file._Desc.Contains(term, StringComparison.OrdinalIgnoreCase));
+
+                            if (isOrSearch)
+                            {
+                                isMatch |= containsTerm;
+                                if (isMatch) break;
+                            }
+                            else if (isAndSearch)
+                            {
+                                isMatch &= containsTerm;
+                                if (!isMatch) break;
+                            }
+                            else
+                            {
+                                isMatch = containsTerm;
+                            }
                         }
-                        else
-                        {
-                            file._IsShow = false;
-                        }
+                        file._IsShow = isMatch;
                     }
 
                 }
@@ -2311,15 +2383,35 @@ namespace Wukong_PBData_ReadWriter_GUI
                 var itemList = _CurrentOpenFile._FileDataItemList;
                 if (!string.IsNullOrEmpty(textBox.Text) && textBox.Text != "搜索ID或备注")
                 {
+
+                    var searchTerms = textBox.Text.Split(new[] { '|', '&' }, StringSplitOptions.RemoveEmptyEntries);
+                    bool isOrSearch = textBox.Text.Contains('|');
+                    bool isAndSearch = textBox.Text.Contains('&');
+
                     foreach (var item in itemList)
                     {
-                        if (item._ID.ToString().Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)
-                            || (!string.IsNullOrEmpty(item._Desc) && item._Desc.Contains(textBox.Text, StringComparison.OrdinalIgnoreCase)))
+                        bool isMatch = isOrSearch ? false : true;
+                        foreach (var term in searchTerms)
                         {
-                            item._IsShow = true;
+                            bool containsTerm = item._ID.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                                                || (!string.IsNullOrEmpty(item._Desc) && item._Desc.Contains(term, StringComparison.OrdinalIgnoreCase));
+
+                            if (isOrSearch)
+                            {
+                                isMatch |= containsTerm;
+                                if (isMatch) break;
+                            }
+                            else if (isAndSearch)
+                            {
+                                isMatch &= containsTerm;
+                                if (!isMatch) break;
+                            }
+                            else
+                            {
+                                isMatch = containsTerm;
+                            }
                         }
-                        else
-                            item._IsShow = false;
+                        item._IsShow = isMatch;
                     }
                 }
                 else
@@ -2560,6 +2652,8 @@ namespace Wukong_PBData_ReadWriter_GUI
         }
         private void SearchTimer_Tick(object sender, EventArgs e)
         {
+            if (!_init)
+                return;
             _SearchTimer.Stop();
 
             string searchText = GlobalSearchBox.Text;
@@ -2906,6 +3000,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <exception cref="NotImplementedException"></exception>
         private void ShowChangelog(object sender, RoutedEventArgs e)
         {
+
             var updateLog = new StringBuilder();
             var updateLogPath = ".\\UpdateLog.log";
             if (File.Exists(updateLogPath))
@@ -2920,6 +3015,94 @@ namespace Wukong_PBData_ReadWriter_GUI
             System.Windows.MessageBox.Show(updateLog.ToString(), "更新日志");
         }
 
+        #region 设置
 
+        private void SetListBox(ListBoxItem? listBoxItem, System.Windows.Media.Color? color, string? content)
+        {
+            if (listBoxItem == null)
+                return;
+            if (content == null && color == null)
+                return;
+            if (content != null)
+                listBoxItem.Content = content;
+            if (color != null)
+                listBoxItem.Foreground = new SolidColorBrush(color.Value);
+        }
+
+        #endregion
+
+        #region 事件
+
+        /// <summary>
+        /// 先这样，暂时先用着，后面再换
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ChangeEvent(object sender, EventArgs e)
+        {
+            //(sender as  System.Windows.Controls.Control).DataContext
+
+            if (sender is System.Windows.Controls.Control control)
+            {
+                switch (control.DataContext)
+                {
+                    case DataPropertyItem:
+                        switch (sender)
+                        {
+                            case System.Windows.Controls.ComboBox:
+                                ComboBox_SelectionChanged(sender, e as SelectionChangedEventArgs);
+                                break;
+                            case System.Windows.Controls.TextBox:
+                                if (control.Tag != null)
+                                    NumberTextBox_TextChanged(sender, e as TextChangedEventArgs);
+                                else
+                                    StringTextBox_TextChanged(sender, e as TextChangedEventArgs);
+                                break;
+                        }
+                        break;
+                    case Tuple<int, IList, Type>:
+                        switch (sender)
+                        {
+                            case System.Windows.Controls.ComboBox:
+                                ComboBox_SelectionChanged1(sender, e as SelectionChangedEventArgs);
+                                break;
+                            case System.Windows.Controls.TextBox:
+                                if (control.Tag != null)
+                                    NumberTextBox_TextChanged1(sender, e as TextChangedEventArgs);
+                                else
+                                    StringTextBox_TextChanged1(sender, e as TextChangedEventArgs);
+                                break;
+                        }
+                        break;
+                    case Tuple<int, IList, Grid>:
+                        switch (sender)
+                        {
+                            case MenuItem:
+                                DelMenu_Click(sender, e as RoutedEventArgs);
+                                break;
+                        }
+                        break;
+                    case Tuple<IList, Grid>:
+                        switch (sender)
+                        {
+                            case System.Windows.Controls.Button:
+                                AddItemButton_Click(sender, e as RoutedEventArgs);
+                                break;
+                        }
+                        break;
+                }
+                //if (item._DataItem == null)
+                //    return;
+                //var changeData = new
+                //{
+                //    color = !item._DataItem._IsModified ? Colors.Blue : Colors.Black,
+                //    content = $"{item._DataItem.DisplayName}{(item._DataItem._IsModified ? "*" : "")}"
+                //};
+                //_listBoxItemAction?.Invoke(item._DataItem._ListBoxItem, changeData.color, changeData.content);
+            }
+
+        }
+
+        #endregion
     }
 }
