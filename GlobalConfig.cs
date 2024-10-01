@@ -12,5 +12,10 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// 配置项目文件夹路径
         /// </summary>
         public const string ConfigDirPath = ".\\Config";
+
+        /// <summary>
+        /// Json文件夹
+        /// </summary>
+        public const string JsonDirPath = ".\\Json";
     }
 }

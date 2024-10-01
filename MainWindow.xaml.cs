@@ -1,17 +1,6 @@
-﻿using ArchiveB1;
-using BtlShare;
-using Google.Protobuf;
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -19,21 +8,29 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
-using System.Windows.Threading;
 using System.Xml.Serialization;
+using System.Windows.Controls.Primitives;
+using System.Windows.Navigation;
+using System.Windows.Threading;
 using UnrealEngine.Runtime;
-using Wukong_PBData_ReadWriter_GUI.DataControllers;
-using Wukong_PBData_ReadWriter_GUI.src;
-using Wukong_PBData_ReadWriter_GUI.Util;
+using ArchiveB1;
+using BtlShare;
+using Google.Protobuf;
+
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using CheckBox = System.Windows.Controls.CheckBox;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using System.Windows.Controls.Primitives;
-using System.Windows.Navigation;
+
 using MessageBox = System.Windows.MessageBox;
 using TextBox = Wpf.Ui.Controls.TextBox;
+
 using Wukong_PBData_ReadWriter_GUI.Entity;
 using Wukong_PBData_ReadWriter_GUI.Views;
+using Wukong_PBData_ReadWriter_GUI.DataControllers;
+using Wukong_PBData_ReadWriter_GUI.Extensions;
+using Wukong_PBData_ReadWriter_GUI.src;
+using Wukong_PBData_ReadWriter_GUI.Util;
+using System;
 
 
 namespace Wukong_PBData_ReadWriter_GUI
@@ -72,7 +69,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <summary>
         /// 配置
         /// </summary>
-        private Config _config = new();
+        private readonly Config _config;
 
         /// <summary>
         /// 
@@ -100,47 +97,54 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// </summary>
         public MainWindow()
         {
+            _config = new();
+            _logUtil = new("main", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log"), 0.5, null, true, 3, 3);
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            _listBoxItemAction += SetListBox;
+
             this.Closed += OnClosed;
             this.Loaded += OnLoaded;
             this.Title = "黑猴配表编辑器" + version;
-            _logUtil = new("main", AppDomain.CurrentDomain.BaseDirectory, 0.5, null, true, 3, 3);
 
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            #region 异常捕获
 
-            _listBoxItemAction += SetListBox;
+            //处理非UI线程异常  
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                _logUtil.Error("Error", e.ExceptionObject as Exception);
+            };
+            //处理UI线程异常  
+            System.Windows.Forms.Application.ThreadException += (sender, e) =>
+            {
+                _logUtil.Error("Error", e.Exception);
+            };
+            //Task线程内未捕获异常处理事件
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                _logUtil.Error($"Error", args.Exception);
+            };
+
+            //UI线程未捕获异常处理事件（UI主线程）
+            this.Dispatcher.UnhandledException += (sender, args) =>
+            {
+                _logUtil.Error($"Error", args.Exception);
+            };
+
+            #endregion
+            _logUtil.Info($"编辑器启动");
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            Init();
+            try
+            {
+                Init();
+            }
+            catch (Exception exception)
+            {
+                _logUtil.Error($"Error", exception);
+            }
             _init = true;
-        }
-
-        /// <summary>  
-        /// 生成自定义异常消息  
-        /// </summary>  
-        /// <param name="ex">异常对象</param>  
-        /// <param name="backStr">备用异常消息：当ex为null时有效</param>  
-        /// <returns>异常字符串文本</returns>  
-        private static string GetExceptionMsg(Exception? ex, string? backStr)
-        {
-            var sb = new StringBuilder();
-            if (ex == null)
-            {
-                sb.AppendLine("【errMsg】：" + backStr);
-            }
-            else
-            {
-                if (ex.GetType().Name.ToLower() == "exception")
-                {
-                    return ex.Message;
-                }
-                sb.AppendLine("【msgTime】：" + DateTime.Now);
-                sb.AppendLine("【msgType】：" + ex.GetType().Name);
-                sb.AppendLine("【callStack】：" + ex.Message);
-                sb.AppendLine("【unTreated】：" + ex.StackTrace);
-            }
-            return sb.ToString();
         }
 
         private void GlobalSearchBox_KeyDown(object sender, KeyEventArgs e)
@@ -157,79 +161,50 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <summary>
         /// 初始化
         /// </summary>
-        private void Init(bool isFirst = false)
+        private void Init()
         {
-            if (!isFirst)
+            var configPath = ".\\config.cfg";
+            if (!File.Exists(configPath))
             {
-                #region 异常捕获
-
-                //处理非UI线程异常  
-                AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
-                {
-                    var str = GetExceptionMsg(e.ExceptionObject as Exception, e.ToString());
-                    //WriteLog(str);
-                    //_logUtil.Error(str);
-                    _logUtil.Error(str);
-                };
-                //处理UI线程异常  
-                System.Windows.Forms.Application.ThreadException += (sender, e) =>
-                {
-                    var str = GetExceptionMsg(e.Exception, e.ToString());
-                    //WriteLog(str);
-                    _logUtil.Error(str);
-                };
-                //Task线程内未捕获异常处理事件
-                TaskScheduler.UnobservedTaskException += (sender, args) =>
-                {
-                    _logUtil.Error($"Error", args.Exception);
-                };
-
-                //UI线程未捕获异常处理事件（UI主线程）
-                this.Dispatcher.UnhandledException += (sender, args) =>
-                {
-                    _logUtil.Error($"Error", args.Exception);
-                };
-
-                #endregion
+                //生成一份
+                SaveConfig();
             }
-            s_DescriptionConfig = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultDescConfig.json"));
-            _MD5Config = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultMD5Config.json"));
-            _OrigItemData = Exporter.ImportItemDataBytes(Path.Combine(GlobalConfig.ConfigDirPath, "DefaultOriData.oridata"));
+            s_DescriptionConfig = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.JsonDirPath, "DefaultDescConfig.json"));
+            _MD5Config = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.JsonDirPath, "DefaultMD5Config.json"));
+            _OrigItemData = Exporter.ImportItemDataBytes(Path.Combine(GlobalConfig.JsonDirPath, "DefaultOriData.oridata"));
+
             _SearchTimer = new DispatcherTimer();
             _SearchTimer.Interval = TimeSpan.FromMilliseconds(500); // 设置延迟时间
             _SearchTimer.Tick += SearchTimer_Tick;
-            var configPath = Path.Combine(GlobalConfig.ConfigDirPath, "config.cfg");
-            if (!File.Exists(configPath))
-            {
-                SaveConfig();
-                Init(true);
-                return;
-            }
+
 
             var content = File.ReadAllText(configPath);
             var configData = JsonUtil.Deserialize<ConcurrentDictionary<string, ConfigData>>(content);
             if (configData == null)
             {
-                File.Copy(configPath, configPath + ".bak");
+                var bakFilePath = configPath + $"_{DateTime.Now:yyyyMMddHHmmss}.bak";
+                File.Copy(configPath, bakFilePath);
+                _logUtil.Debug($"配置文件读取失败,请查看配置内容。已做备份操作。文件路径:{bakFilePath}");
+                SaveConfig();
                 return;
             }
 
             LoadConfig(configData);
 
-            if (!string.IsNullOrWhiteSpace(_config.ComparisonTableFilePath))
-                ComparisonTableController.Instance.LoadData(_config.ComparisonTableFilePath);
-            if (!string.IsNullOrWhiteSpace(_config.RemarkFilePath))
-                LoadDescription(_config.RemarkFilePath);
-            if (!string.IsNullOrWhiteSpace(_config.DataFilePath))
+            if (!string.IsNullOrWhiteSpace(_config.ComparisonTableFilePath.Value as string))
+                ComparisonTableController.Instance.LoadData(_config.ComparisonTableFilePath.Value.ToString());
+            if (!string.IsNullOrWhiteSpace(_config.RemarkFilePath.Value as string))
+                LoadDescription(_config.RemarkFilePath.Value.ToString());
+            if (!string.IsNullOrWhiteSpace(_config.DataFilePath.Value as string))
             {
-                RefreshFolderFile(_config.DataFilePath);
+                RefreshFolderFile(_config.DataFilePath.Value.ToString());
                 //CloseAllOtherWindow();
                 _CurrentOpenFile = null;
-
             }
-            if (!string.IsNullOrWhiteSpace(_config.TempFileDicPath) && Directory.Exists(_config.TempFileDicPath))
+
+            if (!string.IsNullOrWhiteSpace(_config.TempFileDicPath.Value as string) && Directory.Exists(_config.TempFileDicPath.Value.ToString()))
             {
-                var files = Directory.GetFiles(_config.TempFileDicPath, "", SearchOption.AllDirectories);
+                var files = Directory.GetFiles(_config.TempFileDicPath.Value.ToString(), "", SearchOption.AllDirectories);
                 if (files != null && files.Length > 0)
                 {
                     var result = MessageBox.Show("检测到上次修改的文件，是否恢复？", "提示", MessageBoxButton.YesNo, MessageBoxImage.Information);
@@ -272,10 +247,18 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (_DataFiles != null && _DataFiles.Values != null)
                 CacheGlobalSearchAsync(_DataFiles.Values.ToList());
 
+            ControlInitialization();
 
-            AutoSaveFileCheck.IsChecked = _config.AutoSaveFile;
-            DisplaysSourceInformationCheck.IsChecked = _config.DisplaysSourceInformation;
-            AutoSearchInEffectCheck.IsChecked = _config.AutoSearchInEffect;
+        }
+
+        /// <summary>
+        /// 控件初始化
+        /// </summary>
+        private void ControlInitialization()
+        {
+            AutoSaveFileCheck.IsChecked = _config.AutoSaveFile.Value.ToBool();
+            DisplaysSourceInformationCheck.IsChecked = _config.DisplaysSourceInformation.Value.ToBool();
+            AutoSearchInEffectCheck.IsChecked = _config.AutoSearchInEffect.Value.ToBool();
         }
 
         private void StartAutoSaveTick()
@@ -289,7 +272,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void AutoSaveTimer_Tick(object sender, EventArgs e)
         {
-            if (_config.AutoSaveFile && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
+            if (_config.AutoSaveFile.Value.ToBool() && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
             {
                 // 调用自动保存方法
                 foreach (var file in _updateFiles.Values)
@@ -312,9 +295,9 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         public void ClearTempFiles()
         {
-            if (!string.IsNullOrWhiteSpace(_config.TempFileDicPath) && Directory.Exists(_config.TempFileDicPath))
+            if (!string.IsNullOrWhiteSpace(_config.TempFileDicPath.Value.ToString()) && Directory.Exists(_config.TempFileDicPath.Value.ToString()))
             {
-                var files = Directory.GetFiles(_config.TempFileDicPath, "", SearchOption.AllDirectories);
+                var files = Directory.GetFiles(_config.TempFileDicPath.Value.ToString(), "", SearchOption.AllDirectories);
                 if (files != null && files.Length > 0)
                 {
                     foreach (var file in files)
@@ -341,6 +324,19 @@ namespace Wukong_PBData_ReadWriter_GUI
                         continue;
                     var configParma = propertyInfo.GetCustomAttribute(typeof(ConfigParam));
                     object writeData;
+                    object oldData = propertyInfo.GetValue(_config);
+
+                    if (propertyInfo.PropertyType == typeof(AttributeChangeNotification))
+                    {
+                        if (oldData != null && oldData is AttributeChangeNotification attributeChangeNotification)
+                        {
+                            attributeChangeNotification.Value = data.Data;
+                            if (attributeChangeNotification.Change == null)
+                                attributeChangeNotification.Change += ChangeDataFunc;
+                            continue;
+                        }
+                    }
+
                     if (configParma != null && configParma is ConfigParam param && param.DataType != typeof(string))
                     {
                         writeData = Convert.ChangeType(data.Data, param.DataType);
@@ -357,6 +353,22 @@ namespace Wukong_PBData_ReadWriter_GUI
                     _logUtil.Error($"Error", e);
                 }
             }
+
+            foreach (var fieldInfo in typeof(Config).GetFields())
+            {
+                if (!configData.TryGetValue(fieldInfo.Name, out var data) || data.Data == null)
+                    continue;
+                var configParma = (ConfigParam?)fieldInfo.GetCustomAttribute(typeof(ConfigParam));
+                var oldData = fieldInfo.GetValue(_config);
+                if (oldData is AttributeChangeNotification attributeChangeNotification)
+                {
+                    attributeChangeNotification.Value = data.Data;
+                    if (attributeChangeNotification.Change == null)
+                        attributeChangeNotification.Change += ChangeDataFunc;
+                    continue;
+                }
+                fieldInfo.SetValue(_config, data.Data);
+            }
         }
 
         /// <summary>
@@ -364,7 +376,10 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// </summary>
         private void SaveConfig()
         {
-            var configPath = Path.Combine(GlobalConfig.ConfigDirPath, "config.cfg");
+            var configPath = ".\\config.cfg";
+            var fileInfo = new FileInfo(configPath);
+            if (fileInfo.Exists && fileInfo.LastWriteTime >= _config.SaveTime)
+                return;
             File.WriteAllText(configPath, GetConfig(_config));
         }
 
@@ -376,15 +391,55 @@ namespace Wukong_PBData_ReadWriter_GUI
         private string GetConfig(Config config)
         {
             var dic = new ConcurrentDictionary<string, ConfigData>();
+
+            foreach (var fieldInfo in typeof(Config).GetFields())
+            {
+                var configParma = (ConfigParam?)fieldInfo.GetCustomAttribute(typeof(ConfigParam));
+                var data = fieldInfo.GetValue(config);
+                object writeData;
+
+                if (data is AttributeChangeNotification attributeChangeNotification)
+                {
+                    writeData = attributeChangeNotification.Value;
+                }
+                else
+                {
+                    writeData = data;
+                }
+
+
+                dic.TryAdd(fieldInfo.Name, new ConfigData
+                {
+                    Data = writeData,
+                    Desc = configParma?.Desc ?? ""
+                });
+            }
+
             foreach (var propertyInfo in typeof(Config).GetProperties())
             {
                 if (!propertyInfo.CanRead)
                     continue;
                 var configParma = (ConfigParam?)propertyInfo.GetCustomAttribute(typeof(ConfigParam));
                 var data = propertyInfo.GetValue(config);
+                object writeData;
+
+                if (data is AttributeChangeNotification attributeChangeNotification)
+                {
+                    writeData = attributeChangeNotification.Value;
+                }
+                else
+                {
+                    writeData = data;
+                }
+
+                if (writeData is DateTime time)
+                {
+                    writeData = time.ToString("yyyy-MM-dd HH:mm:ss");
+                }
+
                 dic.TryAdd(propertyInfo.Name, new ConfigData
                 {
-                    Data = data != null ? data : configParma?.DefaultValue ?? data,
+                    Data = writeData,
                     Desc = configParma?.Desc ?? ""
                 });
             }
@@ -436,7 +491,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 LoadDescription(dialog.FileName);
-                _config.RemarkFilePath = dialog.FileName;
+                _config.RemarkFilePath.Value = dialog.FileName;
             }
         }
 
@@ -594,7 +649,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             dialog.Description = "请选择Data数据文件夹";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                _config.DataFilePath = dialog.SelectedPath;
+                _config.DataFilePath.Value = dialog.SelectedPath;
                 ClearTempFiles();
                 _updateFiles.Clear();
                 RefreshFolderFile(dialog.SelectedPath);
@@ -944,13 +999,13 @@ namespace Wukong_PBData_ReadWriter_GUI
                                 SaveDataFile(file, tempPath, true);
                         }
 
-                        RefreshFolderFile(_config.DataFilePath);
+                        RefreshFolderFile(_config.DataFilePath.Value.ToString());
                         DataItemList.Items.Clear();
                         DataGrid.Children.Clear();
                         CloseAllOtherWindow();
                         _CurrentOpenFile = null;
                         if (MessageBox.Show("是否保存该路径为默认保存位置？", "提示", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                            _config.DefaultSavePath = _selectedSaveFolder;
+                            _config.DefaultSavePath.Value = _selectedSaveFolder;
                     }
                 }
             }
@@ -966,7 +1021,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 }
                 //_updateFiles.Clear();
 
-                RefreshFolderFile(_config.DataFilePath);
+                RefreshFolderFile(_config.DataFilePath.Value.ToString());
                 DataItemList.Items.Clear();
                 DataGrid.Children.Clear();
                 CloseAllOtherWindow();
@@ -998,14 +1053,14 @@ namespace Wukong_PBData_ReadWriter_GUI
         private void SaveAsNewDataFile(object sender, RoutedEventArgs e)
         {
             System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
-            dialog.InitialDirectory = _config.OutPakFilePath;
+            dialog.InitialDirectory = _config.OutPakFilePath.Value.ToString();
             dialog.Description = "请选择要保存Data数据的文件夹";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 try
                 {
                     string dir = dialog.SelectedPath;
-                    _config.OutPakFilePath = dir;
+                    _config.OutPakFilePath.Value = dir;
                     var pakPath = "";
                     var b1Index = -1;
                     var outPath = "";
@@ -1107,7 +1162,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             // _GlobalSearchCache.Clear();
             OpenFile(file);
 
-            if (_config.AutoSearchInEffect
+            if (_config.AutoSearchInEffect.Value.ToBool()
                 && !string.IsNullOrWhiteSpace(ItemSearch.Text)
                 && !ItemSearch.Text.Equals("搜索ID或备注"))
                 ItemSearch.Dispatcher.BeginInvoke(new Action(() =>
@@ -1117,10 +1172,10 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             //ItemSearch_TextChanged(ItemSearch, null);
         }
-        
-        private void DataItemList_SizeChanged(object sender, SizeChangedEventArgs e)  
-        {  
-            AddNewDataItem.Width = DataItemList.ActualWidth;  
+
+        private void DataItemList_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            AddNewDataItem.Width = DataItemList.ActualWidth;
         }
 
         private void OpenFile(DataFile file)
@@ -1437,7 +1492,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     {
                         var key = data._File._FileData.GetType().Name + "_" + data._ID;
                         if (_OrigItemData.TryGetValue(key, out var itemDataBytes)
-                            && _config.DisplaysSourceInformation
+                            && _config.DisplaysSourceInformation.Value.ToBool()
                             && System.Windows.MessageBox.Show("发现文件有更改,是否展示源信息", "确认", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                         {
                             OpenOriDataWindow(itemDataBytes, data);
@@ -1538,7 +1593,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             grid.RowDefinitions.Clear();
             grid.Children.Clear();
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            
+
             int rowIndex = 0;
             var descSuccessAction = () =>
             {
@@ -1569,7 +1624,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 Grid.SetColumn(label, 0);
                 label.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 label.VerticalAlignment = VerticalAlignment.Top;
-                label.Padding = new Thickness(0,8,0,0);
+                label.Padding = new Thickness(0, 8, 0, 0);
                 label.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
 
 
@@ -2055,7 +2110,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     pakPath = _CurrentOpenFile._FilePath.Substring(b1Index,
                         _CurrentOpenFile._FilePath.Length - b1Index);
 
-                var outPath = Path.Combine(_config.TempFileDicPath, pakPath);
+                var outPath = Path.Combine(_config.TempFileDicPath.Value.ToString(), pakPath);
                 _CurrentOpenFile.Tag = outPath;
 
                 _updateFiles.TryAdd(_CurrentOpenFile._FileName, _CurrentOpenFile);
@@ -2794,7 +2849,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 var filePath = temp.FileName;
                 ComparisonTableController.Instance.LoadData(filePath);
-                _config.ComparisonTableFilePath = filePath;
+                _config.ComparisonTableFilePath.Value = filePath;
             }
         }
 
@@ -2882,8 +2937,8 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <param name="e"></param>
         private void AutoSaveFileCheck_OnCheckedOrUnChecked(object sender, RoutedEventArgs e)
         {
-            _config.AutoSaveFile = ((CheckBox)sender).IsChecked!.Value;
-            if (_config.AutoSaveFile)
+            _config.AutoSaveFile.Value = ((CheckBox)sender).IsChecked!.Value;
+            if (_config.AutoSaveFile.Value.ToBool())
             {
                 if (string.IsNullOrEmpty(_selectedSaveFolder))
                 {
@@ -2900,8 +2955,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                         }
                         else
                         {
-                            _config.AutoSaveFile = false;
-                            AutoSaveFileCheck.IsChecked = _config.AutoSaveFile;
+                            _config.AutoSaveFile.Value = false;
+                            AutoSaveFileCheck.IsChecked = _config.AutoSaveFile.Value.ToBool();
                         }
                     }
                 }
@@ -2923,12 +2978,12 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// <param name="e"></param>
         private void DisplaysSourceInformationCheck_OnCheckedOrUnChecked(object sender, RoutedEventArgs e)
         {
-            _config.DisplaysSourceInformation = ((CheckBox)sender).IsChecked!.Value;
+            _config.DisplaysSourceInformation.Value = ((CheckBox)sender).IsChecked!.Value;
         }
 
         private void AutoSearchInEffectCheck_OnCheckedOrUnChecked(object sender, RoutedEventArgs e)
         {
-            _config.AutoSearchInEffect = ((CheckBox)sender).IsChecked!.Value;
+            _config.AutoSearchInEffect.Value = ((CheckBox)sender).IsChecked!.Value;
         }
 
         #endregion
@@ -2958,29 +3013,6 @@ namespace Wukong_PBData_ReadWriter_GUI
                 CurrentOpenFileChange((_lastActionComponent as ListBoxItem).DataContext as DataFile);
             }
 
-        }
-
-        /// <summary>
-        /// 展示更新日志
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        private void ShowChangelog(object sender, RoutedEventArgs e)
-        {
-
-            var updateLog = new StringBuilder();
-            var updateLogPath = ".\\UpdateLog.log";
-            if (File.Exists(updateLogPath))
-            {
-                updateLog.Append(File.ReadAllText(updateLogPath));
-            }
-            else
-            {
-                updateLog.Append(@"狠狠批评,不加异常捕获");
-            }
-
-            System.Windows.MessageBox.Show(updateLog.ToString(), "更新日志");
         }
 
         #region 设置
@@ -3071,6 +3103,12 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         }
 
+
+        private int ChangeDataFunc(string key, object oldValue, object newValue)
+        {
+            _config.SaveTime = DateTime.Now;
+            return 1;
+        }
         #endregion
     }
 }

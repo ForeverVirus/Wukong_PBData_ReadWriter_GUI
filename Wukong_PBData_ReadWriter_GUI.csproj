@@ -6,8 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+	  <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,25 +19,25 @@
   <ItemGroup>
     <None Remove="vx.jpg" />
     <None Remove="zfb.jpg" />
-    <None Update="Config\ComparisonTable.json">
+    <None Update="Json\ComparisonTable.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Config\config.cfg">
+    <None Update="config.cfg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Json\DefaultDescConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Config\DefaultDescConfig.json">
+    <None Update="Json\DefaultRemark.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Config\DefaultRemark.json">
+    <None Update="Json\DefaultOriData.oridata">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Config\DefaultOriData.oridata">
+    <None Update="Json\DefaultMd5Config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Config\DefaultMd5Config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Config\DefaultDescConfig.json">
+    <None Update="Json\DefaultDescConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -71,7 +70,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Config\DefaultOriData.oridata">
+    <None Update="Json\DefaultOriData.oridata">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="README.md">
@@ -89,41 +88,22 @@
     <None Update="ref\settings.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="UpdateLog.log">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Page Update="MainWindow - 复制.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Views\PakCompressWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Commands\" />
-    <Folder Include="Common\" />
-    <Folder Include="Json\"/>
-    <Folder Include="Models\" />
-    <Folder Include="Resources\Icons\" />
-    <Folder Include="Resources\Images\" />
-    <Folder Include="Services\" />
-    <Folder Include="UserControls\" />
-    <Folder Include="Utilities\" />
+    <Folder Include="Config\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0-rc.1.24431.7" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="WPF-UI" Version="4.0.0-rc.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="WPF-UI" Version="3.0.5" />
   </ItemGroup>
 
 </Project>

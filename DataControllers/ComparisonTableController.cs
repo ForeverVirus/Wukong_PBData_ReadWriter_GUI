@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Wukong_PBData_ReadWriter_GUI.Util;
 
 namespace Wukong_PBData_ReadWriter_GUI.DataControllers
@@ -147,7 +140,7 @@ namespace Wukong_PBData_ReadWriter_GUI.DataControllers
             }
             NeedSave = false;
             if (string.IsNullOrWhiteSpace(_lastFilePath) && string.IsNullOrWhiteSpace(filePath))
-                filePath = Path.Combine(GlobalConfig.ConfigDirPath, "ComparisonTable.json");
+                filePath = Path.Combine(GlobalConfig.JsonDirPath, "ComparisonTable.json");
             File.WriteAllText(filePath ?? _lastFilePath, JsonUtil.Serialize(_comparisonInformation));
         }
 

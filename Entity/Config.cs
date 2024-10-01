@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,56 +14,71 @@ namespace Wukong_PBData_ReadWriter_GUI.Entity
         /// <summary>
         /// 备注文件路径
         /// </summary>
-        [ConfigParam(Desc = "备注文件路径", DefaultValue = ".\\Config\\DefaultRemark.json")]
-        public string RemarkFilePath { set; get; }
+        [ConfigParam(Desc = "备注文件路径")]
+        public AttributeChangeNotification RemarkFilePath =
+            new(data: ".\\Json\\DefaultRemark.json");
 
         /// <summary>
         /// 对照表文件路径
         /// </summary>
-        [ConfigParam(Desc = "对照文件路径", DefaultValue = ".\\Config\\ComparisonTable.json")]
-        public string ComparisonTableFilePath { set; get; }
+        [ConfigParam(Desc = "对照文件路径")]
+        public AttributeChangeNotification ComparisonTableFilePath =
+            new(data: ".\\Json\\ComparisonTable.json");
 
         /// <summary>
         /// 数据文件路径
         /// </summary>
         [ConfigParam(Desc = "数据文件路径")]
-        public string DataFilePath { set; get; }
+        public AttributeChangeNotification DataFilePath
+            = new(data: "");
 
         /// <summary>
         /// 打包文件路径
         /// </summary>
         [ConfigParam(Desc = "打包文件路径")]
-        public string OutPakFilePath { set; get; }
+        public AttributeChangeNotification OutPakFilePath
+            = new(data: "");
 
         /// <summary>
         /// 自动保存文件
         /// </summary>
         [ConfigParam(Desc = "自动保存文件", DataType = typeof(bool))]
-        public bool AutoSaveFile { set; get; }
+        public AttributeChangeNotification AutoSaveFile =
+            new(data: false);
 
         /// <summary>
         /// 显示源数据
         /// </summary>
-        [ConfigParam(Desc = "显示源数据", DataType = typeof(bool),DefaultValue = true)]
-        public bool DisplaysSourceInformation { set; get; } = true;
+        [ConfigParam(Desc = "显示源数据", DataType = typeof(bool))]
+        public AttributeChangeNotification DisplaysSourceInformation =
+            new(data: true);
 
         /// <summary>
         /// 临时文件路径
         /// </summary>
         [ConfigParam(Desc = "临时文件路径")]
-        public string TempFileDicPath { set; get; } = ".\\Temp";
+        public AttributeChangeNotification TempFileDicPath =
+            new(data: ".\\Temp");
 
         /// <summary>
         /// 搜索功能自动生效
         /// </summary>
         [ConfigParam(Desc = "搜索功能自动生效", DataType = typeof(bool))]
-        public bool AutoSearchInEffect { set; get; }
+        public AttributeChangeNotification AutoSearchInEffect =
+            new(data: false);
 
         /// <summary>
         /// 默认保存地址
         /// </summary>
         [ConfigParam(Desc = "默认保存地址")]
-        public string DefaultSavePath { set; get; }
+        public AttributeChangeNotification DefaultSavePath =
+            new(data: "");
+
+        /// <summary>
+        /// 配置更新时间
+        /// </summary>
+        [ConfigParam(Desc = "配置更新时间")]
+        public DateTime SaveTime { set; get; }
     }
 
     public class ConfigParam : Attribute
@@ -97,5 +113,74 @@ namespace Wukong_PBData_ReadWriter_GUI.Entity
         /// 数据
         /// </summary>
         public object Data { set; get; }
+    }
+
+    /// <summary>
+    /// 属性变更通知
+    /// </summary>
+    public class AttributeChangeNotification
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public Func<string, object, object, int> Change;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Key { set; get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private object _value;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object Value
+        {
+            set
+            {
+                if (_value == null || !EqualityComparer<object>.Default.Equals(_value, value))
+                    Change?.Invoke(Key, _value, value);
+                _value = value;
+            }
+            get
+            {
+                if (_value == null)
+                    _value = default(object);
+                return _value;
+            }
+        }
+
+        public AttributeChangeNotification()
+        {
+
+        }
+
+        public AttributeChangeNotification(string key)
+        {
+        }
+
+        public AttributeChangeNotification(object data)
+        {
+            _value = data;
+        }
+
+        public AttributeChangeNotification(Func<string, object, object, int> func)
+        {
+            Change += func;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="func"></param>
+        public AttributeChangeNotification(object data, Func<string, object, object, int> func) : this(data)
+        {
+            Change += func;
+        }
     }
 }
