@@ -2412,7 +2412,6 @@ namespace Wukong_PBData_ReadWriter_GUI
             window.Width = 800;
             window.Height = 800;
             window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            window.Show();
 
             Grid grid = new Grid();
             window.Content = grid;
@@ -2550,7 +2549,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             // 将Grid设置为窗口的内容
             window.Content = rootGrid;
-
+            window.Show();
         }
 
         private void AddNewDataItem_Click(object sender, RoutedEventArgs e)
