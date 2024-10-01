@@ -77,7 +77,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Entity
         /// <summary>
         /// 配置更新时间
         /// </summary>
-        [ConfigParam(Desc = "配置更新时间")]
+        [ConfigParam(Desc = "配置更新时间", DataType = typeof(DateTime))]
         public DateTime SaveTime { set; get; }
     }
 

@@ -51,7 +51,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
         public DispatcherTimer _SearchTimer;
         public string _CurrentOpenFolder = "";
-        public string version = "V1.5.0";
+        public string version = "V1.6.0";
         public MergeWindow _MergeWindow;
         public Task _GlobalSearchTask = null;
         private string _selectedSaveFolder = string.Empty;
@@ -104,7 +104,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             this.Closed += OnClosed;
             this.Loaded += OnLoaded;
-            this.Title = "黑猴配表编辑器" + version;
+            //this.Title = "黑猴配表编辑器" + version;
 
             #region 异常捕获
 
@@ -144,6 +144,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 _logUtil.Error($"Error", exception);
             }
+            this.Title = "黑猴配表编辑器" + version;
             _init = true;
         }
 
@@ -356,18 +357,26 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             foreach (var fieldInfo in typeof(Config).GetFields())
             {
-                if (!configData.TryGetValue(fieldInfo.Name, out var data) || data.Data == null)
-                    continue;
-                var configParma = (ConfigParam?)fieldInfo.GetCustomAttribute(typeof(ConfigParam));
-                var oldData = fieldInfo.GetValue(_config);
-                if (oldData is AttributeChangeNotification attributeChangeNotification)
+                try
                 {
-                    attributeChangeNotification.Value = data.Data;
-                    if (attributeChangeNotification.Change == null)
-                        attributeChangeNotification.Change += ChangeDataFunc;
-                    continue;
+                    if (!configData.TryGetValue(fieldInfo.Name, out var data) || data.Data == null)
+                        continue;
+                    var configParma = (ConfigParam?)fieldInfo.GetCustomAttribute(typeof(ConfigParam));
+                    var oldData = fieldInfo.GetValue(_config);
+                    if (oldData is AttributeChangeNotification attributeChangeNotification)
+                    {
+                        attributeChangeNotification.Value = data.Data;
+                        if (attributeChangeNotification.Change == null)
+                            attributeChangeNotification.Change += ChangeDataFunc;
+                        continue;
+                    }
+
+                    fieldInfo.SetValue(_config, data.Data);
                 }
-                fieldInfo.SetValue(_config, data.Data);
+                catch (Exception e)
+                {
+                    _logUtil.Error($"Error", e);
+                }
             }
         }
 
