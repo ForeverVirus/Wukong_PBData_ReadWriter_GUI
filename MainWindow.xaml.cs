@@ -31,7 +31,9 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using System.Windows.Controls.Primitives;
 using System.Windows.Navigation;
 using MessageBox = System.Windows.MessageBox;
+using TextBox = Wpf.Ui.Controls.TextBox;
 using Wukong_PBData_ReadWriter_GUI.Entity;
+using Wukong_PBData_ReadWriter_GUI.Views;
 
 
 namespace Wukong_PBData_ReadWriter_GUI
@@ -460,44 +462,28 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void CreatePak(object sender, RoutedEventArgs e)
         {
-            Window window = new Window();
-            window.Title = "生成PAK";
-            window.Width = 600;
-            window.Height = 400;
-            window.AllowDrop = true;
-            window.Drop += Window_Drop;
-            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            window.Show();
-
-            Grid grid = new Grid();
-            window.Content = grid;
-
-            TextBlock textBlock = new TextBlock();
-            textBlock.Text = "拖拽要生成Pak的Data文件夹到此处";
-            textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-            textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            grid.Children.Add(textBlock);
+            try
+            {
+                PakCompressWindow pakDecompress = new PakCompressWindow();
+                pakDecompress.Show();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"xxxxxxxxxxxxxxxxxxError in PakCompressWindow#OnDrop: {ex.Message}");
+            }
         }
 
-        private void UncompressPak(object sender, RoutedEventArgs e)
+        private void DecompressPak(object sender, RoutedEventArgs e)
         {
-            Window window = new Window();
-            window.Title = "解包PAK";
-            window.Width = 600;
-            window.Height = 400;
-            window.AllowDrop = true;
-            window.Drop += Window_Drop_Uncompress;
-            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            window.Show();
-
-            Grid grid = new Grid();
-            window.Content = grid;
-
-            TextBlock textBlock = new TextBlock();
-            textBlock.Text = "拖拽要解包的Pak文件夹到此处";
-            textBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-            textBlock.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            grid.Children.Add(textBlock);
+            try
+            {
+                PakDecompressWindow pakDecompress = new PakDecompressWindow();
+                pakDecompress.Show();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"xxxxxxxxxxxxxxxxxxError in PakDecompressWindow#OnDrop: {ex.Message}");
+            }
         }
 
         private void Window_Drop_Uncompress(object sender, System.Windows.DragEventArgs e)
@@ -869,7 +855,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (!hasTop)
             {
                 System.Windows.Controls.TextBlock topFileText = new System.Windows.Controls.TextBlock();
-                topFileText.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+                topFileText.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 TopFileList.VerticalAlignment = System.Windows.VerticalAlignment.Center;
                 topFileText.Text = "选中对应条目的右键置顶此区域";
                 TopFileList.Items.Add(topFileText);
@@ -1131,6 +1117,11 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             //ItemSearch_TextChanged(ItemSearch, null);
         }
+        
+        private void DataItemList_SizeChanged(object sender, SizeChangedEventArgs e)  
+        {  
+            AddNewDataItem.Width = DataItemList.ActualWidth;  
+        }
 
         private void OpenFile(DataFile file)
         {
@@ -1155,7 +1146,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 var pakPath = file._FilePath;
                 if (b1Index != -1)
                     pakPath = file._FilePath.Substring(b1Index, file._FilePath.Length - b1Index);
-                DataFilePath.Text = $"配置数据({pakPath})";
+                DataFilePath.Text = $"正在修改：{pakPath}";
                 CloseAllOtherWindow();
             }
         }
@@ -1547,6 +1538,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             grid.RowDefinitions.Clear();
             grid.Children.Clear();
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            
             int rowIndex = 0;
             var descSuccessAction = () =>
             {
@@ -1554,15 +1546,15 @@ namespace Wukong_PBData_ReadWriter_GUI
             };
             foreach (var item in propertyItemList)
             {
-                System.Windows.Controls.Label label = new System.Windows.Controls.Label();
+                TextBlock label = new TextBlock();
                 if (string.IsNullOrWhiteSpace(item.DisplayName))
                 {
-                    label.Content = $"{item._PropertyName}";
+                    label.Text = $"{item._PropertyName}";
                     ComparisonTableController.Instance.AddData($"{item._PropertyInfo.DeclaringType.Name}.{item._PropertyName}", "");
                 }
                 else
                 {
-                    label.Content = $"{item.DisplayName}";
+                    label.Text = $"{item.DisplayName}";
                 }
 
                 label.ToolTip = new System.Windows.Controls.ToolTip()
@@ -1577,7 +1569,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                 Grid.SetColumn(label, 0);
                 label.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 label.VerticalAlignment = VerticalAlignment.Top;
-                label.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                label.Padding = new Thickness(0,8,0,0);
+                label.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
 
 
                 label.ContextMenu = new ContextMenu();
@@ -1608,14 +1601,15 @@ namespace Wukong_PBData_ReadWriter_GUI
         {
             if (valueType == typeof(int) || valueType == typeof(float) || valueType == typeof(long) || valueType == typeof(double))
             {
-                System.Windows.Controls.TextBox numberTextBox = new System.Windows.Controls.TextBox();
+                TextBox numberTextBox = new TextBox();
                 numberTextBox.PreviewTextInput += new TextCompositionEventHandler(NumericTextBox_PreviewTextInput);
                 numberTextBox.PreviewKeyDown += new System.Windows.Input.KeyEventHandler(NumericTextBox_PreviewKeyDown);
                 numberTextBox.LostFocus += new RoutedEventHandler(NumericTextBox_LostFocus);
                 numberTextBox.Text = item._PropertyInfo.GetValue(item._BelongData).ToString();
                 numberTextBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 numberTextBox.VerticalAlignment = VerticalAlignment.Top;
-                numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
+                numberTextBox.Width = 250;
                 numberTextBox.DataContext = item;
                 //numberTextBox.IsReadOnly = curGrid != DataGrid;
                 numberTextBox.IsReadOnly = false;
@@ -1628,12 +1622,13 @@ namespace Wukong_PBData_ReadWriter_GUI
             }
             else if (valueType == typeof(string))
             {
-                System.Windows.Controls.TextBox stringTextBox = new System.Windows.Controls.TextBox();
+                TextBox stringTextBox = new TextBox();
                 stringTextBox.Text = item._PropertyInfo.GetValue(item._BelongData).ToString();
                 stringTextBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 stringTextBox.VerticalAlignment = VerticalAlignment.Top;
-                stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                 stringTextBox.DataContext = item;
+                stringTextBox.Width = 400;
                 //stringTextBox.IsReadOnly = curGrid != DataGrid;
                 stringTextBox.IsReadOnly = false;
                 //stringTextBox.TextChanged += StringTextBox_TextChanged;
@@ -1648,7 +1643,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                 System.Windows.Controls.ComboBox comboBox = new System.Windows.Controls.ComboBox();
                 comboBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 comboBox.VerticalAlignment = VerticalAlignment.Top;
-                comboBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                comboBox.Width = 250;
+                comboBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                 var items = Enum.GetValues(valueType);
                 var itemSource = new List<object>();
                 var needSave = false;
@@ -1693,7 +1689,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                 button.Content = "打开";
                 button.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 button.VerticalAlignment = VerticalAlignment.Top;
-                button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                button.Width = 250;
+                button.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                 button.Click += new RoutedEventHandler(OpenNestedData);
                 var dataCtx = item._PropertyInfo.GetValue(item._BelongData);
                 if (dataCtx == null)
@@ -1707,9 +1704,10 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 var button = new System.Windows.Controls.Button();
                 button.Content = "打开";
+                button.Width = 250;
                 button.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 button.VerticalAlignment = VerticalAlignment.Top;
-                button.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                button.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                 button.Click += new RoutedEventHandler(OpenListData);
                 button.DataContext = item._PropertyInfo.GetValue(item._BelongData);
                 Grid.SetRow(button, rowIndex);
@@ -1856,7 +1854,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 groupLabel.Content = ListType + "-" + rowIndex;
                 groupLabel.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 groupLabel.VerticalAlignment = VerticalAlignment.Top;
-                groupLabel.Margin = new Thickness(10, 10 + rowIndex * 30, 0, 0);
+                groupLabel.Margin = new Thickness(10, 10 + rowIndex * 40, 0, 0);
                 groupLabel.ContextMenu = new ContextMenu();
                 //MenuItem descItem = new MenuItem();
                 //descItem.Header = "备注";
@@ -1883,7 +1881,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     numberTextBox.Text = item.ToString();
                     numberTextBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                     numberTextBox.VerticalAlignment = VerticalAlignment.Top;
-                    numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                    numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                     numberTextBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
                     numberTextBox.Tag = "numberTextBox";
                     //numberTextBox.TextChanged += NumberTextBox_TextChanged1;
@@ -1899,7 +1897,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     stringTextBox.Text = item.ToString();
                     stringTextBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                     stringTextBox.VerticalAlignment = VerticalAlignment.Top;
-                    stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                    stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                     stringTextBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
                     //stringTextBox.TextChanged += StringTextBox_TextChanged1;
                     stringTextBox.TextChanged += ChangeEvent;
@@ -1913,7 +1911,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     System.Windows.Controls.ComboBox comboBox = new System.Windows.Controls.ComboBox();
                     comboBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                     comboBox.VerticalAlignment = VerticalAlignment.Top;
-                    comboBox.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                    comboBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                     comboBox.ItemsSource = Enum.GetValues(valueType);
                     comboBox.SelectedItem = item;
                     comboBox.DataContext = new Tuple<int, IList, Type>(rowIndex, data, valueType);
@@ -1929,7 +1927,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     newButton.Content = "打开";
                     newButton.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                     newButton.VerticalAlignment = VerticalAlignment.Top;
-                    newButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                    newButton.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                     newButton.Click += new RoutedEventHandler(OpenNestedData);
 
                     newButton.DataContext = item;
@@ -1943,7 +1941,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                     newButton.Content = "打开";
                     newButton.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                     newButton.VerticalAlignment = VerticalAlignment.Top;
-                    newButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+                    newButton.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                     newButton.Click += new RoutedEventHandler(OpenListData);
                     newButton.DataContext = item;
                     Grid.SetRow(newButton, rowIndex);
@@ -1957,7 +1955,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             addItemButton.Content = "新增";
             addItemButton.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
             addItemButton.VerticalAlignment = VerticalAlignment.Top;
-            addItemButton.Margin = new Thickness(0, 10 + rowIndex * 30, 0, 0);
+            addItemButton.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
             addItemButton.DataContext = new Tuple<IList, Grid>(data, grid);
             //addItemButton.Click += AddItemButton_Click;
             addItemButton.Click += ChangeEvent;
@@ -2174,7 +2172,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                         label.Content = labelContent;
                         label.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                         label.VerticalAlignment = VerticalAlignment.Top;
-                        label.Margin = new Thickness(10, 10 + rowIndex * 30, 0, 0);
+                        label.Margin = new Thickness(10, 10 + rowIndex * 40, 0, 0);
                         grid.Children.Add(label);
 
                         DataPropertyItem dataPropertyItem = new DataPropertyItem();
