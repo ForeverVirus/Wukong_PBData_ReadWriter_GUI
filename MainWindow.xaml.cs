@@ -1259,6 +1259,17 @@ namespace Wukong_PBData_ReadWriter_GUI
                 delMenuItem.Click += DelMenuItem_Click;
                 listItem.ContextMenu.Items.Add(delMenuItem);
 
+                MenuItem delOtherMenuItem = new MenuItem();
+                delOtherMenuItem.Header = "除选择外全部删除";
+                delOtherMenuItem.DataContext = item;
+                delOtherMenuItem.Click += DelOtherMenuItem_Click;
+                listItem.ContextMenu.Items.Add(delOtherMenuItem);
+
+                MenuItem delNotModifiedMenuItem = new MenuItem();
+                delNotModifiedMenuItem.Header = "未修改的全部删除";
+                delNotModifiedMenuItem.DataContext = item;
+                delNotModifiedMenuItem.Click += DelNotModifiedMenuItem_Click;
+                listItem.ContextMenu.Items.Add(delNotModifiedMenuItem);
 
                 //TODO 等待更改Tag
                 DataItemList.Items.Add(listItem);
@@ -1386,6 +1397,52 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
         }
+        private void DelOtherMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem == null) return;
+
+            var dataItem = menuItem.DataContext as DataItem;
+
+            if (dataItem == null) return;
+
+            var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile._FileData, null) as IList;
+
+            if (list == null || list.Count <= 0)
+                return;
+
+            list.Clear();
+            list.Add(dataItem._Data);
+
+            dataItem._File._FileDataItemList.Clear();
+            dataItem._File._FileDataItemList.Add(dataItem);
+
+            RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
+        }
+        private void DelNotModifiedMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem == null) return;
+
+
+            var list = _CurrentOpenFile._ListPropertyInfo.GetValue(_CurrentOpenFile._FileData, null) as IList;
+
+            if (list == null || list.Count <= 0)
+                return;
+
+            var tmplist=_CurrentOpenFile._FileDataItemList.ToList<DataItem>();
+
+            _CurrentOpenFile._FileDataItemList.Clear();
+            list.Clear();
+            foreach (var dataItem in tmplist)
+                if (dataItem._IsModified)
+                {
+                    _CurrentOpenFile._FileDataItemList.Add(dataItem);
+                    list.Add(dataItem._Data);
+                }
+            RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
+        }
+
 
         private void OpenDescriptionWindow(object sender, RoutedEventArgs e)
         {
