@@ -1405,7 +1405,6 @@ namespace Wukong_PBData_ReadWriter_GUI
             System.Windows.Point screenPosition = PointToScreen(mousePosition);
             window.Left = screenPosition.X;
             window.Top = screenPosition.Y;
-            window.Show();
 
             Grid grid = new Grid();
             window.Content = grid;
@@ -1454,6 +1453,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             Grid.SetRow(button, 1);
             Grid.SetColumn(button, 1);
             grid.Children.Add(button);
+            window.Show();
         }
 
         private ListBoxItem FindListBoxItem(DependencyObject child)
@@ -1887,8 +1887,6 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                     window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-                    window.Show();
-
                     ScrollViewer scrollViewer = new ScrollViewer();
                     scrollViewer.Height = 550;
                     window.Content = scrollViewer;
@@ -1903,6 +1901,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                     RefreshList(data, ListType, grid);
 
+                    window.Show();
 
                 }
             }
@@ -2203,7 +2202,6 @@ namespace Wukong_PBData_ReadWriter_GUI
                     window.Width = 800;
                     window.Height = 600;
                     window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                    window.Show();
 
                     ScrollViewer scrollViewer = new ScrollViewer();
                     scrollViewer.Height = 550;
@@ -2248,6 +2246,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                         rowIndex++;
                     }
                     ComparisonTableController.Instance.SaveData();
+                    
+                    window.Show();
                 }
             }
         }
