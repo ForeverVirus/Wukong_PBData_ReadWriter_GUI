@@ -1,0 +1,47 @@
+﻿<Window x:Class="Wukong_PBData_ReadWriter_GUI.Views.HelpMenuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:Wukong_PBData_ReadWriter_GUI.Views"
+        mc:Ignorable="d"
+        Title="帮助" Height="800" Width="800" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel HorizontalAlignment="Center" Margin="10">
+                <!-- 二维码图片 -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
+                    <Image Source="pack://application:,,,/zfb.jpg" Width="150" Height="150" Margin="5"/>
+                    <Image Source="pack://application:,,,/vx.jpg" Width="150" Height="150" Margin="5"/>
+                </StackPanel>
+                
+                <!-- 二维码文字 -->
+                <TextBlock HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,20" FontSize="18">
+                    这里是赛博乞讨
+                    <LineBreak/>
+                    如果你喜欢这个工具可以赞助一下，谢谢~
+                </TextBlock>
+
+
+                <!-- 视频教程链接 -->
+                <TextBlock Text="视频教程" HorizontalAlignment="Left" Margin="0,0,0,0" FontSize="18"/>
+                <TextBlock TextWrapping="Wrap" FontSize="16">
+                    禽兽-云轩：
+                    <Hyperlink NavigateUri="https://www.bilibili.com/video/BV15usSe7ETf"
+                               RequestNavigate="Hyperlink_RequestNavigate">简易教程</Hyperlink>
+                    <LineBreak/>
+                    银河Buster：
+                    <Hyperlink NavigateUri="https://www.bilibili.com/video/BV1br4he8Eg1"
+                               RequestNavigate="Hyperlink_RequestNavigate">详细制作教程一</Hyperlink>
+                    <Hyperlink NavigateUri="https://www.bilibili.com/video/BV1TZ4UekEKq"
+                               RequestNavigate="Hyperlink_RequestNavigate">详细制作教程二</Hyperlink>
+                    <Hyperlink NavigateUri="https://www.bilibili.com/video/BV195t7eeEUc"
+                               RequestNavigate="Hyperlink_RequestNavigate">详细制作教程三</Hyperlink>
+                </TextBlock>
+
+                <!-- 帮助文本内容 -->
+                <TextBlock Name="HelpTextBlock" Margin="0,20,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
