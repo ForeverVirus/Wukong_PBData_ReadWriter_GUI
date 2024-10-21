@@ -260,6 +260,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             AutoSaveFileCheck.IsChecked = _config.AutoSaveFile.Value.ToBool();
             DisplaysSourceInformationCheck.IsChecked = _config.DisplaysSourceInformation.Value.ToBool();
             AutoSearchInEffectCheck.IsChecked = _config.AutoSearchInEffect.Value.ToBool();
+            OnlyModifyItem.IsChecked = _config.OnlyModifyItem.Value.ToBool();
         }
 
         private void StartAutoSaveTick()
@@ -1025,7 +1026,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                         foreach (var file in _updateFiles.Values)
                         {
                             // file._FileData
-                            if((bool)_config.OnlyModifyItem.Value)
+                            if(_config.OnlyModifyItem.Value.ToBool())
                                 SaveOnlyModified(file);
 
                             SaveDataFile(file, _selectedSaveFolder);
@@ -1047,7 +1048,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 foreach (var file in _updateFiles.Values)
                 {
-                    if((bool)_config.OnlyModifyItem.Value)
+                    if(_config.OnlyModifyItem.Value.ToBool())
                         SaveOnlyModified(file);
                     SaveDataFile(file, _selectedSaveFolder);
                     if (file.Tag is string tempPath)
@@ -1595,6 +1596,8 @@ namespace Wukong_PBData_ReadWriter_GUI
                                 OpenOriDataWindow(itemDataBytes, data);
                         }
                     }
+                    if(_CurrentOpenFile != null)
+                        _CurrentOpenFile._CurOpenItem = data;
                 }
             }
         }
@@ -1751,14 +1754,14 @@ namespace Wukong_PBData_ReadWriter_GUI
             rowIndex = 0;
             if (oriPropertyItemList != null)
             {
+                TextBlock titleLabel = new TextBlock();;
+                titleLabel.Text = "源数据";
+                titleLabel.Margin = new Thickness(0, 10, 0, 0);
+                Grid.SetRow(titleLabel, 0);
+                Grid.SetColumn(titleLabel, 2);
+                grid.Children.Add(titleLabel);
                 foreach (var item in oriPropertyItemList)
                 {
-                    TextBlock titleLabel = new TextBlock();;
-                    titleLabel.Text = "源数据";
-                    Grid.SetRow(titleLabel, 0);
-                    Grid.SetColumn(titleLabel, 2);
-                    grid.Children.Add(titleLabel);
-                    
                     var valueType = item._PropertyInfo.PropertyType;
                     ProcessPropertyType(valueType, item, rowIndex, grid, 300, 2);
                     rowIndex++;
@@ -1846,7 +1849,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 }
                 comboBox.SelectedItem = itemSource[selectContentIndex];
                 comboBox.DataContext = item;
-                comboBox.IsReadOnly = columnIndex == 2;
+                comboBox.IsEnabled = columnIndex != 2;
                 //comboBox.SelectionChanged += ComboBox_SelectionChanged;
                 comboBox.SelectionChanged += ChangeEvent;
                 comboBox.Tag = items;
@@ -1972,8 +1975,15 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (item != null)
             {
                 item._PropertyInfo.SetValue(item._BelongData, value);
-                item._DataItem._IsDirty = true;
-                _CurrentOpenFile._IsDirty = true;
+                // if(item._DataItem != null)
+                //     item._DataItem._IsDirty = true;
+                if (_CurrentOpenFile != null)
+                {
+                    if(_CurrentOpenFile._CurOpenItem != null)
+                        _CurrentOpenFile._CurOpenItem._IsDirty = true;
+                    _CurrentOpenFile._IsDirty = true;
+                }
+
                 AddCurrentFileInUpdateFiles();
                 //item._DataItem._ListBoxItem
             }
@@ -2350,6 +2360,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                         dataPropertyItem._PropertyDesc = "";
                         dataPropertyItem._PropertyInfo = property;
                         dataPropertyItem._BelongData = data;
+                        // dataPropertyItem._DataItem = 
                         ProcessPropertyType(property.PropertyType, dataPropertyItem, rowIndex, grid, 200);
                         rowIndex++;
                     }

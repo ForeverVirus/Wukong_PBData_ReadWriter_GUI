@@ -35,6 +35,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public PropertyInfo _ListPropertyInfo;
         public List<int> _IDList;
         public ListBoxItem _ListBoxItem;
+        public DataItem _CurOpenItem = null;
 
         /// <summary>
         /// 
