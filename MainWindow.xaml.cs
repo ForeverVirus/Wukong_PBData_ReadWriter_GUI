@@ -972,6 +972,27 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         }
 
+        void SaveOnlyModified(DataFile file)
+        {
+            var list = file._ListPropertyInfo.GetValue(file._FileData, null) as IList;
+
+            if (list == null || list.Count <= 0)
+                return;
+
+            var tmplist=file._FileDataItemList.ToList<DataItem>();
+
+            file._FileDataItemList.Clear();
+            list.Clear();
+            foreach (var dataItem in tmplist)
+            {
+                if (dataItem._IsDirty)
+                {
+                    file._FileDataItemList.Add(dataItem);
+                    list.Add(dataItem._Data);
+                }
+            }
+        }
+
         private void SaveDataFile(object sender, RoutedEventArgs e)
         {
             // if (_config.AutoSaveFile && !_updateFiles.IsEmpty && !string.IsNullOrEmpty(_selectedSaveFolder))
@@ -1003,6 +1024,10 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                         foreach (var file in _updateFiles.Values)
                         {
+                            // file._FileData
+                            if((bool)_config.OnlyModifyItem.Value)
+                                SaveOnlyModified(file);
+
                             SaveDataFile(file, _selectedSaveFolder);
                             if (file.Tag is string tempPath)
                                 SaveDataFile(file, tempPath, true);
@@ -1020,14 +1045,16 @@ namespace Wukong_PBData_ReadWriter_GUI
             }
             else
             {
-
-
                 foreach (var file in _updateFiles.Values)
                 {
+                    if((bool)_config.OnlyModifyItem.Value)
+                        SaveOnlyModified(file);
                     SaveDataFile(file, _selectedSaveFolder);
                     if (file.Tag is string tempPath)
                         SaveDataFile(file, tempPath, true);
                 }
+
+                
                 //_updateFiles.Clear();
 
                 RefreshFolderFile(_config.DataFilePath.Value.ToString());
@@ -1557,11 +1584,15 @@ namespace Wukong_PBData_ReadWriter_GUI
                     if (data._IsModified)
                     {
                         var key = data._File._FileData.GetType().Name + "_" + data._ID;
-                        if (_OrigItemData.TryGetValue(key, out var itemDataBytes)
-                            && _config.DisplaysSourceInformation.Value.ToBool()
-                            && System.Windows.MessageBox.Show("发现文件有更改,是否展示源信息", "确认", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        if (_OrigItemData.TryGetValue(key, out var itemDataBytes))
                         {
-                            OpenOriDataWindow(itemDataBytes, data);
+                            if (!_config.DisplaysSourceInformation.Value.ToBool())
+                            {
+                                if(System.Windows.MessageBox.Show("发现文件有更改,是否展示源信息", "确认", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                                    OpenOriDataWindow(itemDataBytes, data);
+                            }
+                            else
+                                OpenOriDataWindow(itemDataBytes, data);
                         }
                     }
                 }
@@ -1615,47 +1646,48 @@ namespace Wukong_PBData_ReadWriter_GUI
             {
                 return;
             }
+            
+            RefreshDataItemList(curData._DataPropertyItems, dataPropertyItems);
 
-            Window window = new Window();
-            window.Title = "原始数据";
-            window.Width = 640;
-            window.Height = 720;
-
-            StackPanel stackPanel = new StackPanel();
-            window.Content = stackPanel;
-            stackPanel.Margin = new Thickness(5);
-            TextBlock textBlock = new TextBlock();
-            textBlock.Text = "原始配置数据";
-            textBlock.FontWeight = FontWeights.Bold;
-            textBlock.Margin = new Thickness(0, 0, 0, 10);
-            stackPanel.Children.Add(textBlock);
-
-            ScrollViewer scrollViewer = new ScrollViewer();
-            scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-            scrollViewer.Height = 600;
-            stackPanel.Children.Add(scrollViewer);
-
-            Grid grid = new Grid();
-            grid.Width = 640;
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(320) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(320) });
-            scrollViewer.Content = grid;
-
-            RefreshDataItemList(dataPropertyItems, grid);
-
-            var mainWindowRect = new Rect(this.Left, this.Top, this.ActualWidth, this.ActualHeight);
-
-            // 设置子窗口的位置，使其吸附在主窗口的右边
-            window.Left = mainWindowRect.Right;
-            window.Top = mainWindowRect.Top;
-
-            window.Show();
+            // Window window = new Window();
+            // window.Title = "原始数据";
+            // window.Width = 640;
+            // window.Height = 720;
+            //
+            // StackPanel stackPanel = new StackPanel();
+            // window.Content = stackPanel;
+            // stackPanel.Margin = new Thickness(5);
+            // TextBlock textBlock = new TextBlock();
+            // textBlock.Text = "原始配置数据";
+            // textBlock.FontWeight = FontWeights.Bold;
+            // textBlock.Margin = new Thickness(0, 0, 0, 10);
+            // stackPanel.Children.Add(textBlock);
+            //
+            // ScrollViewer scrollViewer = new ScrollViewer();
+            // scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            // scrollViewer.Height = 600;
+            // stackPanel.Children.Add(scrollViewer);
+            //
+            // Grid grid = new Grid();
+            // grid.Width = 640;
+            // grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(320) });
+            // grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(320) });
+            // scrollViewer.Content = grid;
+            //
+            // RefreshDataItemList(dataPropertyItems, grid);
+            //
+            // var mainWindowRect = new Rect(this.Left, this.Top, this.ActualWidth, this.ActualHeight);
+            //
+            // // 设置子窗口的位置，使其吸附在主窗口的右边
+            // window.Left = mainWindowRect.Right;
+            // window.Top = mainWindowRect.Top;
+            //
+            // window.Show();
         }
 
-        private void RefreshDataItemList(List<DataPropertyItem> propertyItemList, Grid grid = null)
+        private void RefreshDataItemList(List<DataPropertyItem> propertyItemList, List<DataPropertyItem> oriPropertyItemList = null)
         {
-            if (grid == null)
-                grid = DataGrid;
+            var grid = DataGrid;
             grid.RowDefinitions.Clear();
             grid.Children.Clear();
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -1663,7 +1695,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             int rowIndex = 0;
             var descSuccessAction = () =>
             {
-                RefreshDataItemList(propertyItemList);
+                RefreshDataItemList(propertyItemList, oriPropertyItemList);
             };
             foreach (var item in propertyItemList)
             {
@@ -1715,10 +1747,28 @@ namespace Wukong_PBData_ReadWriter_GUI
                 ProcessPropertyType(valueType, item, rowIndex, grid, 300);
                 rowIndex++;
             }
+
+            rowIndex = 0;
+            if (oriPropertyItemList != null)
+            {
+                foreach (var item in oriPropertyItemList)
+                {
+                    TextBlock titleLabel = new TextBlock();;
+                    titleLabel.Text = "源数据";
+                    Grid.SetRow(titleLabel, 0);
+                    Grid.SetColumn(titleLabel, 2);
+                    grid.Children.Add(titleLabel);
+                    
+                    var valueType = item._PropertyInfo.PropertyType;
+                    ProcessPropertyType(valueType, item, rowIndex, grid, 300, 2);
+                    rowIndex++;
+                }
+            }
+
             ComparisonTableController.Instance.SaveData();
         }
 
-        private void ProcessPropertyType(Type valueType, DataPropertyItem item, int rowIndex, Grid curGrid, int left)
+        private void ProcessPropertyType(Type valueType, DataPropertyItem item, int rowIndex, Grid curGrid, int left, int columnIndex = 1)
         {
             if (valueType == typeof(int) || valueType == typeof(float) || valueType == typeof(long) || valueType == typeof(double))
             {
@@ -1730,15 +1780,15 @@ namespace Wukong_PBData_ReadWriter_GUI
                 numberTextBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 numberTextBox.VerticalAlignment = VerticalAlignment.Top;
                 numberTextBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
-                numberTextBox.Width = 250;
+                numberTextBox.Width = 220;
                 numberTextBox.DataContext = item;
                 //numberTextBox.IsReadOnly = curGrid != DataGrid;
-                numberTextBox.IsReadOnly = false;
+                numberTextBox.IsReadOnly = columnIndex == 2;
                 numberTextBox.Tag = "numberTextBox";
                 //numberTextBox.TextChanged += NumberTextBox_TextChanged;
                 numberTextBox.TextChanged += ChangeEvent;
                 Grid.SetRow(numberTextBox, rowIndex);
-                Grid.SetColumn(numberTextBox, 1);
+                Grid.SetColumn(numberTextBox, columnIndex);
                 curGrid.Children.Add(numberTextBox);
             }
             else if (valueType == typeof(string))
@@ -1749,13 +1799,13 @@ namespace Wukong_PBData_ReadWriter_GUI
                 stringTextBox.VerticalAlignment = VerticalAlignment.Top;
                 stringTextBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                 stringTextBox.DataContext = item;
-                stringTextBox.Width = 400;
+                stringTextBox.Width = 220;
                 //stringTextBox.IsReadOnly = curGrid != DataGrid;
-                stringTextBox.IsReadOnly = false;
+                stringTextBox.IsReadOnly = columnIndex == 2;
                 //stringTextBox.TextChanged += StringTextBox_TextChanged;
                 stringTextBox.TextChanged += ChangeEvent;
                 Grid.SetRow(stringTextBox, rowIndex);
-                Grid.SetColumn(stringTextBox, 1);
+                Grid.SetColumn(stringTextBox, columnIndex);
 
                 curGrid.Children.Add(stringTextBox);
             }
@@ -1764,7 +1814,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 System.Windows.Controls.ComboBox comboBox = new System.Windows.Controls.ComboBox();
                 comboBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 comboBox.VerticalAlignment = VerticalAlignment.Top;
-                comboBox.Width = 250;
+                comboBox.Width = 220;
                 comboBox.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                 var items = Enum.GetValues(valueType);
                 var itemSource = new List<object>();
@@ -1796,12 +1846,12 @@ namespace Wukong_PBData_ReadWriter_GUI
                 }
                 comboBox.SelectedItem = itemSource[selectContentIndex];
                 comboBox.DataContext = item;
-                comboBox.IsReadOnly = curGrid != DataGrid;
+                comboBox.IsReadOnly = columnIndex == 2;
                 //comboBox.SelectionChanged += ComboBox_SelectionChanged;
                 comboBox.SelectionChanged += ChangeEvent;
                 comboBox.Tag = items;
                 Grid.SetRow(comboBox, rowIndex);
-                Grid.SetColumn(comboBox, 1);
+                Grid.SetColumn(comboBox, columnIndex);
                 curGrid.Children.Add(comboBox);
             }
             else if (typeof(IMessage).IsAssignableFrom(valueType))
@@ -1810,7 +1860,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 button.Content = "打开";
                 button.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 button.VerticalAlignment = VerticalAlignment.Top;
-                button.Width = 250;
+                button.Width = 220;
                 button.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                 button.Click += new RoutedEventHandler(OpenNestedData);
                 var dataCtx = item._PropertyInfo.GetValue(item._BelongData);
@@ -1818,21 +1868,21 @@ namespace Wukong_PBData_ReadWriter_GUI
                     dataCtx = Activator.CreateInstance(item._PropertyInfo.PropertyType);
                 button.DataContext = dataCtx;
                 Grid.SetRow(button, rowIndex);
-                Grid.SetColumn(button, 1);
+                Grid.SetColumn(button, columnIndex);
                 curGrid.Children.Add(button);
             }
             else if (typeof(IList).IsAssignableFrom(valueType))
             {
                 var button = new System.Windows.Controls.Button();
                 button.Content = "打开";
-                button.Width = 250;
+                button.Width = 220;
                 button.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 button.VerticalAlignment = VerticalAlignment.Top;
                 button.Margin = new Thickness(0, 10 + rowIndex * 40, 0, 0);
                 button.Click += new RoutedEventHandler(OpenListData);
                 button.DataContext = item._PropertyInfo.GetValue(item._BelongData);
                 Grid.SetRow(button, rowIndex);
-                Grid.SetColumn(button, 1);
+                Grid.SetColumn(button, columnIndex);
                 curGrid.Children.Add(button);
             }
         }
@@ -1922,6 +1972,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (item != null)
             {
                 item._PropertyInfo.SetValue(item._BelongData, value);
+                item._DataItem._IsDirty = true;
                 _CurrentOpenFile._IsDirty = true;
                 AddCurrentFileInUpdateFiles();
                 //item._DataItem._ListBoxItem
@@ -3050,6 +3101,11 @@ namespace Wukong_PBData_ReadWriter_GUI
         private void AutoSearchInEffectCheck_OnCheckedOrUnChecked(object sender, RoutedEventArgs e)
         {
             _config.AutoSearchInEffect.Value = ((CheckBox)sender).IsChecked!.Value;
+        }
+        
+        private void OnlyModifyItemCheck_OnCheckedOrUnChecked(object sender, RoutedEventArgs e)
+        {
+            _config.OnlyModifyItem.Value = ((CheckBox)sender).IsChecked!.Value;
         }
 
         #endregion

@@ -33,6 +33,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         public bool _IsShow = true;
         public ListBoxItem _ListBoxItem;
         public bool _IsModified = false;
+        public bool _IsDirty = false;
 
         private string _desc;
 

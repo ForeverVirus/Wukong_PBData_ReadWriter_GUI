@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Wukong_PBData_ReadWriter_GUI.Util
 {
@@ -582,6 +583,9 @@ namespace Wukong_PBData_ReadWriter_GUI.Util
                 exBuild.AppendLine($"StackTrace:{ex.StackTrace}");
                 exBuild.AppendLine($"Message:{ex.Message}");
             }
+            
+            System.Windows.MessageBox.Show($"报错了，可以截图给云轩：{exBuild}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            
             _logQueue.Enqueue($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [tid={Thread.CurrentThread.ManagedThreadId}] [Error] {str},{exBuild}");
         }
 

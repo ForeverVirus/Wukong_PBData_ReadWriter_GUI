@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         SizeToContent="WidthAndHeight"
         DataContext="{Binding MenuViewModel, Source={StaticResource Locator}}"
-        Title="黑猴配表编辑器" Height="800" Width="1280">
+        Title="黑猴配表编辑器" Height="800" Width="1920">
     <Window.Resources>
         <local:ViewModelLocator x:Key="Locator" />
         <!-- 自定义ListBoxItem的选中样式 -->
@@ -100,11 +100,12 @@
                 <CheckBox x:Name="AutoSaveFileCheck" Content="自动保存" Checked="AutoSaveFileCheck_OnCheckedOrUnChecked" Unchecked="AutoSaveFileCheck_OnCheckedOrUnChecked"/>
                 <CheckBox x:Name="DisplaysSourceInformationCheck" Content="显示旧数据" Checked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked" Unchecked="DisplaysSourceInformationCheck_OnCheckedOrUnChecked"/>
                 <CheckBox x:Name="AutoSearchInEffectCheck" Content="搜索功能自动生效" Checked="AutoSearchInEffectCheck_OnCheckedOrUnChecked" Unchecked="AutoSearchInEffectCheck_OnCheckedOrUnChecked"/>
+                <CheckBox x:Name="OnlyModifyItem" Content="只保存修改项" Checked="OnlyModifyItemCheck_OnCheckedOrUnChecked" Unchecked="OnlyModifyItemCheck_OnCheckedOrUnChecked"/>
             </MenuItem>
             <MenuItem Header="菜单">
                 <MenuItem Header="清理修改记录" Click="ClearLastUpdateLog"/>
             </MenuItem>
-            <MenuItem Header="帮助"  Click="HelpMenuItem_Click">
+            <MenuItem Header="友情赞助及教程"  Click="HelpMenuItem_Click">
             </MenuItem>
         </Menu>
 
@@ -187,10 +188,11 @@
                 <TextBlock Name="DataFilePath"  Foreground="DarkGray" FontSize="14" Margin="10,0,0,5"/>
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Height="570">
-                    <Grid Name="DataGrid" Width="640">
+                    <Grid Name="DataGrid" Width="680">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="440" />
+                            <ColumnDefinition Width="240" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>

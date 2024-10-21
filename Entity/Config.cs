@@ -66,6 +66,13 @@ namespace Wukong_PBData_ReadWriter_GUI.Entity
         [ConfigParam(Desc = "搜索功能自动生效", DataType = typeof(bool))]
         public AttributeChangeNotification AutoSearchInEffect =
             new(data: false);
+        
+        /// <summary>
+        /// 只保存修改项
+        /// </summary>
+        [ConfigParam(Desc = "只保存修改项", DataType = typeof(bool))]
+        public AttributeChangeNotification OnlyModifyItem =
+            new(data: false);
 
         /// <summary>
         /// 默认保存地址
