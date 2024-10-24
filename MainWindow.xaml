@@ -105,8 +105,7 @@
             <MenuItem Header="菜单">
                 <MenuItem Header="清理修改记录" Click="ClearLastUpdateLog"/>
             </MenuItem>
-            <MenuItem Header="友情赞助及教程"  Click="HelpMenuItem_Click">
-            </MenuItem>
+            <MenuItem Header="友情赞助及教程"  Click="HelpMenuItem_Click"/>
         </Menu>
 
         <StackPanel Grid.Row="1" Margin="5">
@@ -201,14 +200,15 @@
 
         <Grid Grid.Row="3" Margin="5">
             <TextBlock Name="Authors" Text="作者：" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                <Hyperlink NavigateUri="https://space.bilibili.com/8729996" RequestNavigate="Hyperlink_RequestNavigate">
+                <Hyperlink NavigateUri="https://space.bilibili.com/8729996/"
+                           RequestNavigate="Hyperlink_RequestNavigate">
                     禽兽-云轩
                 </Hyperlink>
                 <Hyperlink NavigateUri="https://space.bilibili.com/267309207/"
                            RequestNavigate="Hyperlink_RequestNavigate">
                     richelieu_bee
                 </Hyperlink>
-                <Hyperlink NavigateUri="https://space.bilibili.com/18686483"
+                <Hyperlink NavigateUri="https://space.bilibili.com/18686483/"
                            RequestNavigate="Hyperlink_RequestNavigate">
                     jmdch
                 </Hyperlink>
