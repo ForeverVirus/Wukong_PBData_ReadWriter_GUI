@@ -41,7 +41,8 @@ namespace Wukong_PBData_ReadWriter_GUI
     public partial class MainWindow : Window
     {
         public ConcurrentDictionary<string, DataFile> _DataFiles = new();
-        public static Dictionary<string, string> s_DescriptionConfig = new Dictionary<string, string>();
+        public static Dictionary<string, string> s_DefaultDescriptionConfig = new Dictionary<string, string>();
+        public static Dictionary<string, string> s_CustomDescriptionConfig = new Dictionary<string, string>();
         public static List<(string, DataFile, DataItem)> s_TraditionGlobalSearchCache = new List<(string, DataFile, DataItem)>();
 
         //public List<DataFile> _DataFiles = new List<DataFile>();
@@ -170,7 +171,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                 //生成一份
                 SaveConfig();
             }
-            s_DescriptionConfig = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.JsonDirPath, "DefaultDescConfig.json"));
+            s_DefaultDescriptionConfig = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.JsonDirPath, "DefaultDescConfig.json"));
             _MD5Config = Exporter.ImportDescriptionConfig(Path.Combine(GlobalConfig.JsonDirPath, "DefaultMD5Config.json"));
             _OrigItemData = Exporter.ImportItemDataBytes(Path.Combine(GlobalConfig.JsonDirPath, "DefaultOriData.oridata"));
 
@@ -194,8 +195,38 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             if (!string.IsNullOrWhiteSpace(_config.ComparisonTableFilePath.Value as string))
                 ComparisonTableController.Instance.LoadData(_config.ComparisonTableFilePath.Value.ToString());
-            if (!string.IsNullOrWhiteSpace(_config.RemarkFilePath.Value as string))
-                LoadDescription(_config.RemarkFilePath.Value.ToString());
+
+            if (!string.IsNullOrWhiteSpace(_config.RemarkDirPath.Value as string))
+            {
+                if (!LoadNewDesc(_config.RemarkDirPath.Value.ToString(), ".desc"))
+                {
+                    if (!string.IsNullOrWhiteSpace(_config.RemarkFilePath.Value as string))
+                    {
+                        var remarkFilePath = _config.RemarkFilePath.Value.ToString();
+                        if (File.Exists(remarkFilePath))
+                        {
+                            LoadDescription(remarkFilePath);
+                        }
+                        else
+                        {
+                            LoadNewDesc(Path.GetDirectoryName(remarkFilePath), ".defDesc");
+                        }
+                    }
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(_config.RemarkFilePath.Value as string))
+            {
+                var remarkFilePath = _config.RemarkFilePath.Value.ToString();
+                if (File.Exists(remarkFilePath))
+                {
+                    LoadDescription(remarkFilePath);
+                }
+                else
+                {
+                    LoadNewDesc(Path.GetDirectoryName(remarkFilePath), ".defDesc");
+                }
+            }
+
             if (!string.IsNullOrWhiteSpace(_config.DataFilePath.Value as string))
             {
                 RefreshFolderFile(_config.DataFilePath.Value.ToString());
@@ -494,17 +525,41 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void ImportDescription(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
-            dialog.AddExtension = true;
-            dialog.Filter = "Json|*.json";
-            dialog.Title = "导入备注配置";
+            // System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
+            // dialog.AddExtension = true;
+            // dialog.Filter = "Json|*.json";
+            // dialog.Title = "导入备注配置";
+            // if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            // {
+            //     LoadDescription(dialog.FileName);
+            //     _config.RemarkFilePath.Value = dialog.FileName;
+            // }
+            
+            System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+            dialog.Description = "请选择导入备注的文件夹";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                LoadDescription(dialog.FileName);
-                _config.RemarkFilePath.Value = dialog.FileName;
+                LoadNewDesc(dialog.SelectedPath, ".desc");
+                _config.RemarkDirPath.Value = dialog.SelectedPath;
             }
+            
         }
 
+        private bool LoadNewDesc(string dir, string ext)
+        {
+            var files = Directory.GetFiles(dir, $"*{ext}", SearchOption.AllDirectories);
+            if (files == null)
+                return false;
+            if (files.Length == 0)
+                return false;
+            foreach (var file in files)
+            {
+                LoadDescription(file);
+            }
+
+            return true;
+        }
+        
         /// <summary>
         /// 加载备注
         /// </summary>
@@ -514,13 +569,19 @@ namespace Wukong_PBData_ReadWriter_GUI
             var newDict = Exporter.ImportDescriptionConfig(dialogFileName);
             foreach (var kvp in newDict)
             {
-                if (s_DescriptionConfig.ContainsKey(kvp.Key))
+                if (s_DefaultDescriptionConfig.TryGetValue(kvp.Key, out var defaultValue))
                 {
-                    s_DescriptionConfig[kvp.Key] = kvp.Value;
+                    if(!string.IsNullOrEmpty(defaultValue) && defaultValue.Equals(kvp.Value))
+                        continue;
+                }
+                
+                if (s_CustomDescriptionConfig.ContainsKey(kvp.Key))
+                {
+                    s_CustomDescriptionConfig[kvp.Key] = kvp.Value;
                 }
                 else
                 {
-                    s_DescriptionConfig.Add(kvp.Key, kvp.Value);
+                    s_CustomDescriptionConfig.Add(kvp.Key, kvp.Value);
                 }
             }
         }
@@ -634,16 +695,58 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void ExportDescription(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
-            dialog.AddExtension = true;
-            // dialog.Filter = "Data|*.oridata";
-            dialog.Filter = "Json|*.json";
-            dialog.Title = "导出备注配置";
+            System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+            dialog.Description = "请选择导出备注的文件夹";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                Exporter.ExportDescriptionConfig(s_DescriptionConfig, dialog.FileName);
-                // Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
-                // Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
+                SplitExportDescFile(dialog.SelectedPath);
+            }
+            
+            // System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
+            // dialog.AddExtension = true;
+            // // dialog.Filter = "Data|*.oridata";
+            // dialog.Filter = "Json|*.json";
+            // dialog.Title = "导出备注配置";
+            // if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            // {
+            //     Exporter.ExportDescriptionConfig(s_CustomDescriptionConfig, dialog.FileName);
+            //     // Exporter.ExportDescriptionConfig(_MD5Config, dialog.FileName);
+            //     // Exporter.ExportItemDataBytes(_OrigItemData, dialog.FileName);
+            // }
+        }
+
+        void SplitExportDescFile(string dir)
+        {
+            Dictionary<string, Dictionary<string, string>> fileDescDict =
+                new Dictionary<string, Dictionary<string, string>>();
+            foreach (var kvp in s_CustomDescriptionConfig)
+            {
+                var fileName = "";
+                var keySplitStrArr = kvp.Key.Split('_');
+                if (keySplitStrArr.Length > 1)
+                    fileName = keySplitStrArr[0];
+                else
+                {
+                    fileName = kvp.Key;
+                }
+                
+                var filePath = Path.Combine(dir, fileName + ".desc");
+                if (!fileDescDict.TryGetValue(filePath, out var config))
+                {
+                    config = new Dictionary<string, string>();
+                    fileDescDict.Add(filePath, config);
+                }
+                if(!config.ContainsKey(kvp.Key))
+                    config.Add(kvp.Key, kvp.Value);
+                else
+                {
+                    config[kvp.Key] = kvp.Value;
+                }
+            }
+
+            foreach (var kvp in fileDescDict)
+            {
+                Exporter.ExportDescriptionConfig(kvp.Value, kvp.Key);
             }
         }
 
@@ -1377,10 +1480,10 @@ namespace Wukong_PBData_ReadWriter_GUI
                         list.Add(newItem);
                         var key = newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID;
                         //解决克隆新增ID重复 
-                        if (s_DescriptionConfig.ContainsKey(key))
+                        if (s_DefaultDescriptionConfig.ContainsKey(key))
                         {
                             _CurrentOpenFile._IDList.Remove(newDataItem._ID);
-                            while (s_DescriptionConfig.ContainsKey(key))
+                            while (s_DefaultDescriptionConfig.ContainsKey(key))
                             {
                                 newDataItem._ID++;
                                 key = newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID;
@@ -1390,7 +1493,7 @@ namespace Wukong_PBData_ReadWriter_GUI
                         }
 
                         //s_DescriptionConfig.Add(newDataItem._File._FileData.GetType().Name + "_" + newDataItem._ID, dataItem._Desc);
-                        s_DescriptionConfig.Add(newDataItem.DescKey, dataItem._Desc);
+                        s_DefaultDescriptionConfig.Add(newDataItem.DescKey, dataItem._Desc);
                         RefreshFileDataItemList(_CurrentOpenFile._FileDataItemList);
                     }
                 }
@@ -1513,8 +1616,17 @@ namespace Wukong_PBData_ReadWriter_GUI
             textBox.AcceptsReturn = true;
             textBox.TextWrapping = TextWrapping.Wrap;
             string desc = "这里写备注";
-            s_DescriptionConfig.TryGetValue(data.Item1, out desc);
-            textBox.Text = desc;
+            if(s_CustomDescriptionConfig.TryGetValue(data.Item1, out desc))
+            {
+                textBox.Text = desc;
+            }
+            else
+            {
+                s_DefaultDescriptionConfig.TryGetValue(data.Item1, out desc);
+                textBox.Text = desc;
+            }
+            // s_DefaultDescriptionConfig.TryGetValue(data.Item1, out desc);
+            // textBox.Text = desc;
             Grid.SetRow(textBox, 0);
             Grid.SetColumn(textBox, 1);
             grid.Children.Add(textBox);
@@ -1526,12 +1638,12 @@ namespace Wukong_PBData_ReadWriter_GUI
             button.Content = "确定";
             button.Click += (sender, e) =>
             {
-                if (s_DescriptionConfig.ContainsKey(data.Item1))
+                if (s_CustomDescriptionConfig.ContainsKey(data.Item1))
                 {
-                    s_DescriptionConfig.Remove(data.Item1);
+                    s_CustomDescriptionConfig.Remove(data.Item1);
                 }
 
-                s_DescriptionConfig.TryAdd(data.Item1, textBox.Text);
+                s_CustomDescriptionConfig.TryAdd(data.Item1, textBox.Text);
                 data.Item2?.Invoke();
                 window.Close();
             };
@@ -1735,7 +1847,7 @@ namespace Wukong_PBData_ReadWriter_GUI
 
                 string descKey = item._DataItem._File._FileData.GetType().Name + "_" + item._PropertyName;
 
-                if (s_DescriptionConfig.ContainsKey(descKey))
+                if (s_DefaultDescriptionConfig.ContainsKey(descKey) || s_CustomDescriptionConfig.ContainsKey(descKey))
                 {
                     label.Foreground = new SolidColorBrush(Colors.Blue);
                 }

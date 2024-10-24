@@ -28,6 +28,9 @@
     <None Update="Json\DefaultDescConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Json\DefaultRemark.defDesc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Json\DefaultRemark.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -14,8 +14,12 @@ namespace Wukong_PBData_ReadWriter_GUI.src
         {
             get
             {
+                if(MainWindow.s_CustomDescriptionConfig.TryGetValue(_FileName, out var customDesc))
+                {
+                    return customDesc;
+                }
                 //var mainWindow = System.Windows.Application.Current.MainWindow as MainWindow;
-                if (MainWindow.s_DescriptionConfig.TryGetValue(_FileName, out var desc))
+                if (MainWindow.s_DefaultDescriptionConfig.TryGetValue(_FileName, out var desc))
                 {
                     return desc;
                 }

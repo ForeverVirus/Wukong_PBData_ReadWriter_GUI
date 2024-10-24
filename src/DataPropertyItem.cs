@@ -33,7 +33,11 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             {
                 if (_DataItem != null && _DataItem._File != null)
                 {
-                    if (MainWindow.s_DescriptionConfig.TryGetValue(_DataItem._File._FileData.GetType().Name + "_" + _PropertyName, out var desc))
+                    if (MainWindow.s_CustomDescriptionConfig.TryGetValue(_DataItem._File._FileData.GetType().Name + "_" + _PropertyName, out var customDesc))
+                    {
+                        return customDesc;
+                    }
+                    if (MainWindow.s_DefaultDescriptionConfig.TryGetValue(_DataItem._File._FileData.GetType().Name + "_" + _PropertyName, out var desc))
                     {
                         return desc;
                     }
