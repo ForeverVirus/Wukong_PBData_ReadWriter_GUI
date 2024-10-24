@@ -23,7 +23,7 @@ namespace Wukong_PBData_ReadWriter_GUI.Entity
         /// </summary>
         [ConfigParam(Desc = "备注文件夹路径")]
         public AttributeChangeNotification RemarkDirPath =
-            new(data: "");
+            new(data: ".\\Json\\Desc\\");
 
         /// <summary>
         /// 对照表文件路径

@@ -198,7 +198,8 @@ namespace Wukong_PBData_ReadWriter_GUI
 
             if (!string.IsNullOrWhiteSpace(_config.RemarkDirPath.Value as string))
             {
-                if (!LoadNewDesc(_config.RemarkDirPath.Value.ToString(), ".desc"))
+                var dir = _config.RemarkDirPath.Value.ToString();
+                if (!Directory.Exists(dir) || !LoadNewDesc(_config.RemarkDirPath.Value.ToString(), ".desc"))
                 {
                     if (!string.IsNullOrWhiteSpace(_config.RemarkFilePath.Value as string))
                     {
@@ -540,7 +541,8 @@ namespace Wukong_PBData_ReadWriter_GUI
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 LoadNewDesc(dialog.SelectedPath, ".desc");
-                _config.RemarkDirPath.Value = dialog.SelectedPath;
+                // SplitExportDescFile(_config.RemarkDirPath.Value.ToString());
+                // _config.RemarkDirPath.Value = dialog.SelectedPath;
             }
             
         }
@@ -695,12 +697,38 @@ namespace Wukong_PBData_ReadWriter_GUI
 
         private void ExportDescription(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
-            dialog.Description = "请选择导出备注的文件夹";
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            // System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+            // dialog.Description = "请选择导出备注的文件夹";
+            // if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            // {
+            //     SplitExportDescFile(dialog.SelectedPath);
+            // }
+            var dir = _config.RemarkDirPath.Value.ToString();
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            
+            SplitExportDescFile(dir);
+
+            if (System.Windows.MessageBox.Show("保存备注成功", "确认", MessageBoxButton.OK,
+                    MessageBoxImage.Question) == MessageBoxResult.OK)
             {
-                SplitExportDescFile(dialog.SelectedPath);
+                if (Directory.Exists(dir))
+                {
+                    Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = dir,
+                        UseShellExecute = true,
+                        Verb = "open"
+                    });
+                }
+                else
+                {
+                    MessageBox.Show("The specified folder does not exist.");
+                }
             }
+            
+            
+            // System.Windows.Forms
             
             // System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
             // dialog.AddExtension = true;
