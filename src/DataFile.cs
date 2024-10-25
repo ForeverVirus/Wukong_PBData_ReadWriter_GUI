@@ -63,6 +63,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
             var data = Exporter.GetDataByFile(_FileName, filePath);
             if (data != null)
             {
+                Console.WriteLine("data is " + data);
                 _FileData = data;
                 CanOpen = false;
                 _FileDataItemList = new List<DataItem>();
@@ -105,6 +106,8 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                                 dataItem._Data = item as IMessage;
                                 dataItem._File = this;
                                 _FileDataItemList.Add(dataItem);
+                                
+                                Console.WriteLine("dataItem is " + dataItem);
                             }
                         }
                     }

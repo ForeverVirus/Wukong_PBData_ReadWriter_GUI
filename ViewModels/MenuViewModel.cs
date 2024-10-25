@@ -1,17 +1,52 @@
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Wukong_PBData_ReadWriter_GUI.Services;
 using DragEventArgs = System.Windows.DragEventArgs;
 
 namespace Wukong_PBData_ReadWriter_GUI.ViewModels;
 
-public partial class MenuViewModel : ObservableObject
+public partial class MenuViewModel(ISharedDataService sharedDataService) : ObservableObject
 {
+    private readonly ISharedDataService _sharedDataService = sharedDataService;
+
     [RelayCommand]
     private void OpenDataFolder()
     {
         Console.WriteLine("OpenDataFolder method called.");
-        // 打开Data目录的逻辑
+        //选择文件夹,并返回选择的文件夹路径，FolderBrowserDialog是一个选择文件夹的对话框
+        System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+        dialog.Description = "请选择Data数据文件夹";
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            _config.DataFilePath.Value = dialog.SelectedPath;
+            ClearTempFiles();
+            _updateFiles.Clear();
+            RefreshFolderFile(dialog.SelectedPath);
+            CloseAllOtherWindow();
+            _CurrentOpenFile = null;
+            _selectedSaveFolder = string.Empty;
+
+
+            if (_GlobalSearchTask != null && !_GlobalSearchTask.IsCompleted)
+            {
+                _GlobalSearchTask = null;
+                _GlobalSearchCache.Clear();
+                s_TraditionGlobalSearchCache.Clear();
+            }
+
+            _GlobalSearchTask = CacheGlobalSearchAsync(_DataFiles.Values.ToList());
+            await _GlobalSearchTask;
+
+
+            // var files = _DataFiles.Values.ToList();
+            // files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
+            // s_DescriptionConfig = Exporter.GenerateFirstDescConfig(files);
+            // _MD5Config = Exporter.CollectItemMD5(files);
+            // _OrigItemData = Exporter.CollectItemBytes(files);
+
+
+        }
     }
 
     [RelayCommand]

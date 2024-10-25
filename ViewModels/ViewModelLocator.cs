@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Wukong_PBData_ReadWriter_GUI.Services;
 
 namespace Wukong_PBData_ReadWriter_GUI.ViewModels
 {
@@ -12,6 +13,7 @@ namespace Wukong_PBData_ReadWriter_GUI.ViewModels
 
             Ioc.Default.ConfigureServices(
                 new ServiceCollection()
+                    .AddSingleton<ISharedDataService, SharedDataService>()  // 注册共享服务
                     .AddSingleton<PakDecompressViewModel>() // 注册 PakDecompressViewModel
                     .AddSingleton<PakCompressViewModel>()
                     .AddSingleton<MenuViewModel>()

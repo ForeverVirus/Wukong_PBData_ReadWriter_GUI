@@ -40,17 +40,27 @@ namespace Wukong_PBData_ReadWriter_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Data文件列表，key为文件名、value为文件实例，根据用户设定的路径读取而来
         public ConcurrentDictionary<string, DataFile> _DataFiles = new();
+        // ID的描述文件（包含每个ID对应的中文解释），从DefaultDescConfig.json中读取
         public static Dictionary<string, string> s_DefaultDescriptionConfig = new Dictionary<string, string>();
         public static Dictionary<string, string> s_CustomDescriptionConfig = new Dictionary<string, string>();
+        
+        // 缓存搜索结果，实际价值存疑
         public static List<(string, DataFile, DataItem)> s_TraditionGlobalSearchCache = new List<(string, DataFile, DataItem)>();
 
         //public List<DataFile> _DataFiles = new List<DataFile>();
+        // 数据项的md5校验字典，key为数据项id、value为md5取值。用于比对、标记被修改过的文件（相对黑猴原版文件）
         public Dictionary<string, string> _MD5Config = new Dictionary<string, string>();
+        // 原始数据
         public Dictionary<string, byte[]> _OrigItemData = new Dictionary<string, byte[]>();
+        // 数据文件，包含文件名、路径与详细的protobuff数据
         public DataFile _CurrentOpenFile = null;
+        // 全局搜索缓存
         public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
+        // 延时搜索计时器
         public DispatcherTimer _SearchTimer;
+        // 记录当前打开的文件夹路径
         public string _CurrentOpenFolder = "";
         public string version = "V1.6.0";
         public MergeWindow _MergeWindow;
