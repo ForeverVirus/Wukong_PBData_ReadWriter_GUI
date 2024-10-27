@@ -31,6 +31,8 @@ using Wukong_PBData_ReadWriter_GUI.Extensions;
 using Wukong_PBData_ReadWriter_GUI.src;
 using Wukong_PBData_ReadWriter_GUI.Util;
 using System;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Wukong_PBData_ReadWriter_GUI.Services;
 
 
 namespace Wukong_PBData_ReadWriter_GUI
@@ -108,7 +110,12 @@ namespace Wukong_PBData_ReadWriter_GUI
         /// </summary>
         public MainWindow()
         {
-            _config = new();
+            
+            Console.WriteLine("MainWindow started");
+            ISharedDataService sharedDataService = Ioc.Default.GetService<ISharedDataService>();
+            Console.WriteLine("xxxx"+sharedDataService?.ConfigData.AutoSaveFile.Value);
+
+            _config = sharedDataService?.GlobalData.config;
             _logUtil = new("main", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log"), 0.5, null, true, 3, 3);
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             _listBoxItemAction += SetListBox;
@@ -302,7 +309,7 @@ namespace Wukong_PBData_ReadWriter_GUI
             AutoSaveFileCheck.IsChecked = _config.AutoSaveFile.Value.ToBool();
             DisplaysSourceInformationCheck.IsChecked = _config.DisplaysSourceInformation.Value.ToBool();
             AutoSearchInEffectCheck.IsChecked = _config.AutoSearchInEffect.Value.ToBool();
-            OnlyModifyItem.IsChecked = _config.OnlyModifyItem.Value.ToBool();
+            // OnlyModifyItem.IsChecked = _config.OnlyModifyItem.Value.ToBool();
         }
 
         private void StartAutoSaveTick()
@@ -867,6 +874,10 @@ namespace Wukong_PBData_ReadWriter_GUI
             var files = _DataFiles.Values.ToList();
             files.Sort((a, b) => a._FileName.CompareTo(b._FileName));
 
+            foreach (var dataFile in files)
+            {
+                Console.WriteLine($"loadFile: {dataFile._FileName} = {dataFile._FilePath}");
+            }
             RefreshDataFile(files);
         }
 

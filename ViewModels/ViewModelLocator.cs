@@ -11,14 +11,6 @@ namespace Wukong_PBData_ReadWriter_GUI.ViewModels
             // 注册 ViewModel
             Console.WriteLine("ViewModelLocator initialized.");
 
-            Ioc.Default.ConfigureServices(
-                new ServiceCollection()
-                    .AddSingleton<ISharedDataService, SharedDataService>()  // 注册共享服务
-                    .AddSingleton<PakDecompressViewModel>() // 注册 PakDecompressViewModel
-                    .AddSingleton<PakCompressViewModel>()
-                    .AddSingleton<MenuViewModel>()
-                    .BuildServiceProvider());
-
             // 检查 ViewModel 是否被正确注册
             var viewModel = Ioc.Default.GetService<PakDecompressViewModel>();
             if (viewModel == null)

@@ -7,7 +7,7 @@ namespace Wukong_PBData_ReadWriter_GUI.src
 {
     public class DataFile
     {
-        public string _FileName;
+        public string _FileName {set; get;  }
         public string _FilePath;
         public IMessage _FileData;
         public string _Desc
