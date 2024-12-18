@@ -52,7 +52,7 @@ namespace Wukong_PBData_ReadWriter_GUI
         public List<(string, DataFile, DataItem)> _GlobalSearchCache = new List<(string, DataFile, DataItem)>();
         public DispatcherTimer _SearchTimer;
         public string _CurrentOpenFolder = "";
-        public string version = "V1.6.0";
+        public string version = "V1.7.2";
         public MergeWindow _MergeWindow;
         public Task _GlobalSearchTask = null;
         private string _selectedSaveFolder = string.Empty;

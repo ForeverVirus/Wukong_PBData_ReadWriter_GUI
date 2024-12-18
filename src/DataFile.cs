@@ -87,7 +87,43 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                                 {
                                     property = itemType.GetProperty("ID");
                                 }
-
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("DropId");
+                                }
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("ExtentBattleId");
+                                }
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("SimpleStateID");
+                                }
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("MapId");
+                                }
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("Count");
+                                }
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("Group");
+                                }
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("GroupId");
+                                }
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("NpcId");
+                                }
+                                if (property == null)
+                                {
+                                    property = itemType.GetProperty("Rank");
+                                }
+                                
                                 if (property == null)
                                     continue;
 
