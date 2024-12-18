@@ -93,6 +93,10 @@ namespace Wukong_PBData_ReadWriter_GUI.src
                                 }
                                 if (property == null)
                                 {
+                                    property = itemType.GetProperty("ItemId");
+                                }
+                                if (property == null)
+                                {
                                     property = itemType.GetProperty("ExtentBattleId");
                                 }
                                 if (property == null)
